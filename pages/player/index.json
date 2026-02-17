@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "正在播放",
+  "navigationStyle": "custom",
+  "launchMode": "singleTask",
+  "usingComponents": {
+    "roc-icon-plus": "../../uni_modules/roc-icon-plus/components/roc-icon-plus/roc-icon-plus"
+  }
+}

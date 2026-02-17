@@ -1,0 +1,10 @@
+{
+  "navigationBarTitleText": "我的",
+  "navigationStyle": "custom",
+  "launchMode": "singleTask",
+  "usingComponents": {
+    "mini-player": "../../components/player/MiniPlayer",
+    "custom-tab-bar": "../../components/common/CustomTabBar",
+    "roc-icon-plus": "../../uni_modules/roc-icon-plus/components/roc-icon-plus/roc-icon-plus"
+  }
+}

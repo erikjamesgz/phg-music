@@ -1,0 +1,14 @@
+{
+  "navigationBarTitleText": "列表",
+  "navigationStyle": "custom",
+  "launchMode": "singleTask",
+  "usingComponents": {
+    "roc-icon-plus": "../../uni_modules/roc-icon-plus/components/roc-icon-plus/roc-icon-plus",
+    "custom-tab-bar": "../../components/common/CustomTabBar",
+    "mini-player": "../../components/player/MiniPlayer",
+    "music-toggle-modal": "../../components/player/MusicToggleModal",
+    "auto-update-toast": "../../components/common/AutoUpdateToast",
+    "loading-toast": "../../components/common/LoadingToast",
+    "virtual-list": "../../components/common/VirtualList"
+  }
+}

@@ -1,0 +1,110 @@
+/* 主题颜色变量 */
+
+// 主色调
+$uni-color-primary: #7b68ee;
+$uni-color-primary-light: #9f91f2;
+$uni-color-primary-dark: #5a4ebd;
+
+// 辅助色
+$uni-color-success: #4cd964;
+$uni-color-warning: #f0ad4e;
+$uni-color-error: #dd524d;
+$uni-color-info: #909399;
+
+// 文本颜色
+$uni-text-color: #333333;
+$uni-text-color-inverse: #ffffff;
+$uni-text-color-grey: #999999;
+$uni-text-color-placeholder: #cccccc;
+$uni-text-color-disable: #c0c0c0;
+
+// 背景颜色
+$uni-bg-color: #ffffff;
+$uni-bg-color-grey: #f8f8f8;
+$uni-bg-color-hover: #f1f1f1;
+$uni-bg-color-mask: rgba(0, 0, 0, 0.4);
+
+// 边框颜色
+$uni-border-color: #e5e5e5;
+
+// 尺寸变量
+
+// 文字尺寸
+$uni-font-size-sm: 24rpx;
+$uni-font-size-base: 28rpx;
+$uni-font-size-lg: 32rpx;
+$uni-font-size-xl: 36rpx;
+$uni-font-size-xxl: 42rpx;
+
+// 图片尺寸
+$uni-img-size-sm: 40rpx;
+$uni-img-size-base: 52rpx;
+$uni-img-size-lg: 80rpx;
+
+// 圆角
+$uni-border-radius-sm: 4rpx;
+$uni-border-radius-base: 8rpx;
+$uni-border-radius-lg: 12rpx;
+$uni-border-radius-circle: 50%;
+
+// 阴影
+$uni-shadow-sm: 0 0 5rpx rgba(0, 0, 0, 0.1);
+$uni-shadow-base: 0 1rpx 6rpx rgba(0, 0, 0, 0.1);
+$uni-shadow-lg: 0 4rpx 16rpx rgba(0, 0, 0, 0.2);
+
+// 透明度
+$uni-opacity-disabled: 0.3;
+
+// 间距
+$uni-spacing-row-sm: 10rpx;
+$uni-spacing-row-base: 20rpx;
+$uni-spacing-row-lg: 30rpx;
+
+$uni-spacing-col-sm: 8rpx;
+$uni-spacing-col-base: 16rpx;
+$uni-spacing-col-lg: 24rpx;
+
+// 组件高度
+$uni-height-sm: 60rpx;
+$uni-height-base: 80rpx;
+$uni-height-lg: 100rpx;
+
+// 组件宽度
+$uni-width-sm: 200rpx;
+$uni-width-base: 300rpx;
+$uni-width-lg: 400rpx;
+
+// 组件间距
+$uni-padding-sm: 20rpx;
+$uni-padding-base: 30rpx;
+$uni-padding-lg: 40rpx;
+
+// 导航栏高度
+$uni-nav-height: 88rpx;
+
+// 标签栏高度
+$uni-tab-height: 100rpx;
+
+// 迷你播放器高度
+$uni-mini-player-height: 120rpx;
+
+// 全屏播放器底部控制栏高度
+$uni-player-controls-height: 160rpx;
+
+// 媒体查询
+$uni-screen-xs: 375px;
+$uni-screen-sm: 480px;
+$uni-screen-md: 768px;
+$uni-screen-lg: 992px;
+$uni-screen-xl: 1200px;
+
+// 暗黑模式变量
+[data-theme='dark'] {
+  $uni-bg-color: #121212;
+  $uni-bg-color-grey: #1e1e1e;
+  $uni-bg-color-hover: #2c2c2c;
+  $uni-text-color: #f5f5f5;
+  $uni-text-color-grey: #aaaaaa;
+  $uni-text-color-disable: #666666;
+  $uni-border-color: #333333;
+}

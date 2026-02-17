@@ -1,0 +1,1 @@
+<view wx:if="{{a}}" class="auto-update-toast data-v-65f43f02"><view class="toast-content data-v-65f43f02"><view class="toast-icon data-v-65f43f02"><view class="loading-spinner data-v-65f43f02"></view></view><view class="toast-text data-v-65f43f02"><text class="toast-title data-v-65f43f02">正在自动更新</text><text class="toast-subtitle data-v-65f43f02">{{b}}</text></view></view></view>

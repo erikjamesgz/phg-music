@@ -1,0 +1,47 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/playlist/index",
+    "pages/search/index",
+    "pages/music-sources/index",
+    "pages/player/index",
+    "pages/rank/index",
+    "pages/my/index",
+    "pages/settings/index",
+    "pages/sharelist/index",
+    "pages/songlist-list/index"
+  ],
+  "window": {
+    "navigationBarTextStyle": "white",
+    "navigationBarTitleText": "拼好歌",
+    "navigationBarBackgroundColor": "#7b68ee",
+    "backgroundColor": "#F8F8F8"
+  },
+  "tabBar": {
+    "custom": true,
+    "borderStyle": "white",
+    "color": "#8a8a8a",
+    "selectedColor": "#00afff",
+    "backgroundColor": "#ffffff",
+    "list": [
+      {
+        "pagePath": "pages/index/index"
+      },
+      {
+        "pagePath": "pages/search/index"
+      },
+      {
+        "pagePath": "pages/playlist/index"
+      },
+      {
+        "pagePath": "pages/my/index"
+      }
+    ]
+  },
+  "themeLocation": "theme.json",
+  "requiredBackgroundModes": [
+    "audio"
+  ],
+  "darkmode": true,
+  "usingComponents": {}
+}

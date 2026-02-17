@@ -1,0 +1,13 @@
+{
+  "navigationBarTitleText": "拼好歌",
+  "navigationStyle": "custom",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark",
+  "launchMode": "singleTask",
+  "usingComponents": {
+    "roc-icon-plus": "../../uni_modules/roc-icon-plus/components/roc-icon-plus/roc-icon-plus",
+    "mini-player": "../../components/player/MiniPlayer",
+    "custom-tab-bar": "../../components/common/CustomTabBar",
+    "pact-modal": "../../components/common/PactModal"
+  }
+}

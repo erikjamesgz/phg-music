@@ -1,0 +1,1 @@
+"use strict";const e=require("../../common/vendor.js"),t={__name:"AutoUpdateToast",props:{visible:{type:Boolean,default:!1},playlistName:{type:String,default:""}},setup:t=>(a,s)=>e.e({a:t.visible},t.visible?{b:e.t(t.playlistName)}:{})},a=e._export_sfc(t,[["__scopeId","data-v-65f43f02"]]);wx.createComponent(a);
