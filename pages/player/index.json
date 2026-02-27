@@ -3,6 +3,7 @@
   "navigationStyle": "custom",
   "launchMode": "singleTask",
   "usingComponents": {
-    "roc-icon-plus": "../../uni_modules/roc-icon-plus/components/roc-icon-plus/roc-icon-plus"
+    "roc-icon-plus": "../../uni_modules/roc-icon-plus/components/roc-icon-plus/roc-icon-plus",
+    "music-comment": "../../components/comment/MusicComment"
   }
 }

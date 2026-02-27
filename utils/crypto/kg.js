@@ -1,0 +1,1 @@
+"use strict";const e=require("./md5.js");exports.signatureParams=(s,t="web",r="")=>{let i="OIlwieks28dk2k092lksi2UIkp";"web"===t&&(i="NVPh5oo715z5DIWAeQlhMDsWXXQV4hwt");let l=s.split("&");l.sort();let o=`${i}${l.join("")}${r}${i}`;return e.md5(o)};
