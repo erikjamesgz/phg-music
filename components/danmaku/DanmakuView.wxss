@@ -1,0 +1,58 @@
+
+.danmaku-container.data-v-79ac768a {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 100;
+}
+.danmaku-item.data-v-79ac768a {
+  position: absolute;
+  left: 100%;
+  display: inline-flex;
+  align-items: center;
+  padding: 6rpx 16rpx;
+  background-color: rgba(0, 0, 0, 0.35);
+  border-radius: 20rpx;
+  white-space: nowrap;
+  animation: danmaku-move-79ac768a linear forwards;
+}
+.danmaku-item.dark-mode.data-v-79ac768a {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+.danmaku-item.paused.data-v-79ac768a {
+  animation-play-state: paused;
+}
+.danmaku-user.data-v-79ac768a {
+  color: #ffd700;
+  font-size: 24rpx;
+  font-weight: 500;
+  margin-right: 8rpx;
+  flex-shrink: 0;
+}
+.dark-mode .danmaku-user.data-v-79ac768a {
+  color: #ffca28;
+}
+.danmaku-text.data-v-79ac768a {
+  color: #ffffff;
+  font-size: 24rpx;
+}
+.dark-mode .danmaku-text.data-v-79ac768a {
+  color: #ffffff;
+}
+@keyframes danmaku-move-79ac768a {
+0% {
+    transform: translateX(0);
+    opacity: 1;
+}
+90% {
+    opacity: 1;
+}
+100% {
+    transform: translateX(calc(-100vw - 100%));
+    opacity: 0;
+}
+}

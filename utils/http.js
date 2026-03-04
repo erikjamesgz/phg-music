@@ -1,1 +1,262 @@
-"use strict";const e=require("../common/vendor.js"),t=require("./storage.js"),o={baseUrl:"https://api.celadonmusic.com",timeout:3e4,header:{"Content-Type":"application/json"},loading:!0,loadingText:"加载中...",showError:!0};let r={};function a(e){return`${e.method}_${e.url}_${JSON.stringify(e.data||{})}`}function n(t){e.index.showLoading({title:t,mask:!0})}function s(){e.index.hideLoading()}function d(t){e.index.showToast({title:t||"请求失败",icon:"none",duration:2e3})}function i(e,t,o){t.loading&&s(),t.showError&&d(e),o(new Error(e))}function u(t,o){e.index.removeStorageSync("token"),e.index.removeStorageSync("userInfo"),t.loading&&s(),t.showError&&d("登录已过期，请重新登录"),o(new Error("未授权，请重新登录"))}function l(d){(d={...o,...d,header:{...o.header,...d.header}}).url=d.url.startsWith("http")?d.url:o.baseUrl+d.url;const l=a(d);if(r[l])return r[l];const h=t.getStorage("token");h&&(d.header.Authorization=`Bearer ${h}`),d.isNetease&&(d.header["Content-Type"]="application/x-www-form-urlencoded"),d.loading&&n(d.loadingText);const c=new Promise((t,o)=>{e.index.request({url:d.url,data:d.data,method:d.method,header:d.header,timeout:d.timeout,success:e=>{!function(e,t,o,n){var d;delete r[a(t)],t.loading&&s(),e.statusCode>=200&&e.statusCode<300?o(e.data):401===e.statusCode?u(t,n):i((null==(d=e.data)?void 0:d.message)||`请求失败: ${e.statusCode}`,t,n)}(e,d,t,o)},fail:e=>{delete r[l],d.loading&&s();i(e.errMsg||"网络请求失败",d,o)}})});return r[l]=c,c}const h={request:l,get:function(e,t,o={}){return l({url:e,data:null==t?{}:t,method:"GET",...o})},post:function(e,t={},o={}){return l({url:e,data:t,method:"POST",...o})},put:function(e,t={},o={}){return l({url:e,data:t,method:"PUT",...o})},delete:function(e,t={},o={}){return l({url:e,data:t,method:"DELETE",...o})},upload:function(r,a,d="file",l={},h={}){h={...o,...h,header:{...o.header,...h.header}},r=r.startsWith("http")?r:o.baseUrl+r;const c=t.getStorage("token");return c&&(h.header.Authorization=`Bearer ${c}`),h.loading&&n(h.loadingText||"上传中..."),new Promise((t,o)=>{const n=e.index.uploadFile({url:r,filePath:a,name:d,formData:l,header:h.header,success:e=>{if(h.loading&&s(),e.statusCode>=200&&e.statusCode<300){let o;try{o=JSON.parse(e.data)}catch(r){o=e.data}t(o)}else if(401===e.statusCode)u(h,o);else{i(`上传失败: ${e.statusCode}`,h,o)}},fail:e=>{h.loading&&s();i(e.errMsg||"上传失败",h,o)}});h.onProgress&&n.onProgressUpdate(e=>{h.onProgress(e.progress)})})},download:function(r,a={}){a={...o,...a,header:{...o.header,...a.header}},r=r.startsWith("http")?r:o.baseUrl+r;const d=t.getStorage("token");return d&&(a.header.Authorization=`Bearer ${d}`),a.loading&&n(a.loadingText||"下载中..."),new Promise((t,o)=>{const n=e.index.downloadFile({url:r,header:a.header,success:e=>{if(a.loading&&s(),e.statusCode>=200&&e.statusCode<300)t(e.tempFilePath);else if(401===e.statusCode)u(a,o);else{i(`下载失败: ${e.statusCode}`,a,o)}},fail:e=>{a.loading&&s();i(e.errMsg||"下载失败",a,o)}});a.onProgress&&n.onProgressUpdate(e=>{a.onProgress(e.progress)})})},config:o};exports.http=h;
+"use strict";
+const common_vendor = require("../common/vendor.js");
+const utils_storage = require("./storage.js");
+const config = {
+  // 基础URL
+  baseUrl: "https://api.celadonmusic.com",
+  // 请求超时时间（毫秒）
+  timeout: 3e4,
+  // 请求头
+  header: {
+    "Content-Type": "application/json"
+  },
+  // 是否显示加载提示
+  loading: true,
+  // 加载提示文本
+  loadingText: "加载中...",
+  // 是否显示错误提示
+  showError: true
+};
+let requestQueue = {};
+function generateRequestKey(options) {
+  return `${options.method}_${options.url}_${JSON.stringify(options.data || {})}`;
+}
+function showLoading(title) {
+  common_vendor.index.showLoading({
+    title,
+    mask: true
+  });
+}
+function hideLoading() {
+  common_vendor.index.hideLoading();
+}
+function showError(message) {
+  common_vendor.index.showToast({
+    title: message || "请求失败",
+    icon: "none",
+    duration: 2e3
+  });
+}
+function handleResponse(response, options, resolve, reject) {
+  var _a;
+  delete requestQueue[generateRequestKey(options)];
+  if (options.loading) {
+    hideLoading();
+  }
+  if (response.statusCode >= 200 && response.statusCode < 300) {
+    resolve(response.data);
+  } else if (response.statusCode === 401) {
+    handleUnauthorized(options, reject);
+  } else {
+    const errorMsg = ((_a = response.data) == null ? void 0 : _a.message) || `请求失败: ${response.statusCode}`;
+    handleRequestError(errorMsg, options, reject);
+  }
+}
+function handleRequestError(message, options, reject) {
+  if (options.loading) {
+    hideLoading();
+  }
+  if (options.showError) {
+    showError(message);
+  }
+  reject(new Error(message));
+}
+function handleUnauthorized(options, reject) {
+  common_vendor.index.removeStorageSync("token");
+  common_vendor.index.removeStorageSync("userInfo");
+  if (options.loading) {
+    hideLoading();
+  }
+  if (options.showError) {
+    showError("登录已过期，请重新登录");
+  }
+  reject(new Error("未授权，请重新登录"));
+}
+function request(options) {
+  options = {
+    ...config,
+    ...options,
+    header: { ...config.header, ...options.header }
+  };
+  options.url = options.url.startsWith("http") ? options.url : config.baseUrl + options.url;
+  const requestKey = generateRequestKey(options);
+  if (requestQueue[requestKey]) {
+    return requestQueue[requestKey];
+  }
+  const token = utils_storage.getStorage("token");
+  if (token) {
+    options.header["Authorization"] = `Bearer ${token}`;
+  }
+  if (options.isNetease) {
+    options.header["Content-Type"] = "application/x-www-form-urlencoded";
+  }
+  if (options.loading) {
+    showLoading(options.loadingText);
+  }
+  const requestPromise = new Promise((resolve, reject) => {
+    common_vendor.index.request({
+      url: options.url,
+      data: options.data,
+      method: options.method,
+      header: options.header,
+      timeout: options.timeout,
+      success: (res) => {
+        handleResponse(res, options, resolve, reject);
+      },
+      fail: (err) => {
+        delete requestQueue[requestKey];
+        if (options.loading) {
+          hideLoading();
+        }
+        const errorMsg = err.errMsg || "网络请求失败";
+        handleRequestError(errorMsg, options, reject);
+      }
+    });
+  });
+  requestQueue[requestKey] = requestPromise;
+  return requestPromise;
+}
+function get(url, data, options = {}) {
+  return request({
+    url,
+    data: data === null || data === void 0 ? {} : data,
+    method: "GET",
+    ...options
+  });
+}
+function post(url, data = {}, options = {}) {
+  return request({
+    url,
+    data,
+    method: "POST",
+    ...options
+  });
+}
+function put(url, data = {}, options = {}) {
+  return request({
+    url,
+    data,
+    method: "PUT",
+    ...options
+  });
+}
+function del(url, data = {}, options = {}) {
+  return request({
+    url,
+    data,
+    method: "DELETE",
+    ...options
+  });
+}
+function upload(url, filePath, name = "file", formData = {}, options = {}) {
+  options = {
+    ...config,
+    ...options,
+    header: { ...config.header, ...options.header }
+  };
+  url = url.startsWith("http") ? url : config.baseUrl + url;
+  const token = utils_storage.getStorage("token");
+  if (token) {
+    options.header["Authorization"] = `Bearer ${token}`;
+  }
+  if (options.loading) {
+    showLoading(options.loadingText || "上传中...");
+  }
+  return new Promise((resolve, reject) => {
+    const uploadTask = common_vendor.index.uploadFile({
+      url,
+      filePath,
+      name,
+      formData,
+      header: options.header,
+      success: (res) => {
+        if (options.loading) {
+          hideLoading();
+        }
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          let data;
+          try {
+            data = JSON.parse(res.data);
+          } catch (e) {
+            data = res.data;
+          }
+          resolve(data);
+        } else if (res.statusCode === 401) {
+          handleUnauthorized(options, reject);
+        } else {
+          const errorMsg = `上传失败: ${res.statusCode}`;
+          handleRequestError(errorMsg, options, reject);
+        }
+      },
+      fail: (err) => {
+        if (options.loading) {
+          hideLoading();
+        }
+        const errorMsg = err.errMsg || "上传失败";
+        handleRequestError(errorMsg, options, reject);
+      }
+    });
+    if (options.onProgress) {
+      uploadTask.onProgressUpdate((res) => {
+        options.onProgress(res.progress);
+      });
+    }
+  });
+}
+function download(url, options = {}) {
+  options = {
+    ...config,
+    ...options,
+    header: { ...config.header, ...options.header }
+  };
+  url = url.startsWith("http") ? url : config.baseUrl + url;
+  const token = utils_storage.getStorage("token");
+  if (token) {
+    options.header["Authorization"] = `Bearer ${token}`;
+  }
+  if (options.loading) {
+    showLoading(options.loadingText || "下载中...");
+  }
+  return new Promise((resolve, reject) => {
+    const downloadTask = common_vendor.index.downloadFile({
+      url,
+      header: options.header,
+      success: (res) => {
+        if (options.loading) {
+          hideLoading();
+        }
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          resolve(res.tempFilePath);
+        } else if (res.statusCode === 401) {
+          handleUnauthorized(options, reject);
+        } else {
+          const errorMsg = `下载失败: ${res.statusCode}`;
+          handleRequestError(errorMsg, options, reject);
+        }
+      },
+      fail: (err) => {
+        if (options.loading) {
+          hideLoading();
+        }
+        const errorMsg = err.errMsg || "下载失败";
+        handleRequestError(errorMsg, options, reject);
+      }
+    });
+    if (options.onProgress) {
+      downloadTask.onProgressUpdate((res) => {
+        options.onProgress(res.progress);
+      });
+    }
+  });
+}
+const http = {
+  request,
+  get,
+  post,
+  put,
+  delete: del,
+  upload,
+  download,
+  config
+};
+exports.http = http;

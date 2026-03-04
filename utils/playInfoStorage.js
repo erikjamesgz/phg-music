@@ -1,1 +1,48 @@
-"use strict";const t=require("./storage.js"),e="last_play_info";let o=null;async function a(o){try{const a={time:o.time||0,maxTime:o.maxTime||0,listId:o.listId||"",index:o.index??-1,timestamp:Date.now()};await t.setStorage(e,a),console.log("[playInfoStorage] 播放信息已保存:",a)}catch(a){console.error("[playInfoStorage] 保存播放信息失败:",a)}}exports.getPlayInfo=async function(){try{const o=await t.getStorage(e);return o?(console.log("[playInfoStorage] 获取到保存的播放信息:",o),o):null}catch(o){return console.error("[playInfoStorage] 获取播放信息失败:",o),null}},exports.savePlayInfo=async function(t,e=!1){o&&(clearTimeout(o),o=null),e?await a(t):o=setTimeout(async()=>{await a(t),o=null},2e3)};
+"use strict";
+const utils_storage = require("./storage.js");
+const PLAY_INFO_KEY = "last_play_info";
+let saveTimer = null;
+const SAVE_INTERVAL = 2e3;
+async function savePlayInfo(playInfo, immediate = false) {
+  if (saveTimer) {
+    clearTimeout(saveTimer);
+    saveTimer = null;
+  }
+  if (immediate) {
+    await doSavePlayInfo(playInfo);
+  } else {
+    saveTimer = setTimeout(async () => {
+      await doSavePlayInfo(playInfo);
+      saveTimer = null;
+    }, SAVE_INTERVAL);
+  }
+}
+async function doSavePlayInfo(playInfo) {
+  try {
+    const data = {
+      time: playInfo.time || 0,
+      maxTime: playInfo.maxTime || 0,
+      listId: playInfo.listId || "",
+      index: playInfo.index ?? -1,
+      timestamp: Date.now()
+    };
+    await utils_storage.setStorage(PLAY_INFO_KEY, data);
+    console.log("[playInfoStorage] 播放信息已保存:", data);
+  } catch (error) {
+    console.error("[playInfoStorage] 保存播放信息失败:", error);
+  }
+}
+async function getPlayInfo() {
+  try {
+    const data = await utils_storage.getStorage(PLAY_INFO_KEY);
+    if (!data)
+      return null;
+    console.log("[playInfoStorage] 获取到保存的播放信息:", data);
+    return data;
+  } catch (error) {
+    console.error("[playInfoStorage] 获取播放信息失败:", error);
+    return null;
+  }
+}
+exports.getPlayInfo = getPlayInfo;
+exports.savePlayInfo = savePlayInfo;

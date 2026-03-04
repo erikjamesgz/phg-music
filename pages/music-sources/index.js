@@ -1,1 +1,472 @@
-"use strict";const e=require("../../common/vendor.js"),t=require("../../utils/musicSourceStorage.js"),a=require("../../utils/system.js"),s=require("../../utils/config.js");if(require("../../store/modules/list.js"),require("../../store/modules/player.js"),!Array){e.resolveComponent("roc-icon-plus")()}Math;const o={__name:"index",setup(o){const i=e.ref("9:41"),n=e.ref(null),r=e.computed(()=>{const t="true"===e.index.getStorageSync("darkMode");return console.log("[music-sources] isDarkMode:",t),t}),c=e.ref(a.getStatusBarHeight()),l=e.computed(()=>({height:`${c.value}px`,width:"100%",backgroundColor:"transparent"})),d=e.ref(!1),u=e.ref([]),p=e.ref([]),m=()=>{e.index.navigateBack()},f=async a=>{e.index.showModal({title:"确认删除",content:`确定要删除音源"${a.name}"吗？`,confirmColor:"#ff4d4f",success:async o=>{if(o.confirm){const o=`${a.name} ${a.version}`;e.index.showLoading({title:"删除中...",mask:!0});try{const i=await e.index.request({url:`${s.getServerUrl()}/api/scripts/delete`,method:"POST",header:{"Content-Type":"application/json"},data:{id:a.id}});e.index.hideLoading();const n=i.data;if(200===n.code&&n.data&&n.data.success){n.data.scripts&&(u.value=n.data.scripts.map(e=>({id:e.id,name:e.name,type:e.isDefault?"official":"custom",version:e.version||"1.0.0",developer:e.author||"未知开发者",updateDate:e.createdAt||(new Date).toLocaleDateString(),description:e.description||"远程音源",updateNotify:!0,selected:e.isDefault})),t.saveMusicSources(u.value));const a={type:"delete",text:`删除音源 ${o}`,textHtml:`删除音源 <strong>${o}</strong>`,time:(new Date).toLocaleTimeString()};p.value.unshift(a),t.addActivity(a),e.index.showToast({title:n.msg||"删除成功",icon:"success"})}else e.index.showToast({title:n.msg||"删除失败",icon:"none"})}catch(i){e.index.hideLoading(),console.error("删除音源失败:",i),e.index.showToast({title:"删除失败，请检查网络",icon:"none"})}}}})},v=e.ref(""),h=e.ref(!0),g=e.ref(""),y=e.ref(!1),x=()=>{v.value="",h.value=!0,g.value="",y.value=!1,d.value=!0},w=()=>{e.index.showModal({title:"提示",content:"此功能暂不支持",showCancel:!1,confirmText:"确定"})},S=()=>{d.value=!1},D=async()=>{if(v.value.trim()){y.value=!0;try{const a=(await e.index.request({url:`${s.getServerUrl()}/api/scripts/import/url`,method:"POST",header:{"Content-Type":"application/json"},data:{url:v.value.trim()}})).data;if(200===a.code&&a.data&&a.data.success){a.data.scripts&&(u.value=a.data.scripts.map(e=>({id:e.id,name:e.name,type:e.isDefault?"official":"custom",version:e.version||"1.0.0",developer:e.author||"未知开发者",updateDate:e.createdAt||(new Date).toLocaleDateString(),description:e.description||"远程音源",updateNotify:!0,selected:e.isDefault})),t.saveMusicSources(u.value));const s={type:"add",text:"导入音源成功",textHtml:"导入音源 <strong>成功</strong>",time:(new Date).toLocaleTimeString()};p.value.unshift(s),t.addActivity(s),e.index.showToast({title:a.msg||"导入成功",icon:"success"}),S()}else e.index.showToast({title:a.msg||"导入失败",icon:"none"})}catch(a){console.error("导入音源失败:",a),e.index.showModal({title:"导入失败",content:a.message||"网络错误，请检查网络连接",showCancel:!1,confirmText:"确定"})}finally{y.value=!1}}else e.index.showToast({title:"请输入音源URL",icon:"none"})};return e.onMounted(()=>{(()=>{const e=()=>{const e=new Date,t=e.getHours(),a=e.getMinutes();i.value=`${t}:${a<10?"0"+a:a}`};e(),setInterval(e,6e4)})(),(()=>{const a=s.getServerUrl();e.index.request({url:`${a}/api/scripts/loaded`,method:"GET",success:e=>{if(e.data&&200===e.data.code){const a=e.data.data||[];console.log("[音源管理] 获取音源列表成功:",a),u.value=a.map(e=>({id:e.id,name:e.name,version:e.version||"1.0.0",developer:e.author||"未知开发者",updateDate:e.updateTime||(new Date).toLocaleDateString(),description:e.description||"远程音源",isDefault:e.isDefault||!1,selected:e.isDefault||!1})),t.saveMusicSources(u.value)}else console.error("[音源管理] 获取音源列表失败:",e.data),u.value=t.getMusicSources()},fail:e=>{console.error("[音源管理] 获取音源列表请求失败:",e),u.value=t.getMusicSources()}})})(),p.value=t.getActivities(),e.index.getStorageSync("music_sources_initialized")||e.index.setStorageSync("music_sources_initialized",!0),a.setStatusBarTextColor("black")}),(a,o)=>e.e({a:e.s(l.value),b:e.p({type:"fas",name:"chevron-left",size:"20",color:"#4b5563"}),c:e.o(m),d:0===u.value.length},0===u.value.length?{e:e.p({type:"fas",name:"music",size:"48",color:"#00d7cd"})}:{f:e.f(u.value,(a,o,i)=>e.e({a:"92af1ee3-2-"+i,b:e.t(a.name),c:e.t(a.version),d:"92af1ee3-3-"+i,e:e.t(a.developer),f:"92af1ee3-4-"+i,g:e.t(a.updateDate),h:"92af1ee3-5-"+i,i:e.t(a.description),j:a.selected},a.selected?{k:"92af1ee3-6-"+i,l:e.p({type:"fas",name:"check-circle",size:"18",color:"#6dc380"})}:{},{m:e.o(t=>(t=>{n.value=t.id,e.index.showActionSheet({itemList:["删除音源"],itemColor:"#ff4d4f",success:e=>{0===e.tapIndex&&f(t)}})})(a),a.id),n:a.id,o:a.selected?1:"",p:e.o(o=>(async a=>{const o=s.getServerUrl();e.index.showLoading({title:"设置中...",mask:!0});try{const s=await e.index.request({url:`${o}/api/scripts/default`,method:"POST",header:{"Content-Type":"application/json"},data:{id:a}});e.index.hideLoading();const i=s.data;if(200===i.code&&i.data&&i.data.success){const s=u.value.find(e=>e.id===a),o=s?s.name:"未知音源";u.value=u.value.map(e=>({...e,selected:e.id===a,isDefault:e.id===a})),t.saveMusicSources(u.value);const i={type:"update",text:`设置默认音源 ${o}`,textHtml:`设置默认音源 <strong>${o}</strong>`,time:(new Date).toLocaleTimeString()};p.value.unshift(i),t.addActivity(i),e.index.showToast({title:"设置成功",icon:"success"})}else e.index.showToast({title:i.msg||"设置失败",icon:"none"})}catch(i){e.index.hideLoading(),console.error("[音源管理] 设置默认音源失败:",i),e.index.showToast({title:"设置失败，请检查网络",icon:"none"})}})(a.id),a.id)})),g:e.p({type:"fas",name:"music",size:"20",color:"#00d7cd"}),h:e.p({type:"fas",name:"user",size:"12",color:"#999"}),i:e.p({type:"fas",name:"calendar-alt",size:"12",color:"#999"}),j:e.p({type:"fas",name:"comment-alt",size:"12",color:"#999"})},{k:e.p({type:"fas",name:"cloud-download-alt",size:"20",color:"#0084ff"}),l:e.o(x),m:e.p({type:"fas",name:"file-import",size:"20",color:"#00d7cd"}),n:e.o(w),o:0===p.value.length},0===p.value.length?{p:e.p({type:"fas",name:"history",size:"48",color:"#7b68ee"})}:{q:e.f(p.value,(t,a,s)=>{return{a:"92af1ee3-10-"+s,b:e.p({type:"fas",name:(o=t.type,{add:"plus",update:"sync",edit:"edit",delete:"trash-alt",share:"share-alt"}[o]||"circle"),size:"14"}),c:e.n(t.type),d:t.textHtml,e:e.t(t.time),f:a};var o})},{r:d.value},d.value?e.e({s:e.p({type:"fas",name:"times",size:"20",color:"#999"}),t:e.o(S),v:y.value,w:v.value,x:e.o(e=>v.value=e.detail.value),y:e.o(S),z:y.value?1:"",A:y.value},y.value?{B:e.p({type:"fas",name:"spinner",size:"16",color:"#fff"})}:{},{C:e.o(D),D:y.value||!v.value.trim()?1:"",E:e.o(()=>{}),F:e.o(S)}):{},{G:r.value?1:""})}},i=e._export_sfc(o,[["__scopeId","data-v-92af1ee3"]]);wx.createPage(i);
+"use strict";
+const common_vendor = require("../../common/vendor.js");
+const utils_musicSourceStorage = require("../../utils/musicSourceStorage.js");
+const utils_system = require("../../utils/system.js");
+const utils_config = require("../../utils/config.js");
+require("../../store/modules/list.js");
+require("../../store/modules/player.js");
+if (!Array) {
+  const _easycom_roc_icon_plus2 = common_vendor.resolveComponent("roc-icon-plus");
+  _easycom_roc_icon_plus2();
+}
+const _easycom_roc_icon_plus = () => "../../uni_modules/roc-icon-plus/components/roc-icon-plus/roc-icon-plus.js";
+if (!Math) {
+  _easycom_roc_icon_plus();
+}
+const _sfc_main = {
+  __name: "index",
+  setup(__props) {
+    const currentTime = common_vendor.ref("9:41");
+    const currentSourceId = common_vendor.ref(null);
+    const isDarkMode = common_vendor.computed(() => {
+      const darkMode = common_vendor.index.getStorageSync("darkMode") === "true";
+      console.log("[music-sources] isDarkMode:", darkMode);
+      return darkMode;
+    });
+    const statusBarHeight = common_vendor.ref(utils_system.getStatusBarHeight());
+    const statusBarStyle = common_vendor.computed(() => ({
+      height: `${statusBarHeight.value}px`,
+      width: "100%",
+      backgroundColor: "transparent"
+    }));
+    const showOnlineImport = common_vendor.ref(false);
+    const sources = common_vendor.ref([]);
+    const activities = common_vendor.ref([]);
+    const initDefaultSources = () => {
+      const hasInitialized = common_vendor.index.getStorageSync("music_sources_initialized");
+      if (!hasInitialized) {
+        common_vendor.index.setStorageSync("music_sources_initialized", true);
+      }
+    };
+    const startClock = () => {
+      const updateTime = () => {
+        const now = /* @__PURE__ */ new Date();
+        const hours = now.getHours();
+        const minutes = now.getMinutes();
+        currentTime.value = `${hours}:${minutes < 10 ? "0" + minutes : minutes}`;
+      };
+      updateTime();
+      setInterval(updateTime, 6e4);
+    };
+    const goBack = () => {
+      common_vendor.index.navigateBack();
+    };
+    const fetchMusicSources = () => {
+      const serverUrl = utils_config.getServerUrl();
+      common_vendor.index.request({
+        url: `${serverUrl}/api/scripts/loaded`,
+        method: "GET",
+        success: (res) => {
+          if (res.data && res.data.code === 200) {
+            const apiSources = res.data.data || [];
+            console.log("[音源管理] 获取音源列表成功:", apiSources);
+            sources.value = apiSources.map((source) => ({
+              id: source.id,
+              name: source.name,
+              version: source.version || "1.0.0",
+              developer: source.author || "未知开发者",
+              updateDate: source.updateTime || (/* @__PURE__ */ new Date()).toLocaleDateString(),
+              description: source.description || "远程音源",
+              isDefault: source.isDefault || false,
+              selected: source.isDefault || false
+            }));
+            utils_musicSourceStorage.saveMusicSources(sources.value);
+          } else {
+            console.error("[音源管理] 获取音源列表失败:", res.data);
+            sources.value = utils_musicSourceStorage.getMusicSources();
+          }
+        },
+        fail: (err) => {
+          console.error("[音源管理] 获取音源列表请求失败:", err);
+          sources.value = utils_musicSourceStorage.getMusicSources();
+        }
+      });
+    };
+    const selectSource = async (sourceId) => {
+      const serverUrl = utils_config.getServerUrl();
+      common_vendor.index.showLoading({
+        title: "设置中...",
+        mask: true
+      });
+      try {
+        const response = await common_vendor.index.request({
+          url: `${serverUrl}/api/scripts/default`,
+          method: "POST",
+          header: {
+            "Content-Type": "application/json"
+          },
+          data: {
+            id: sourceId
+          }
+        });
+        common_vendor.index.hideLoading();
+        const result = response.data;
+        if (result.code === 200 && result.data && result.data.success) {
+          const selectedSource = sources.value.find((source) => source.id === sourceId);
+          const sourceName = selectedSource ? selectedSource.name : "未知音源";
+          sources.value = sources.value.map((source) => ({
+            ...source,
+            selected: source.id === sourceId,
+            isDefault: source.id === sourceId
+          }));
+          utils_musicSourceStorage.saveMusicSources(sources.value);
+          const activity = {
+            type: "update",
+            text: `设置默认音源 ${sourceName}`,
+            textHtml: `设置默认音源 <strong>${sourceName}</strong>`,
+            time: (/* @__PURE__ */ new Date()).toLocaleTimeString()
+          };
+          activities.value.unshift(activity);
+          utils_musicSourceStorage.addActivity(activity);
+          common_vendor.index.showToast({
+            title: "设置成功",
+            icon: "success"
+          });
+        } else {
+          common_vendor.index.showToast({
+            title: result.msg || "设置失败",
+            icon: "none"
+          });
+        }
+      } catch (error) {
+        common_vendor.index.hideLoading();
+        console.error("[音源管理] 设置默认音源失败:", error);
+        common_vendor.index.showToast({
+          title: "设置失败，请检查网络",
+          icon: "none"
+        });
+      }
+    };
+    const openSourceActions = (source) => {
+      currentSourceId.value = source.id;
+      common_vendor.index.showActionSheet({
+        itemList: ["删除音源"],
+        itemColor: "#ff4d4f",
+        success: (res) => {
+          if (res.tapIndex === 0) {
+            deleteSource(source);
+          }
+        }
+      });
+    };
+    const deleteSource = async (source) => {
+      common_vendor.index.showModal({
+        title: "确认删除",
+        content: `确定要删除音源"${source.name}"吗？`,
+        confirmColor: "#ff4d4f",
+        success: async (res) => {
+          if (res.confirm) {
+            const sourceName = `${source.name} ${source.version}`;
+            common_vendor.index.showLoading({
+              title: "删除中...",
+              mask: true
+            });
+            try {
+              const response = await common_vendor.index.request({
+                url: `${utils_config.getServerUrl()}/api/scripts/delete`,
+                method: "POST",
+                header: {
+                  "Content-Type": "application/json"
+                },
+                data: {
+                  id: source.id
+                }
+              });
+              common_vendor.index.hideLoading();
+              const result = response.data;
+              if (result.code === 200 && result.data && result.data.success) {
+                if (result.data.scripts) {
+                  sources.value = result.data.scripts.map((s) => ({
+                    id: s.id,
+                    name: s.name,
+                    type: s.isDefault ? "official" : "custom",
+                    version: s.version || "1.0.0",
+                    developer: s.author || "未知开发者",
+                    updateDate: s.createdAt || (/* @__PURE__ */ new Date()).toLocaleDateString(),
+                    description: s.description || "远程音源",
+                    updateNotify: true,
+                    selected: s.isDefault
+                  }));
+                  utils_musicSourceStorage.saveMusicSources(sources.value);
+                }
+                const activity = {
+                  type: "delete",
+                  text: `删除音源 ${sourceName}`,
+                  textHtml: `删除音源 <strong>${sourceName}</strong>`,
+                  time: (/* @__PURE__ */ new Date()).toLocaleTimeString()
+                };
+                activities.value.unshift(activity);
+                utils_musicSourceStorage.addActivity(activity);
+                common_vendor.index.showToast({
+                  title: result.msg || "删除成功",
+                  icon: "success"
+                });
+              } else {
+                common_vendor.index.showToast({
+                  title: result.msg || "删除失败",
+                  icon: "none"
+                });
+              }
+            } catch (error) {
+              common_vendor.index.hideLoading();
+              console.error("删除音源失败:", error);
+              common_vendor.index.showToast({
+                title: "删除失败，请检查网络",
+                icon: "none"
+              });
+            }
+          }
+        }
+      });
+    };
+    const importUrl = common_vendor.ref("");
+    const urlValid = common_vendor.ref(true);
+    const urlError = common_vendor.ref("");
+    const importing = common_vendor.ref(false);
+    const importOnline = () => {
+      importUrl.value = "";
+      urlValid.value = true;
+      urlError.value = "";
+      importing.value = false;
+      showOnlineImport.value = true;
+    };
+    const importLocal = () => {
+      common_vendor.index.showModal({
+        title: "提示",
+        content: "此功能暂不支持",
+        showCancel: false,
+        confirmText: "确定"
+      });
+    };
+    const getActivityIcon = (type) => {
+      const iconMap = {
+        "add": "plus",
+        "update": "sync",
+        "edit": "edit",
+        "delete": "trash-alt",
+        "share": "share-alt"
+      };
+      return iconMap[type] || "circle";
+    };
+    const closeOnlineImportPopup = () => {
+      showOnlineImport.value = false;
+    };
+    const startImport = async () => {
+      if (!importUrl.value.trim()) {
+        common_vendor.index.showToast({
+          title: "请输入音源URL",
+          icon: "none"
+        });
+        return;
+      }
+      importing.value = true;
+      try {
+        const response = await common_vendor.index.request({
+          url: `${utils_config.getServerUrl()}/api/scripts/import/url`,
+          method: "POST",
+          header: {
+            "Content-Type": "application/json"
+          },
+          data: {
+            url: importUrl.value.trim()
+          }
+        });
+        const result = response.data;
+        if (result.code === 200 && result.data && result.data.success) {
+          if (result.data.scripts) {
+            sources.value = result.data.scripts.map((s) => ({
+              id: s.id,
+              name: s.name,
+              type: s.isDefault ? "official" : "custom",
+              version: s.version || "1.0.0",
+              developer: s.author || "未知开发者",
+              updateDate: s.createdAt || (/* @__PURE__ */ new Date()).toLocaleDateString(),
+              description: s.description || "远程音源",
+              updateNotify: true,
+              selected: s.isDefault
+            }));
+            utils_musicSourceStorage.saveMusicSources(sources.value);
+          }
+          const activity = {
+            type: "add",
+            text: `导入音源成功`,
+            textHtml: `导入音源 <strong>成功</strong>`,
+            time: (/* @__PURE__ */ new Date()).toLocaleTimeString()
+          };
+          activities.value.unshift(activity);
+          utils_musicSourceStorage.addActivity(activity);
+          common_vendor.index.showToast({
+            title: result.msg || "导入成功",
+            icon: "success"
+          });
+          closeOnlineImportPopup();
+        } else {
+          common_vendor.index.showToast({
+            title: result.msg || "导入失败",
+            icon: "none"
+          });
+        }
+      } catch (error) {
+        console.error("导入音源失败:", error);
+        common_vendor.index.showModal({
+          title: "导入失败",
+          content: error.message || "网络错误，请检查网络连接",
+          showCancel: false,
+          confirmText: "确定"
+        });
+      } finally {
+        importing.value = false;
+      }
+    };
+    common_vendor.onMounted(() => {
+      startClock();
+      fetchMusicSources();
+      activities.value = utils_musicSourceStorage.getActivities();
+      initDefaultSources();
+      utils_system.setStatusBarTextColor("black");
+    });
+    return (_ctx, _cache) => {
+      return common_vendor.e({
+        a: common_vendor.s(statusBarStyle.value),
+        b: common_vendor.p({
+          type: "fas",
+          name: "chevron-left",
+          size: "20",
+          color: "#4b5563"
+        }),
+        c: common_vendor.o(goBack),
+        d: sources.value.length === 0
+      }, sources.value.length === 0 ? {
+        e: common_vendor.p({
+          type: "fas",
+          name: "music",
+          size: "48",
+          color: "#00d7cd"
+        })
+      } : {
+        f: common_vendor.f(sources.value, (source, index, i0) => {
+          return common_vendor.e({
+            a: "92af1ee3-2-" + i0,
+            b: common_vendor.t(source.name),
+            c: common_vendor.t(source.version),
+            d: "92af1ee3-3-" + i0,
+            e: common_vendor.t(source.developer),
+            f: "92af1ee3-4-" + i0,
+            g: common_vendor.t(source.updateDate),
+            h: "92af1ee3-5-" + i0,
+            i: common_vendor.t(source.description),
+            j: source.selected
+          }, source.selected ? {
+            k: "92af1ee3-6-" + i0,
+            l: common_vendor.p({
+              type: "fas",
+              name: "check-circle",
+              size: "18",
+              color: "#6dc380"
+            })
+          } : {}, {
+            m: common_vendor.o(($event) => openSourceActions(source), source.id),
+            n: source.id,
+            o: source.selected ? 1 : "",
+            p: common_vendor.o(($event) => selectSource(source.id), source.id)
+          });
+        }),
+        g: common_vendor.p({
+          type: "fas",
+          name: "music",
+          size: "20",
+          color: "#00d7cd"
+        }),
+        h: common_vendor.p({
+          type: "fas",
+          name: "user",
+          size: "12",
+          color: "#999"
+        }),
+        i: common_vendor.p({
+          type: "fas",
+          name: "calendar-alt",
+          size: "12",
+          color: "#999"
+        }),
+        j: common_vendor.p({
+          type: "fas",
+          name: "comment-alt",
+          size: "12",
+          color: "#999"
+        })
+      }, {
+        k: common_vendor.p({
+          type: "fas",
+          name: "cloud-download-alt",
+          size: "20",
+          color: "#0084ff"
+        }),
+        l: common_vendor.o(importOnline),
+        m: common_vendor.p({
+          type: "fas",
+          name: "file-import",
+          size: "20",
+          color: "#00d7cd"
+        }),
+        n: common_vendor.o(importLocal),
+        o: activities.value.length === 0
+      }, activities.value.length === 0 ? {
+        p: common_vendor.p({
+          type: "fas",
+          name: "history",
+          size: "48",
+          color: "#7b68ee"
+        })
+      } : {
+        q: common_vendor.f(activities.value, (activity, index, i0) => {
+          return {
+            a: "92af1ee3-10-" + i0,
+            b: common_vendor.p({
+              type: "fas",
+              name: getActivityIcon(activity.type),
+              size: "14"
+            }),
+            c: common_vendor.n(activity.type),
+            d: activity.textHtml,
+            e: common_vendor.t(activity.time),
+            f: index
+          };
+        })
+      }, {
+        r: showOnlineImport.value
+      }, showOnlineImport.value ? common_vendor.e({
+        s: common_vendor.p({
+          type: "fas",
+          name: "times",
+          size: "20",
+          color: "#999"
+        }),
+        t: common_vendor.o(closeOnlineImportPopup),
+        v: importing.value,
+        w: importUrl.value,
+        x: common_vendor.o(($event) => importUrl.value = $event.detail.value),
+        y: common_vendor.o(closeOnlineImportPopup),
+        z: importing.value ? 1 : "",
+        A: importing.value
+      }, importing.value ? {
+        B: common_vendor.p({
+          type: "fas",
+          name: "spinner",
+          size: "16",
+          color: "#fff"
+        })
+      } : {}, {
+        C: common_vendor.o(startImport),
+        D: importing.value || !importUrl.value.trim() ? 1 : "",
+        E: common_vendor.o(() => {
+        }),
+        F: common_vendor.o(closeOnlineImportPopup)
+      }) : {}, {
+        G: isDarkMode.value ? 1 : ""
+      });
+    };
+  }
+};
+const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-92af1ee3"]]);
+wx.createPage(MiniProgramPage);

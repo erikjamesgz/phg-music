@@ -1,1 +1,749 @@
-"use strict";const e=require("../../common/vendor.js"),t=require("../../utils/system.js"),a=require("../../utils/format.js"),l=require("../../utils/api/tags.js"),o=require("../../utils/imageProxy.js");if(!Array){e.resolveComponent("roc-icon-plus")()}Math||((()=>"../../uni_modules/roc-icon-plus/components/roc-icon-plus/roc-icon-plus.js")+i)();const i=()=>"../../components/player/MiniPlayer.js",n="songlist_last_source",s="songlist_last_tag",c="songlist_last_sort",r={__name:"index",setup(i){const r=t.getStatusBarHeight();e.computed(()=>({height:`${r}px`}));const u=e.computed(()=>({paddingTop:`${r}px`})),d=e.ref(!1),g=()=>{d.value="true"===e.index.getStorageSync("darkMode"),console.log("[SonglistList] 初始化暗黑模式:",d.value)},m=[{id:"kw",name:"酷我音乐"},{id:"kg",name:"酷狗音乐"},{id:"tx",name:"QQ音乐"},{id:"mg",name:"咪咕音乐"},{id:"wy",name:"网易云音乐"}],p=e.ref({kw:[{id:"",name:"推荐"}],kg:[{id:"",name:"推荐"}],tx:[{id:"",name:"推荐"}],mg:[{id:"",name:"推荐"}],wy:[{id:"",name:"推荐"}]}),v=e.ref(!1),h=async e=>{if(console.log("[SonglistList] 加载标签:",e),v.value)console.log("[SonglistList] 标签正在加载中，跳过");else{v.value=!0;try{const t=await l.getTagsBySource(e);console.log("[SonglistList] 获取到标签分组:",t.length);const a=l.flattenTags(t);console.log("[SonglistList] 扁平化后标签数量:",a.length),p.value[e]=a;a.some(e=>e.id===x.value)||(x.value="")}catch(t){console.error("[SonglistList] 加载标签失败:",t)}finally{v.value=!1}}},y={kw:[{id:"hot",name:"最热"},{id:"new",name:"最新"}],kg:[{id:"6",name:"最热"},{id:"5",name:"最新"}],tx:[{id:"5",name:"最热"},{id:"2",name:"最新"}],mg:[],wy:[{id:"hot",name:"最热"},{id:"new",name:"最新"}]},f=()=>{try{return e.index.getStorageSync(n)||"tx"}catch(t){return"tx"}},_=()=>{try{return e.index.getStorageSync(s)||""}catch(t){return""}},w=()=>{try{return e.index.getStorageSync(c)||"hot"}catch(t){return"hot"}},k=t=>{try{e.index.setStorageSync(s,t)}catch(a){console.error("[SonglistList] 保存标签失败:",a)}},S=t=>{try{e.index.setStorageSync(c,t)}catch(a){console.error("[SonglistList] 保存排序失败:",a)}},b=e.ref(f()),x=e.ref(_()),L=e.ref(w()),$=e.ref([]),U=e.ref(1),C=e.ref(!1),I=e.ref(!1),j=e.ref(!0),q=e.ref(""),P=e.ref(!1),R=e.computed(()=>{const e=m.find(e=>e.id===b.value);return e?e.name:"酷我音乐"}),M=e.computed(()=>p.value[b.value]||[{id:"",name:"推荐"}]),T=e.computed(()=>y[b.value]||[]),z=()=>{e.index.navigateBack()},A=t=>{console.log("[SonglistList] 切换平台:",t),b.value=t,x.value="",L.value="hot",U.value=1,$.value=[],j.value=!0,P.value=!1,(t=>{try{e.index.setStorageSync(n,t)}catch(a){console.error("[SonglistList] 保存平台失败:",a)}})(t),k(""),S("hot"),h(t),E()},E=async()=>{if(!C.value){1===U.value&&(C.value=!0),q.value="";try{const t=b.value,a=x.value,l=L.value,o=U.value;let i="";switch(t){case"kw":{const e="new"===l?"new":"hot";if(a){const[e,t]=a.split("-");i="10000"===t?`http://wapi.kuwo.cn/api/pc/classify/playlist/getTagPlayList?loginUid=0&loginSid=0&appUid=76039576&pn=${o}&id=${e}&rn=30`:"43"===t?`http://mobileinterfaces.kuwo.cn/er.s?type=get_pc_qz_data&f=web&id=${e}&prod=pc`:`http://wapi.kuwo.cn/api/pc/classify/playlist/getTagPlayList?loginUid=0&loginSid=0&appUid=76039576&pn=${o}&id=${e}&rn=30`}else i=`http://wapi.kuwo.cn/api/pc/classify/playlist/getRcmPlayList?loginUid=0&loginSid=0&appUid=76039576&pn=${o}&rn=30&order=${e}`;console.log("酷我音乐请求URL:",i);break}case"kg":i=`http://www2.kugou.kugou.com/yueku/v9/special/getSpecial?is_ajax=1&cdn=cdn&t=${l||"6"}&c=${a||""}&p=${o}`,console.log("酷狗音乐请求URL:",i);break;case"tx":{const e="2"===l?2:5,t={comm:{cv:1602,ct:20},playlist:{method:a?"get_category_content":"get_playlist_by_tag",param:a?{titleid:parseInt(a),caller:"0",category_id:parseInt(a),size:30,page:o-1,use_page:1}:{id:1e7,sin:30*(o-1),size:30,order:e,cur_page:o},module:a?"playlist.PlayListCategoryServer":"playlist.PlayListPlazaServer"}};i=`https://u.y.qq.com/cgi-bin/musicu.fcg?loginUin=0&hostUin=0&format=json&inCharset=utf-8&outCharset=utf-8&notice=0&platform=wk_v15.json&needNewCode=0&data=${encodeURIComponent(JSON.stringify(t))}`,console.log("QQ音乐请求URL:",i);break}case"mg":i=a?`https://app.c.nf.migu.cn/pc/v1.0/template/musiclistplaza-listbytag/release?pageNumber=${o}&templateVersion=2&tagId=${a}`:`https://app.c.nf.migu.cn/pc/bmw/page-data/playlist-square-recommend/v1.0?templateVersion=2&pageNo=${o}`,console.log("咪咕音乐请求URL:",i);break;case"wy":{const e="new"===l?"new":"hot";i=`https://music.163.com/api/playlist/list?cat=${encodeURIComponent(a||"全部")}&order=${e}&limit=30&offset=${30*(o-1)}`,console.log("网易云音乐请求URL:",i);break}default:i=`http://wapi.kuwo.cn/api/pc/classify/playlist/getRcmPlayList?loginUid=0&loginSid=0&appUid=76039576&pn=${o}&rn=30&order=hot`,console.log("默认请求URL:",i)}const n=await e.index.request({url:i,method:"GET",header:{Referer:"https://servicewechat.com/wx2d02f54a4e4c4027/devtools/page-frame.html"}});if(200===n.statusCode){const e=B(n.data,t);console.log("=== fetchSonglist 完成 ==="),console.log("result.list.length:",e.list.length),console.log("currentPage:",U.value),console.log("result.total:",e.total),1===U.value?$.value=e.list:$.value=[...$.value,...e.list],j.value=e.list.length>=30,console.log("hasMore 更新为:",j.value),0===e.list.length&&1===U.value&&(q.value="暂无歌单数据")}else if(403===n.statusCode)q.value="请求被拒绝，请检查网络设置";else if(404===n.statusCode)q.value="接口不存在";else{if(!(n.statusCode>=500))throw new Error(`请求失败 (${n.statusCode})`);q.value="服务器错误，请稍后重试"}}catch(t){console.error("获取歌单列表失败:",t),q.value=t.message||"加载失败，请重试"}finally{C.value=!1,I.value=!1}}},B=(e,t)=>{const a=[];let l=0;console.log("解析数据:",t,JSON.stringify(e).substring(0,500));try{switch(t){case"kw":Array.isArray(e)?(e.forEach(e=>{e.list&&Array.isArray(e.list)&&e.list.forEach(t=>{var l;let o=t.img?t.img.trim().replace(/`/g,""):"";!o||o.endsWith(".jpg")||o.endsWith(".png")||o.endsWith(".webp")||(o+=".jpg"),a.push({id:`digest-${t.digest}__${t.id}`,name:H(t.name),author:H((null==(l=e.label)?void 0:l.replace("分类",""))||""),img:o,play_count:0,total:0,desc:H(t.desc),source:"kw"})})}),l=a.length):200===e.code&&e.data&&e.data.data&&(l=e.data.total||0,e.data.data.forEach(e=>{let t=e.img?e.img.trim().replace(/`/g,""):"";!t||t.endsWith(".jpg")||t.endsWith(".png")||t.endsWith(".webp")||(t+=".jpg"),a.push({id:`digest-${e.digest}__${e.id}`,name:H(e.name),author:H(e.uname),img:t,play_count:e.listencnt,total:e.total,desc:H(e.desc),source:"kw"})}));break;case"kg":1===e.status&&e.special_db&&(l=e.special_db.length||0,e.special_db.forEach(e=>{a.push({id:"id_"+e.specialid,name:e.specialname,author:e.nickname,img:e.img||"",play_count:e.play_count||e.total_play_count,total:e.songcount,time:e.publishtime||e.publish_time,desc:e.intro,source:"kg"})}));break;case"tx":if(0===e.code&&e.playlist&&e.playlist.data){const t=e.playlist.data;t.v_playlist&&Array.isArray(t.v_playlist)&&(l=t.total||0,t.v_playlist.forEach(e=>{a.push({id:String(e.tid),name:e.title,author:e.creator_info?e.creator_info.nick:"未知",img:e.cover_url_big||e.cover_url_medium||e.cover_url_small||"",play_count:e.access_num,total:e.song_ids?e.song_ids.length:0,time:e.modify_time?1e3*e.modify_time:null,desc:e.desc||"",source:"tx"})})),t.content&&t.content.v_item&&Array.isArray(t.content.v_item)&&(l=t.content.total_cnt||0,t.content.v_item.forEach(({basic:e})=>{e&&a.push({id:String(e.tid),name:e.title,author:e.creator?e.creator.nick:"未知",img:e.cover&&(e.cover.big_url||e.cover.medium_url||e.cover.default_url)||"",play_count:e.play_cnt,total:e.song_cnt||0,desc:e.desc||"",source:"tx"})}))}break;case"mg":if("000000"===e.code&&e.data)if(e.data.contents){const t=new Set,o=e=>{var l,i;for(const n of e)n.contents?o(n.contents):"2021"!=n.resType||t.has(n.resId)||(t.add(n.resId),a.push({id:String(n.resId),author:"",name:n.txt,img:n.img,play_count:(null==(i=null==(l=n.barList)?void 0:l[0])?void 0:i.title)||void 0,desc:n.txt2||"",source:"mg"}))};o(e.data.contents),l=t.size}else e.data.contentItemList&&e.data.contentItemList[1]&&e.data.contentItemList[1].itemList&&(l=e.data.contentItemList[1].itemList.length||0,e.data.contentItemList[1].itemList.forEach(e=>{var t,l;a.push({id:String(e.logEvent.contentId),author:"",name:e.title,img:e.imageUrl,play_count:(null==(l=null==(t=e.barList)?void 0:t[0])?void 0:l.title)||void 0,desc:"",source:"mg"})}));break;case"wy":e.playlists&&Array.isArray(e.playlists)&&(l=e.total||0,e.playlists.forEach(e=>{a.push({id:String(e.id),name:e.name,author:"",img:e.coverImgUrl,play_count:e.playCount,total:e.trackCount,time:e.createTime,desc:e.description||"",source:"wy"})}))}}catch(o){console.error("解析歌单数据失败:",o)}return{list:a,total:l}},H=e=>e?e.replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&nbsp;/g," ").replace(/<br>/g,"\n"):"";let N=null,W=0;const Q=t=>{const a=e.index.createSelectorQuery();a.select(".list-wrapper").boundingClientRect(),a.select(".list-wrapper").scrollOffset(),a.exec(e=>{if(!e[0]||!e[1])return;const t=e[0],a=e[1],l=a.scrollTop,o=a.scrollHeight,i=t.height,n=o-l-i;Math.abs(l-W)>100&&(console.log("=== onScroll ==="),console.log("scrollTop:",l),console.log("scrollHeight:",o),console.log("clientHeight:",i),console.log("scrollBottom:",n),console.log("hasMore:",j.value),console.log("isLoadingMore:",I.value),W=l),n<100&&j.value&&!I.value&&!C.value&&(console.log("触发自动加载更多"),N&&clearTimeout(N),N=setTimeout(()=>{console.log("=== loadMore 触发 ==="),console.log("hasMore:",j.value),console.log("isLoadingMore:",I.value),console.log("currentPage:",U.value),!j.value||I.value||C.value?console.log("loadMore 被拦截"):(console.log("loadMore 执行：准备加载下一页"),U.value++,I.value=!0,E())},200))})},O=()=>{Q()};let J=null;return e.onMounted(()=>{g(),t.setStatusBarTextColor(d.value?"white":"dark"),J=({height:e,isShowing:t})=>{console.log("[SonglistList] MiniPlayer 高度变化:",e,"是否显示:",t)},e.index.$on("miniPlayerHeightChange",J);const a=f(),l=_(),o=w();console.log("[SonglistList] 读取上次选择:",{source:a,tag:l,sort:o}),b.value=a,x.value=l,L.value=o,h(b.value).then(()=>{(p.value[b.value]||[]).some(e=>e.id===x.value)||""===x.value||(console.log("[SonglistList] 保存的标签不存在，重置为推荐"),x.value=""),E()})}),e.onShow(()=>{g(),t.setStatusBarTextColor(d.value?"white":"dark")}),e.watch(b,e=>{console.log("[SonglistList] watch 平台变化:",e),x.value="",L.value="hot",h(e)}),e.watch(x,()=>{W=0}),e.onUnmounted(()=>{J&&(e.index.$off("miniPlayerHeightChange",J),console.log("[SonglistList] 已清理 MiniPlayer 监听器"))}),(t,l)=>e.e({a:e.p({name:"chevron-left",size:"24",color:"#333"}),b:e.o(z),c:e.t(R.value),d:e.p({name:"chevron-down",size:"14",color:"#666"}),e:e.o(e=>P.value=!0),f:e.f(M.value,(t,a,l)=>({a:e.t(t.name),b:t.id,c:x.value===t.id?1:"",d:e.o(e=>{return a=t.id,x.value=a,U.value=1,$.value=[],j.value=!0,k(a),void E();var a},t.id)})),g:T.value.length>0},T.value.length>0?{h:e.f(T.value,(t,a,l)=>({a:e.t(t.name),b:t.id,c:L.value===t.id?1:"",d:e.o(e=>{return a=t.id,L.value=a,U.value=1,$.value=[],j.value=!0,S(a),void E();var a},t.id)}))}:{},{i:e.s(u.value),j:C.value&&0===$.value.length},(C.value&&$.value.length,{}),{k:q.value&&!C.value},q.value&&!C.value?{l:e.t(q.value)}:{},{m:$.value.length>0},$.value.length>0?{n:e.f($.value,(t,l,i)=>e.e({a:e.unref(o.proxyImageUrl)(t.img),b:e.o(e=>((e,t)=>{if(!t||!t.img)return;let a=0;t.img.includes("wsrv.nl")?a=1:t.img.includes("weserv.nl")?a=2:t.img.includes("jina.ai")&&(a=3);const l=o.handleImageError(e,t.img,a);l&&(t.img=l)})(e,t),t.id+l),c:t.play_count},t.play_count?{d:"baf9cd20-2-"+i,e:e.p({name:"play",size:"10",color:"#fff"}),f:e.t(e.unref(a.formatPlayCount)(t.play_count))}:{},{g:t.total},t.total?{h:"baf9cd20-3-"+i,i:e.p({name:"music",size:"10",color:"#fff"}),j:e.t(t.total)}:{},{k:e.t(t.name),l:t.author||t.time},t.author||t.time?e.e({m:t.author},t.author?{n:e.t(t.author)}:{},{o:t.author&&t.time},(t.author&&t.time,{}),{p:t.time},t.time?{q:e.t(e.unref(a.formatDate)(t.time))}:{}):{},{r:t.desc},t.desc?{s:e.t(t.desc)}:{},{t:t.id+l,v:e.o(a=>(t=>{let a="";switch(t.source){case"kw":a=`https://www.kuwo.cn/playlist_detail/${t.id}`;break;case"kg":a=`https://www.kugou.com/yy/special/single/${t.id}.html`;break;case"tx":a=`https://y.qq.com/n/ryqq/playlist/${t.id}`;break;case"wy":a=`https://music.163.com/playlist?id=${t.id}`;break;case"mg":a=`https://music.migu.cn/v3/music/playlist/${t.id}`;break;default:a=t.id}e.index.navigateTo({url:`/pages/sharelist/index?source=${t.source}&link=${encodeURIComponent(a)}&id=${t.id}&picUrl=${encodeURIComponent(t.img)}&name=${encodeURIComponent(t.name||"")}&author=${encodeURIComponent(t.author||"")}&playCount=${t.play_count||0}&fromName=songlist-list`})})(t),t.id+l)}))}:{},{o:$.value.length>0},$.value.length>0?e.e({p:I.value},(I.value||j.value,{}),{q:!j.value}):{},{r:!C.value&&!q.value&&0===$.value.length},C.value||q.value||0!==$.value.length?{}:{s:e.p({name:"inbox",size:"64",color:"#ccc"})},{t:e.o(Q),v:e.o(O),w:P.value},P.value?{x:e.p({name:"xmark",size:"20",color:"#999"}),y:e.o(e=>P.value=!1),z:e.f(m,(t,a,l)=>e.e({a:e.t(t.name),b:b.value===t.id},b.value===t.id?{c:"baf9cd20-6-"+l,d:e.p({name:"check",size:"16",color:"#00d7cd"})}:{},{e:t.id,f:b.value===t.id?1:"",g:e.o(e=>A(t.id),t.id)})),A:e.o(()=>{}),B:e.o(e=>P.value=!1)}:{},{C:d.value?1:""})}},u=e._export_sfc(r,[["__scopeId","data-v-baf9cd20"]]);wx.createPage(u);
+"use strict";
+const common_vendor = require("../../common/vendor.js");
+const utils_system = require("../../utils/system.js");
+const utils_format = require("../../utils/format.js");
+const utils_api_tags = require("../../utils/api/tags.js");
+const utils_imageProxy = require("../../utils/imageProxy.js");
+if (!Array) {
+  const _easycom_roc_icon_plus2 = common_vendor.resolveComponent("roc-icon-plus");
+  _easycom_roc_icon_plus2();
+}
+const _easycom_roc_icon_plus = () => "../../uni_modules/roc-icon-plus/components/roc-icon-plus/roc-icon-plus.js";
+if (!Math) {
+  (_easycom_roc_icon_plus + MiniPlayer)();
+}
+const MiniPlayer = () => "../../components/player/MiniPlayer.js";
+const STORAGE_KEY_SOURCE = "songlist_last_source";
+const STORAGE_KEY_TAG = "songlist_last_tag";
+const STORAGE_KEY_SORT = "songlist_last_sort";
+const _sfc_main = {
+  __name: "index",
+  setup(__props) {
+    const statusBarHeight = utils_system.getStatusBarHeight();
+    common_vendor.computed(() => ({
+      height: `${statusBarHeight}px`
+    }));
+    const headerStyle = common_vendor.computed(() => ({
+      paddingTop: `${statusBarHeight}px`
+    }));
+    const darkMode = common_vendor.ref(false);
+    const initDarkMode = () => {
+      darkMode.value = common_vendor.index.getStorageSync("darkMode") === "true";
+      console.log("[SonglistList] 初始化暗黑模式:", darkMode.value);
+    };
+    const sourceList = [
+      { id: "kw", name: "酷我音乐" },
+      { id: "kg", name: "酷狗音乐" },
+      { id: "tx", name: "QQ音乐" },
+      { id: "mg", name: "咪咕音乐" },
+      { id: "wy", name: "网易云音乐" }
+    ];
+    const sourceTagsMap = common_vendor.ref({
+      kw: [{ id: "", name: "推荐" }],
+      kg: [{ id: "", name: "推荐" }],
+      tx: [{ id: "", name: "推荐" }],
+      mg: [{ id: "", name: "推荐" }],
+      wy: [{ id: "", name: "推荐" }]
+    });
+    const isLoadingTags = common_vendor.ref(false);
+    const loadTags = async (source) => {
+      console.log("[SonglistList] 加载标签:", source);
+      if (isLoadingTags.value) {
+        console.log("[SonglistList] 标签正在加载中，跳过");
+        return;
+      }
+      isLoadingTags.value = true;
+      try {
+        const tags = await utils_api_tags.getTagsBySource(source);
+        console.log("[SonglistList] 获取到标签分组:", tags.length);
+        const flatTags = utils_api_tags.flattenTags(tags);
+        console.log("[SonglistList] 扁平化后标签数量:", flatTags.length);
+        sourceTagsMap.value[source] = flatTags;
+        const currentTagExists = flatTags.some((tag) => tag.id === currentTagId.value);
+        if (!currentTagExists) {
+          currentTagId.value = "";
+        }
+      } catch (error) {
+        console.error("[SonglistList] 加载标签失败:", error);
+      } finally {
+        isLoadingTags.value = false;
+      }
+    };
+    const sourceSortMap = {
+      kw: [
+        { id: "hot", name: "最热" },
+        { id: "new", name: "最新" }
+      ],
+      kg: [
+        { id: "6", name: "最热" },
+        { id: "5", name: "最新" }
+      ],
+      tx: [
+        { id: "5", name: "最热" },
+        { id: "2", name: "最新" }
+      ],
+      mg: [],
+      wy: [
+        { id: "hot", name: "最热" },
+        { id: "new", name: "最新" }
+      ]
+    };
+    const getLastSource = () => {
+      try {
+        return common_vendor.index.getStorageSync(STORAGE_KEY_SOURCE) || "tx";
+      } catch (e) {
+        return "tx";
+      }
+    };
+    const getLastTag = () => {
+      try {
+        return common_vendor.index.getStorageSync(STORAGE_KEY_TAG) || "";
+      } catch (e) {
+        return "";
+      }
+    };
+    const getLastSort = () => {
+      try {
+        return common_vendor.index.getStorageSync(STORAGE_KEY_SORT) || "hot";
+      } catch (e) {
+        return "hot";
+      }
+    };
+    const saveSource = (source) => {
+      try {
+        common_vendor.index.setStorageSync(STORAGE_KEY_SOURCE, source);
+      } catch (e) {
+        console.error("[SonglistList] 保存平台失败:", e);
+      }
+    };
+    const saveTag = (tag) => {
+      try {
+        common_vendor.index.setStorageSync(STORAGE_KEY_TAG, tag);
+      } catch (e) {
+        console.error("[SonglistList] 保存标签失败:", e);
+      }
+    };
+    const saveSort = (sort) => {
+      try {
+        common_vendor.index.setStorageSync(STORAGE_KEY_SORT, sort);
+      } catch (e) {
+        console.error("[SonglistList] 保存排序失败:", e);
+      }
+    };
+    const currentSource = common_vendor.ref(getLastSource());
+    const currentTagId = common_vendor.ref(getLastTag());
+    const currentSortId = common_vendor.ref(getLastSort());
+    const songlist = common_vendor.ref([]);
+    const currentPage = common_vendor.ref(1);
+    const isLoading = common_vendor.ref(false);
+    const isLoadingMore = common_vendor.ref(false);
+    const hasMore = common_vendor.ref(true);
+    const loadError = common_vendor.ref("");
+    const showSourcePicker = common_vendor.ref(false);
+    const currentSourceName = common_vendor.computed(() => {
+      const source = sourceList.find((s) => s.id === currentSource.value);
+      return source ? source.name : "酷我音乐";
+    });
+    const tagList = common_vendor.computed(() => {
+      return sourceTagsMap.value[currentSource.value] || [{ id: "", name: "推荐" }];
+    });
+    const sortList = common_vendor.computed(() => {
+      return sourceSortMap[currentSource.value] || [];
+    });
+    const handleSonglistImageError = (event, item) => {
+      if (!item || !item.img)
+        return;
+      let currentProxyIndex = 0;
+      if (item.img.includes("wsrv.nl"))
+        currentProxyIndex = 1;
+      else if (item.img.includes("weserv.nl"))
+        currentProxyIndex = 2;
+      else if (item.img.includes("jina.ai"))
+        currentProxyIndex = 3;
+      const nextUrl = utils_imageProxy.handleImageError(event, item.img, currentProxyIndex);
+      if (nextUrl) {
+        item.img = nextUrl;
+      }
+    };
+    const goBack = () => {
+      common_vendor.index.navigateBack();
+    };
+    const selectSource = (sourceId) => {
+      console.log("[SonglistList] 切换平台:", sourceId);
+      currentSource.value = sourceId;
+      currentTagId.value = "";
+      currentSortId.value = "hot";
+      currentPage.value = 1;
+      songlist.value = [];
+      hasMore.value = true;
+      showSourcePicker.value = false;
+      saveSource(sourceId);
+      saveTag("");
+      saveSort("hot");
+      loadTags(sourceId);
+      fetchSonglist();
+    };
+    const selectTag = (tagId) => {
+      currentTagId.value = tagId;
+      currentPage.value = 1;
+      songlist.value = [];
+      hasMore.value = true;
+      saveTag(tagId);
+      fetchSonglist();
+    };
+    const selectSort = (sortId) => {
+      currentSortId.value = sortId;
+      currentPage.value = 1;
+      songlist.value = [];
+      hasMore.value = true;
+      saveSort(sortId);
+      fetchSonglist();
+    };
+    const fetchSonglist = async () => {
+      if (isLoading.value)
+        return;
+      if (currentPage.value === 1) {
+        isLoading.value = true;
+      }
+      loadError.value = "";
+      try {
+        const source = currentSource.value;
+        const tagId = currentTagId.value;
+        const sortId = currentSortId.value;
+        const page = currentPage.value;
+        let url = "";
+        switch (source) {
+          case "kw": {
+            const kwOrder = sortId === "new" ? "new" : "hot";
+            if (tagId) {
+              const [kwId, kwType] = tagId.split("-");
+              if (kwType === "10000") {
+                url = `http://wapi.kuwo.cn/api/pc/classify/playlist/getTagPlayList?loginUid=0&loginSid=0&appUid=76039576&pn=${page}&id=${kwId}&rn=30`;
+              } else if (kwType === "43") {
+                url = `http://mobileinterfaces.kuwo.cn/er.s?type=get_pc_qz_data&f=web&id=${kwId}&prod=pc`;
+              } else {
+                url = `http://wapi.kuwo.cn/api/pc/classify/playlist/getTagPlayList?loginUid=0&loginSid=0&appUid=76039576&pn=${page}&id=${kwId}&rn=30`;
+              }
+            } else {
+              url = `http://wapi.kuwo.cn/api/pc/classify/playlist/getRcmPlayList?loginUid=0&loginSid=0&appUid=76039576&pn=${page}&rn=30&order=${kwOrder}`;
+            }
+            console.log("酷我音乐请求URL:", url);
+            break;
+          }
+          case "kg": {
+            const kgSortId = sortId || "6";
+            url = `http://www2.kugou.kugou.com/yueku/v9/special/getSpecial?is_ajax=1&cdn=cdn&t=${kgSortId}&c=${tagId || ""}&p=${page}`;
+            console.log("酷狗音乐请求URL:", url);
+            break;
+          }
+          case "tx": {
+            const txOrder = sortId === "2" ? 2 : 5;
+            const txData = {
+              comm: { cv: 1602, ct: 20 },
+              playlist: {
+                method: tagId ? "get_category_content" : "get_playlist_by_tag",
+                param: tagId ? { titleid: parseInt(tagId), caller: "0", category_id: parseInt(tagId), size: 30, page: page - 1, use_page: 1 } : { id: 1e7, sin: 30 * (page - 1), size: 30, order: txOrder, cur_page: page },
+                module: tagId ? "playlist.PlayListCategoryServer" : "playlist.PlayListPlazaServer"
+              }
+            };
+            url = `https://u.y.qq.com/cgi-bin/musicu.fcg?loginUin=0&hostUin=0&format=json&inCharset=utf-8&outCharset=utf-8&notice=0&platform=wk_v15.json&needNewCode=0&data=${encodeURIComponent(JSON.stringify(txData))}`;
+            console.log("QQ音乐请求URL:", url);
+            break;
+          }
+          case "mg": {
+            if (tagId) {
+              url = `https://app.c.nf.migu.cn/pc/v1.0/template/musiclistplaza-listbytag/release?pageNumber=${page}&templateVersion=2&tagId=${tagId}`;
+            } else {
+              url = `https://app.c.nf.migu.cn/pc/bmw/page-data/playlist-square-recommend/v1.0?templateVersion=2&pageNo=${page}`;
+            }
+            console.log("咪咕音乐请求URL:", url);
+            break;
+          }
+          case "wy": {
+            const wyOrder = sortId === "new" ? "new" : "hot";
+            const wyCat = tagId || "全部";
+            url = `https://music.163.com/api/playlist/list?cat=${encodeURIComponent(wyCat)}&order=${wyOrder}&limit=30&offset=${(page - 1) * 30}`;
+            console.log("网易云音乐请求URL:", url);
+            break;
+          }
+          default: {
+            url = `http://wapi.kuwo.cn/api/pc/classify/playlist/getRcmPlayList?loginUid=0&loginSid=0&appUid=76039576&pn=${page}&rn=30&order=hot`;
+            console.log("默认请求URL:", url);
+          }
+        }
+        const res = await common_vendor.index.request({
+          url,
+          method: "GET"
+        });
+        if (res.statusCode === 200) {
+          const result = parseSonglistData(res.data, source);
+          console.log("=== fetchSonglist 完成 ===");
+          console.log("result.list.length:", result.list.length);
+          console.log("currentPage:", currentPage.value);
+          console.log("result.total:", result.total);
+          if (currentPage.value === 1) {
+            songlist.value = result.list;
+          } else {
+            songlist.value = [...songlist.value, ...result.list];
+          }
+          hasMore.value = result.list.length >= 30;
+          console.log("hasMore 更新为:", hasMore.value);
+          if (result.list.length === 0 && currentPage.value === 1) {
+            loadError.value = "暂无歌单数据";
+          }
+        } else if (res.statusCode === 403) {
+          loadError.value = "请求被拒绝，请检查网络设置";
+        } else if (res.statusCode === 404) {
+          loadError.value = "接口不存在";
+        } else if (res.statusCode >= 500) {
+          loadError.value = "服务器错误，请稍后重试";
+        } else {
+          throw new Error(`请求失败 (${res.statusCode})`);
+        }
+      } catch (error) {
+        console.error("获取歌单列表失败:", error);
+        loadError.value = error.message || "加载失败，请重试";
+      } finally {
+        isLoading.value = false;
+        isLoadingMore.value = false;
+      }
+    };
+    const parseSonglistData = (data, source) => {
+      const list = [];
+      let total = 0;
+      console.log("解析数据:", source, JSON.stringify(data).substring(0, 500));
+      try {
+        switch (source) {
+          case "kw":
+            if (Array.isArray(data)) {
+              data.forEach((group) => {
+                if (group.list && Array.isArray(group.list)) {
+                  group.list.forEach((item) => {
+                    var _a;
+                    let imgUrl = item.img ? item.img.trim().replace(/`/g, "") : "";
+                    if (imgUrl && !imgUrl.endsWith(".jpg") && !imgUrl.endsWith(".png") && !imgUrl.endsWith(".webp")) {
+                      imgUrl = imgUrl + ".jpg";
+                    }
+                    list.push({
+                      id: `digest-${item.digest}__${item.id}`,
+                      name: decodeName(item.name),
+                      author: decodeName(((_a = group.label) == null ? void 0 : _a.replace("分类", "")) || ""),
+                      img: imgUrl,
+                      play_count: 0,
+                      total: 0,
+                      desc: decodeName(item.desc),
+                      source: "kw"
+                    });
+                  });
+                }
+              });
+              total = list.length;
+            } else if (data.code === 200 && data.data && data.data.data) {
+              total = data.data.total || 0;
+              data.data.data.forEach((item) => {
+                let imgUrl = item.img ? item.img.trim().replace(/`/g, "") : "";
+                if (imgUrl && !imgUrl.endsWith(".jpg") && !imgUrl.endsWith(".png") && !imgUrl.endsWith(".webp")) {
+                  imgUrl = imgUrl + ".jpg";
+                }
+                list.push({
+                  id: `digest-${item.digest}__${item.id}`,
+                  name: decodeName(item.name),
+                  author: decodeName(item.uname),
+                  img: imgUrl,
+                  play_count: item.listencnt,
+                  total: item.total,
+                  desc: decodeName(item.desc),
+                  source: "kw"
+                });
+              });
+            }
+            break;
+          case "kg":
+            if (data.status === 1 && data.special_db) {
+              total = data.special_db.length || 0;
+              data.special_db.forEach((item) => {
+                list.push({
+                  id: "id_" + item.specialid,
+                  name: item.specialname,
+                  author: item.nickname,
+                  img: item.img || "",
+                  play_count: item.play_count || item.total_play_count,
+                  total: item.songcount,
+                  time: item.publishtime || item.publish_time,
+                  desc: item.intro,
+                  source: "kg"
+                });
+              });
+            }
+            break;
+          case "tx":
+            if (data.code === 0 && data.playlist && data.playlist.data) {
+              const playlistData = data.playlist.data;
+              if (playlistData.v_playlist && Array.isArray(playlistData.v_playlist)) {
+                total = playlistData.total || 0;
+                playlistData.v_playlist.forEach((item) => {
+                  list.push({
+                    id: String(item.tid),
+                    name: item.title,
+                    author: item.creator_info ? item.creator_info.nick : "未知",
+                    img: item.cover_url_big || item.cover_url_medium || item.cover_url_small || "",
+                    play_count: item.access_num,
+                    total: item.song_ids ? item.song_ids.length : 0,
+                    time: item.modify_time ? item.modify_time * 1e3 : null,
+                    desc: item.desc || "",
+                    source: "tx"
+                  });
+                });
+              }
+              if (playlistData.content && playlistData.content.v_item && Array.isArray(playlistData.content.v_item)) {
+                total = playlistData.content.total_cnt || 0;
+                playlistData.content.v_item.forEach(({ basic }) => {
+                  if (!basic)
+                    return;
+                  list.push({
+                    id: String(basic.tid),
+                    name: basic.title,
+                    author: basic.creator ? basic.creator.nick : "未知",
+                    img: basic.cover && (basic.cover.big_url || basic.cover.medium_url || basic.cover.default_url) || "",
+                    play_count: basic.play_cnt,
+                    total: basic.song_cnt || 0,
+                    desc: basic.desc || "",
+                    source: "tx"
+                  });
+                });
+              }
+            }
+            break;
+          case "mg":
+            if (data.code === "000000" && data.data) {
+              if (data.data.contents) {
+                const ids = /* @__PURE__ */ new Set();
+                const parseContents = (contents) => {
+                  var _a, _b;
+                  for (const item of contents) {
+                    if (item.contents) {
+                      parseContents(item.contents);
+                    } else if (item.resType == "2021" && !ids.has(item.resId)) {
+                      ids.add(item.resId);
+                      list.push({
+                        id: String(item.resId),
+                        author: "",
+                        name: item.txt,
+                        img: item.img,
+                        play_count: ((_b = (_a = item.barList) == null ? void 0 : _a[0]) == null ? void 0 : _b.title) || void 0,
+                        desc: item.txt2 || "",
+                        source: "mg"
+                      });
+                    }
+                  }
+                };
+                parseContents(data.data.contents);
+                total = ids.size;
+              } else if (data.data.contentItemList && data.data.contentItemList[1] && data.data.contentItemList[1].itemList) {
+                total = data.data.contentItemList[1].itemList.length || 0;
+                data.data.contentItemList[1].itemList.forEach((item) => {
+                  var _a, _b;
+                  list.push({
+                    id: String(item.logEvent.contentId),
+                    author: "",
+                    name: item.title,
+                    img: item.imageUrl,
+                    play_count: ((_b = (_a = item.barList) == null ? void 0 : _a[0]) == null ? void 0 : _b.title) || void 0,
+                    desc: "",
+                    source: "mg"
+                  });
+                });
+              }
+            }
+            break;
+          case "wy":
+            if (data.playlists && Array.isArray(data.playlists)) {
+              total = data.total || 0;
+              data.playlists.forEach((item) => {
+                list.push({
+                  id: String(item.id),
+                  name: item.name,
+                  author: "",
+                  img: item.coverImgUrl,
+                  play_count: item.playCount,
+                  total: item.trackCount,
+                  time: item.createTime,
+                  desc: item.description || "",
+                  source: "wy"
+                });
+              });
+            }
+            break;
+        }
+      } catch (error) {
+        console.error("解析歌单数据失败:", error);
+      }
+      return { list, total };
+    };
+    const decodeName = (str) => {
+      if (!str)
+        return "";
+      return str.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, " ").replace(/<br>/g, "\n");
+    };
+    const loadMore = () => {
+      console.log("=== loadMore 触发 ===");
+      console.log("hasMore:", hasMore.value);
+      console.log("isLoadingMore:", isLoadingMore.value);
+      console.log("currentPage:", currentPage.value);
+      if (!hasMore.value || isLoadingMore.value || isLoading.value) {
+        console.log("loadMore 被拦截");
+        return;
+      }
+      console.log("loadMore 执行：准备加载下一页");
+      currentPage.value++;
+      isLoadingMore.value = true;
+      fetchSonglist();
+    };
+    const goToDetail = (item) => {
+      let link = "";
+      switch (item.source) {
+        case "kw":
+          link = `https://www.kuwo.cn/playlist_detail/${item.id}`;
+          break;
+        case "kg":
+          link = `https://www.kugou.com/yy/special/single/${item.id}.html`;
+          break;
+        case "tx":
+          link = `https://y.qq.com/n/ryqq/playlist/${item.id}`;
+          break;
+        case "wy":
+          link = `https://music.163.com/playlist?id=${item.id}`;
+          break;
+        case "mg":
+          link = `https://music.migu.cn/v3/music/playlist/${item.id}`;
+          break;
+        default:
+          link = item.id;
+      }
+      common_vendor.index.navigateTo({
+        url: `/pages/sharelist/index?source=${item.source}&link=${encodeURIComponent(link)}&id=${item.id}&picUrl=${encodeURIComponent(item.img)}&name=${encodeURIComponent(item.name || "")}&author=${encodeURIComponent(item.author || "")}&playCount=${item.play_count || 0}&fromName=songlist-list`
+      });
+    };
+    let scrollTimer = null;
+    let lastScrollTop = 0;
+    const onScroll = (e) => {
+      const query = common_vendor.index.createSelectorQuery();
+      query.select(".list-wrapper").boundingClientRect();
+      query.select(".list-wrapper").scrollOffset();
+      query.exec((res) => {
+        if (!res[0] || !res[1])
+          return;
+        const rect = res[0];
+        const scrollInfo = res[1];
+        const scrollTop = scrollInfo.scrollTop;
+        const scrollHeight = scrollInfo.scrollHeight;
+        const clientHeight = rect.height;
+        const scrollBottom = scrollHeight - scrollTop - clientHeight;
+        if (Math.abs(scrollTop - lastScrollTop) > 100) {
+          console.log("=== onScroll ===");
+          console.log("scrollTop:", scrollTop);
+          console.log("scrollHeight:", scrollHeight);
+          console.log("clientHeight:", clientHeight);
+          console.log("scrollBottom:", scrollBottom);
+          console.log("hasMore:", hasMore.value);
+          console.log("isLoadingMore:", isLoadingMore.value);
+          lastScrollTop = scrollTop;
+        }
+        if (scrollBottom < 100 && hasMore.value && !isLoadingMore.value && !isLoading.value) {
+          console.log("触发自动加载更多");
+          if (scrollTimer)
+            clearTimeout(scrollTimer);
+          scrollTimer = setTimeout(() => {
+            loadMore();
+          }, 200);
+        }
+      });
+    };
+    const onTouchMove = () => {
+      onScroll();
+    };
+    let miniPlayerHeightChangeHandler = null;
+    common_vendor.onMounted(() => {
+      initDarkMode();
+      utils_system.setStatusBarTextColor(darkMode.value ? "white" : "dark");
+      miniPlayerHeightChangeHandler = ({ height, isShowing }) => {
+        console.log("[SonglistList] MiniPlayer 高度变化:", height, "是否显示:", isShowing);
+      };
+      common_vendor.index.$on("miniPlayerHeightChange", miniPlayerHeightChangeHandler);
+      const lastSource = getLastSource();
+      const lastTag = getLastTag();
+      const lastSort = getLastSort();
+      console.log("[SonglistList] 读取上次选择:", { source: lastSource, tag: lastTag, sort: lastSort });
+      currentSource.value = lastSource;
+      currentTagId.value = lastTag;
+      currentSortId.value = lastSort;
+      loadTags(currentSource.value).then(() => {
+        const currentTags = sourceTagsMap.value[currentSource.value] || [];
+        const tagExists = currentTags.some((tag) => tag.id === currentTagId.value);
+        if (!tagExists && currentTagId.value !== "") {
+          console.log("[SonglistList] 保存的标签不存在，重置为推荐");
+          currentTagId.value = "";
+        }
+        fetchSonglist();
+      });
+    });
+    common_vendor.onShow(() => {
+      initDarkMode();
+      utils_system.setStatusBarTextColor(darkMode.value ? "white" : "dark");
+    });
+    common_vendor.watch(currentSource, (newSource) => {
+      console.log("[SonglistList] watch 平台变化:", newSource);
+      currentTagId.value = "";
+      currentSortId.value = "hot";
+      loadTags(newSource);
+    });
+    common_vendor.watch(currentTagId, () => {
+      lastScrollTop = 0;
+    });
+    common_vendor.onUnmounted(() => {
+      if (miniPlayerHeightChangeHandler) {
+        common_vendor.index.$off("miniPlayerHeightChange", miniPlayerHeightChangeHandler);
+        console.log("[SonglistList] 已清理 MiniPlayer 监听器");
+      }
+    });
+    return (_ctx, _cache) => {
+      return common_vendor.e({
+        a: common_vendor.p({
+          name: "chevron-left",
+          size: "24",
+          color: "#333"
+        }),
+        b: common_vendor.o(goBack),
+        c: common_vendor.t(currentSourceName.value),
+        d: common_vendor.p({
+          name: "chevron-down",
+          size: "14",
+          color: "#666"
+        }),
+        e: common_vendor.o(($event) => showSourcePicker.value = true),
+        f: common_vendor.f(tagList.value, (tag, k0, i0) => {
+          return {
+            a: common_vendor.t(tag.name),
+            b: tag.id,
+            c: currentTagId.value === tag.id ? 1 : "",
+            d: common_vendor.o(($event) => selectTag(tag.id), tag.id)
+          };
+        }),
+        g: sortList.value.length > 0
+      }, sortList.value.length > 0 ? {
+        h: common_vendor.f(sortList.value, (sort, k0, i0) => {
+          return {
+            a: common_vendor.t(sort.name),
+            b: sort.id,
+            c: currentSortId.value === sort.id ? 1 : "",
+            d: common_vendor.o(($event) => selectSort(sort.id), sort.id)
+          };
+        })
+      } : {}, {
+        i: common_vendor.s(headerStyle.value),
+        j: isLoading.value && songlist.value.length === 0
+      }, isLoading.value && songlist.value.length === 0 ? {} : {}, {
+        k: loadError.value && !isLoading.value
+      }, loadError.value && !isLoading.value ? {
+        l: common_vendor.t(loadError.value)
+      } : {}, {
+        m: songlist.value.length > 0
+      }, songlist.value.length > 0 ? {
+        n: common_vendor.f(songlist.value, (item, index, i0) => {
+          return common_vendor.e({
+            a: common_vendor.unref(utils_imageProxy.proxyImageUrl)(item.img),
+            b: common_vendor.o(($event) => handleSonglistImageError($event, item), item.id + index),
+            c: item.play_count
+          }, item.play_count ? {
+            d: "46e80bd5-2-" + i0,
+            e: common_vendor.p({
+              name: "play",
+              size: "10",
+              color: "#fff"
+            }),
+            f: common_vendor.t(common_vendor.unref(utils_format.formatPlayCount)(item.play_count))
+          } : {}, {
+            g: item.total
+          }, item.total ? {
+            h: "46e80bd5-3-" + i0,
+            i: common_vendor.p({
+              name: "music",
+              size: "10",
+              color: "#fff"
+            }),
+            j: common_vendor.t(item.total)
+          } : {}, {
+            k: common_vendor.t(item.name),
+            l: item.author || item.time
+          }, item.author || item.time ? common_vendor.e({
+            m: item.author
+          }, item.author ? {
+            n: common_vendor.t(item.author)
+          } : {}, {
+            o: item.author && item.time
+          }, item.author && item.time ? {} : {}, {
+            p: item.time
+          }, item.time ? {
+            q: common_vendor.t(common_vendor.unref(utils_format.formatDate)(item.time))
+          } : {}) : {}, {
+            r: item.desc
+          }, item.desc ? {
+            s: common_vendor.t(item.desc)
+          } : {}, {
+            t: item.id + index,
+            v: common_vendor.o(($event) => goToDetail(item), item.id + index)
+          });
+        })
+      } : {}, {
+        o: songlist.value.length > 0
+      }, songlist.value.length > 0 ? common_vendor.e({
+        p: isLoadingMore.value
+      }, isLoadingMore.value ? {} : !hasMore.value ? {} : {}, {
+        q: !hasMore.value
+      }) : {}, {
+        r: !isLoading.value && !loadError.value && songlist.value.length === 0
+      }, !isLoading.value && !loadError.value && songlist.value.length === 0 ? {
+        s: common_vendor.p({
+          name: "inbox",
+          size: "64",
+          color: "#ccc"
+        })
+      } : {}, {
+        t: common_vendor.o(onScroll),
+        v: common_vendor.o(onTouchMove),
+        w: showSourcePicker.value
+      }, showSourcePicker.value ? {
+        x: common_vendor.p({
+          name: "xmark",
+          size: "20",
+          color: "#999"
+        }),
+        y: common_vendor.o(($event) => showSourcePicker.value = false),
+        z: common_vendor.f(sourceList, (source, k0, i0) => {
+          return common_vendor.e({
+            a: common_vendor.t(source.name),
+            b: currentSource.value === source.id
+          }, currentSource.value === source.id ? {
+            c: "46e80bd5-6-" + i0,
+            d: common_vendor.p({
+              name: "check",
+              size: "16",
+              color: "#00d7cd"
+            })
+          } : {}, {
+            e: source.id,
+            f: currentSource.value === source.id ? 1 : "",
+            g: common_vendor.o(($event) => selectSource(source.id), source.id)
+          });
+        }),
+        A: common_vendor.o(() => {
+        }),
+        B: common_vendor.o(($event) => showSourcePicker.value = false)
+      } : {}, {
+        C: darkMode.value ? 1 : ""
+      });
+    };
+  }
+};
+const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-46e80bd5"]]);
+wx.createPage(MiniProgramPage);

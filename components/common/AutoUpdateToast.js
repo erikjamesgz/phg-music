@@ -1,1 +1,26 @@
-"use strict";const e=require("../../common/vendor.js"),t={__name:"AutoUpdateToast",props:{visible:{type:Boolean,default:!1},playlistName:{type:String,default:""}},setup:t=>(a,s)=>e.e({a:t.visible},t.visible?{b:e.t(t.playlistName)}:{})},a=e._export_sfc(t,[["__scopeId","data-v-65f43f02"]]);wx.createComponent(a);
+"use strict";
+const common_vendor = require("../../common/vendor.js");
+const _sfc_main = {
+  __name: "AutoUpdateToast",
+  props: {
+    visible: {
+      type: Boolean,
+      default: false
+    },
+    playlistName: {
+      type: String,
+      default: ""
+    }
+  },
+  setup(__props) {
+    return (_ctx, _cache) => {
+      return common_vendor.e({
+        a: __props.visible
+      }, __props.visible ? {
+        b: common_vendor.t(__props.playlistName)
+      } : {});
+    };
+  }
+};
+const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-65f43f02"]]);
+wx.createComponent(Component);

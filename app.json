@@ -1,5 +1,6 @@
 {
   "pages": [
+    "pages/main/index",
     "pages/index/index",
     "pages/playlist/index",
     "pages/search/index",
@@ -24,6 +25,9 @@
     "selectedColor": "#00afff",
     "backgroundColor": "#ffffff",
     "list": [
+      {
+        "pagePath": "pages/main/index"
+      },
       {
         "pagePath": "pages/index/index"
       },

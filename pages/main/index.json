@@ -1,0 +1,17 @@
+{
+  "navigationBarTitleText": "拼好歌",
+  "navigationStyle": "custom",
+  "enablePullDownRefresh": false,
+  "backgroundTextStyle": "dark",
+  "launchMode": "singleTask",
+  "usingComponents": {
+    "roc-icon-plus": "../../uni_modules/roc-icon-plus/components/roc-icon-plus/roc-icon-plus",
+    "index-page": "../index/index",
+    "search-page": "../search/index",
+    "playlist-page": "../playlist/index",
+    "my-page": "../my/index",
+    "mini-player": "../../components/player/MiniPlayer",
+    "custom-tab-bar": "../../components/common/CustomTabBar",
+    "pact-modal": "../../components/common/PactModal"
+  }
+}

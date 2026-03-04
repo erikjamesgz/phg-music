@@ -1,1 +1,99 @@
-"use strict";const e=[{name:"original",url:"",enabled:!0},{name:"wsrv",url:"https://wsrv.nl/?url=",enabled:!0},{name:"weserv",url:"https://images.weserv.nl/?url=",enabled:!0},{name:"jina",url:"https://r.jina.ai/http://",enabled:!0}],t={},r="/static/images/default-cover.png",n=(n,a=0)=>{if(!n)return r;if(n.startsWith("https://"))return n;if(n.startsWith("/")||n.startsWith("./")||n.startsWith("../"))return n;if(!n.startsWith("http://"))return r;let l;if(a>=0&&a<e.length)l=e[a];else{const r=((r=0)=>{for(let n=r;n<e.length;n++){const r=e[n],a=t[r.name]||0;if(r.enabled&&a<3)return{proxy:r,index:n}}return null})(0);r&&(l=r.proxy)}return l?"original"===l.name?n:"jina"===l.name?`${l.url}${n.replace("http://","")}`:`${l.url}${encodeURIComponent(n)}`:(console.error("[ImageProxy] 没有可用的代理服务器"),r)};exports.handleImageError=(r,a,l=0)=>{if(!a)return null;const s=l+1;var o;if(l<e.length&&(o=e[l].name,t[o]=(t[o]||0)+1,console.warn(`[ImageProxy] 代理 ${o} 失败次数: ${t[o]}`)),s<e.length){const t=n(a,s);return console.log(`[ImageProxy] 代理 ${e[l].name} 失败，尝试 ${e[s].name}: ${t}`),r&&r.target&&(r.target.src=t),t}const i=(u=a)?u.replace(/^http:\/\//i,"https://"):u;var u;return console.log(`[ImageProxy] 所有代理都失败，尝试直接转换为 HTTPS: ${i}`),r&&r.target&&(r.target.src=i),i},exports.proxyImageUrl=n;
+"use strict";
+const PROXY_SERVERS = [
+  {
+    name: "original",
+    url: "",
+    // 原链接，不添加代理前缀
+    enabled: true
+  },
+  {
+    name: "wsrv",
+    url: "https://wsrv.nl/?url=",
+    enabled: true
+  },
+  {
+    name: "weserv",
+    url: "https://images.weserv.nl/?url=",
+    enabled: true
+  },
+  {
+    name: "jina",
+    url: "https://r.jina.ai/http://",
+    enabled: true
+  }
+];
+const proxyFailCount = {};
+const MAX_FAIL_COUNT = 3;
+const DEFAULT_IMAGE = "/static/images/default-cover.png";
+const getAvailableProxy = (startIndex = 0) => {
+  for (let i = startIndex; i < PROXY_SERVERS.length; i++) {
+    const proxy = PROXY_SERVERS[i];
+    const failCount = proxyFailCount[proxy.name] || 0;
+    if (proxy.enabled && failCount < MAX_FAIL_COUNT) {
+      return { proxy, index: i };
+    }
+  }
+  return null;
+};
+const recordProxyFail = (proxyName) => {
+  proxyFailCount[proxyName] = (proxyFailCount[proxyName] || 0) + 1;
+  console.warn(`[ImageProxy] 代理 ${proxyName} 失败次数: ${proxyFailCount[proxyName]}`);
+};
+const convertToHttps = (url) => {
+  if (!url)
+    return url;
+  return url.replace(/^http:\/\//i, "https://");
+};
+const proxyImageUrl = (url, proxyIndex = 0) => {
+  if (!url)
+    return DEFAULT_IMAGE;
+  if (url.startsWith("https://"))
+    return url;
+  if (url.startsWith("/") || url.startsWith("./") || url.startsWith("../"))
+    return url;
+  if (!url.startsWith("http://"))
+    return DEFAULT_IMAGE;
+  let proxy;
+  if (proxyIndex >= 0 && proxyIndex < PROXY_SERVERS.length) {
+    proxy = PROXY_SERVERS[proxyIndex];
+  } else {
+    const result = getAvailableProxy(0);
+    if (result)
+      proxy = result.proxy;
+  }
+  if (!proxy) {
+    console.error("[ImageProxy] 没有可用的代理服务器");
+    return DEFAULT_IMAGE;
+  }
+  if (proxy.name === "original") {
+    return url;
+  }
+  if (proxy.name === "jina") {
+    return `${proxy.url}${url.replace("http://", "")}`;
+  }
+  return `${proxy.url}${encodeURIComponent(url)}`;
+};
+const handleImageError = (event, originalUrl, currentProxyIndex = 0) => {
+  if (!originalUrl)
+    return null;
+  const nextIndex = currentProxyIndex + 1;
+  if (currentProxyIndex < PROXY_SERVERS.length) {
+    recordProxyFail(PROXY_SERVERS[currentProxyIndex].name);
+  }
+  if (nextIndex < PROXY_SERVERS.length) {
+    const nextUrl = proxyImageUrl(originalUrl, nextIndex);
+    console.log(`[ImageProxy] 代理 ${PROXY_SERVERS[currentProxyIndex].name} 失败，尝试 ${PROXY_SERVERS[nextIndex].name}: ${nextUrl}`);
+    if (event && event.target) {
+      event.target.src = nextUrl;
+    }
+    return nextUrl;
+  }
+  const httpsUrl = convertToHttps(originalUrl);
+  console.log(`[ImageProxy] 所有代理都失败，尝试直接转换为 HTTPS: ${httpsUrl}`);
+  if (event && event.target) {
+    event.target.src = httpsUrl;
+  }
+  return httpsUrl;
+};
+exports.handleImageError = handleImageError;
+exports.proxyImageUrl = proxyImageUrl;

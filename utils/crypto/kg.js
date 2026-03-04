@@ -1,1 +1,12 @@
-"use strict";const e=require("./md5.js");exports.signatureParams=(s,t="web",r="")=>{let i="OIlwieks28dk2k092lksi2UIkp";"web"===t&&(i="NVPh5oo715z5DIWAeQlhMDsWXXQV4hwt");let l=s.split("&");l.sort();let o=`${i}${l.join("")}${r}${i}`;return e.md5(o)};
+"use strict";
+const utils_crypto_md5 = require("./md5.js");
+const signatureParams = (params, platform = "web", body = "") => {
+  let keyparam = "OIlwieks28dk2k092lksi2UIkp";
+  if (platform === "web")
+    keyparam = "NVPh5oo715z5DIWAeQlhMDsWXXQV4hwt";
+  let param_list = params.split("&");
+  param_list.sort();
+  let sign_params = `${keyparam}${param_list.join("")}${body}${keyparam}`;
+  return utils_crypto_md5.md5(sign_params);
+};
+exports.signatureParams = signatureParams;

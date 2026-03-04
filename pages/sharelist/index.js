@@ -1,1 +1,1055 @@
-"use strict";const e=require("../../common/vendor.js"),l=require("../../utils/system.js"),a=require("../../utils/api/songlist.js"),o=require("../../utils/api/songlist-direct.js"),t=require("../../store/modules/list.js"),s=require("../../store/modules/player.js"),i=require("../../utils/imageProxy.js");if(!Array){e.resolveComponent("custom-tabbar")()}Math||(n+r)();const n=()=>"../../uni_modules/roc-icon-plus/components/roc-icon-plus/roc-icon-plus.js",r=()=>"../../components/player/MiniPlayer.js",u={__name:"index",setup(n){const r=e.ref(""),u=e.ref(""),c=e.ref(""),v=e.ref(!1),g=e.ref(!1),d=e.ref(""),h=e.ref(""),S=e.ref(""),m=e.ref(""),p=e.ref(l.getStatusBarHeight()),f=e.computed(()=>({height:`${p.value}px`,width:"100%"})),y=e.ref(""),I=e.ref(""),L=e.ref(""),x=e.ref(""),T=e.ref(""),P=e.ref(0),_=e.ref(""),M=e.ref([]),D=e.ref(!1),w=e.ref(!0),U=e.ref(1),b=e.ref([]),C=e.ref(1),k=e.computed(()=>{var e;E.value;const l=t.listStore.state.playInfo.playerListId,a=t.listStore.state.tempList.meta,o=t.listStore.state.playInfo.playIndex;console.log("[Sharelist] currentSongIndex 计算:",{playerListId:l,tempListMetaId:null==a?void 0:a.id,currentListId:O.value,playIndex:o,songsLength:M.value.length});const i=null==(e=s.playerStore.state.currentSong)?void 0:e.id;if(console.log("[Sharelist] 当前播放歌曲ID:",i),l===t.LIST_IDS.TEMP){const e=null==a?void 0:a.id;if(e&&(e===O.value||e.startsWith("local_"))||e===O.value){if(o>=0&&o<M.value.length)return o;if(i){const e=M.value.findIndex(e=>e.id===i);return console.log("[Sharelist] 临时列表匹配，在songs中查找索引:",i,"结果:",e),e}}return console.log("[Sharelist] 临时列表不匹配当前列表，返回 -1"),-1}if(l===O.value){if(o>=0&&o<M.value.length)return console.log("[Sharelist] 当前页面歌单播放，使用 playIndex:",o),o;if(i){const e=M.value.findIndex(e=>e.id===i);return console.log("[Sharelist] 在songs中查找索引:",i,"结果:",e),e}return console.log("[Sharelist] 当前页面歌单播放，但未找到歌曲，返回 -1"),-1}if(l===t.LIST_IDS.DEFAULT&&i){const e=M.value.findIndex(e=>e.id===i);return console.log("[Sharelist] 在songs中查找索引:",i,"结果:",e),e}return console.log("[Sharelist] 不在播放当前列表，返回 -1"),-1});e.computed(()=>k.value>=0&&M.value.length>k.value?M.value[k.value]:null);const A=e.computed(()=>s.playerStore.state.isPlaying),E=e.ref(0);e.watch(()=>s.playerStore.state.currentSong,(e,l)=>{console.log("[Sharelist] playerStore.currentSong 变化:",null==e?void 0:e.name,"ID:",null==e?void 0:e.id),E.value++},{deep:!0}),e.watch(()=>[t.listStore.state.playInfo.playerListId,t.listStore.state.playInfo.playIndex],(e,l)=>{console.log("[Sharelist] playInfo 变化:",e),E.value++},{deep:!0});const N=e.ref(!1),R=()=>{N.value="true"===e.index.getStorageSync("darkMode"),console.log("[Sharelist] 初始化暗黑模式:",N.value)},$=e.ref(0),j=({height:e,isShowing:l})=>{console.log("[Sharelist] MiniPlayer 高度变化:",e,"是否显示:",l),$.value=l?e:0},q=e.ref(0),z=e=>e?a.formatPlayCount(e):"0",O=e.ref(""),B=e.ref(!1),Q=()=>(O.value||(O.value=`${h.value}_${Date.now()}`),O.value),H=(e,l="name",a="、")=>{if(!e)return"未知歌手";if(Array.isArray(e)){const o=[];return e.forEach(e=>{let a=e[l];a&&o.push(a)}),o.length>0?o.join(a):"未知歌手"}return String(e||"未知歌手")},J=e=>e.types?e.types.some(e=>"flac"===e.type||"flac24bit"===e.type||"SQ"===e.type):"SQ"===e.quality,F=()=>{e.index.navigateBack()},W=(e,l)=>{if(!L.value)return;let a=0;L.value.includes("wsrv.nl")?a=1:L.value.includes("weserv.nl")?a=2:L.value.includes("jina.ai")&&(a=3);const o=i.handleImageError(e,L.value,a);o&&(L.value=o)},K=async()=>{if(0===M.value.length)return;if(console.log("[Sharelist] 播放全部"),console.log("[Sharelist] 是否是本地歌单:",B.value),B.value)return console.log("[Sharelist] 本地歌单，直接切换到对应列表播放"),t.listStore.setPlayerListId(O.value),void(await G(0,!1));console.log("[Sharelist] 在线歌单，使用临时列表播放，添加到试听列表");const e=Q();t.listStore.setTempList(t.LIST_IDS.TEMP,[],{}),t.listStore.setTempList(t.LIST_IDS.TEMP,M.value,{id:e,source:h.value,name:I.value}),t.listStore.setPlayerListId(t.LIST_IDS.TEMP),await G(0,!0)},G=async(l,a=!0)=>{var o,i,n;const r=M.value[l];if(r){console.log("[Sharelist] ========== 播放歌曲开始 =========="),console.log("[Sharelist] 歌曲索引:",l),console.log("[Sharelist] 是否添加到试听列表:",a),console.log("[Sharelist] 是否是本地歌单:",B.value);try{const e={standard:"320k",high:"flac",lossless:"flac24bit",low:"128k"}[s.playerStore.getState().audioQuality||"standard"]||"320k";let l;if(console.log(`[Sharelist] 使用音质 ${e} 获取歌曲播放URL`),B.value){console.log("[Sharelist] 本地歌单，使用临时列表播放，不添加到试听列表");const e=`local_${O.value}`;t.listStore.setTempList(t.LIST_IDS.TEMP,[],{}),t.listStore.setTempList(t.LIST_IDS.TEMP,M.value,{id:e,source:h.value,name:I.value}),t.listStore.setPlayerListId(t.LIST_IDS.TEMP),l=t.LIST_IDS.TEMP,a=!1}else{console.log("[Sharelist] 在线歌单，使用临时列表播放，添加到试听列表");const e=Q();t.listStore.setTempList(t.LIST_IDS.TEMP,[],{}),t.listStore.setTempList(t.LIST_IDS.TEMP,M.value,{id:e,source:h.value,name:I.value}),t.listStore.setPlayerListId(t.LIST_IDS.TEMP),l=t.LIST_IDS.TEMP,a=!0}if(a){const e={id:r.id,name:r.name,singer:r.singer,ar:r.ar||(r.singer?r.singer.split("、").map(e=>({name:e})):[]),album:r.album||r.albumName,duration:r.dt||r.interval||r.duration,source:r.source||h.value,songmid:r.songmid,hash:r.hash,copyrightId:r.copyrightId,img:r.img||r.albumPic||(null==(o=r.al)?void 0:o.picUrl)||""},l=t.listStore.state.defaultList.list;console.log("[Sharelist] 试听列表当前歌曲数:",l.length);new Set(l.map(e=>e.id)).has(e.id)?console.log("[Sharelist] 歌曲已在试听列表中:",e.name):(t.listStore.addListMusics(t.LIST_IDS.DEFAULT,[e],"top"),console.log("[Sharelist] 已添加 1 首歌曲到试听列表:",e.name))}const u=null==(i=s.playerStore.state.currentSong)?void 0:i.id;console.log("[Sharelist] 之前播放的歌曲ID:",u,"即将播放的歌曲ID:",r.id);const c={id:r.id,name:r.name,singer:r.singer,ar:r.ar||(r.singer?r.singer.split("、").map(e=>({name:e})):[]),album:r.album||r.albumName,duration:r.dt||r.interval||r.duration,source:r.source||h.value,songmid:r.songmid,hash:r.hash,copyrightId:r.copyrightId,img:r.img||r.albumPic||(null==(n=r.al)?void 0:n.picUrl)||"",url:"",playUrl:"",lyric:"",tlyric:"",rlyric:"",lxlyric:""};t.listStore.setPlayMusicInfo(l,c,!1);const v=u===c.id;if(console.log("[Sharelist] 是否是同一首歌:",v,"previousSongId:",u,"currentId:",c.id),v)return console.log("[Sharelist] 同一首歌，切换播放/暂停状态"),void(s.playerStore.state.isPlaying?s.playerStore.pause():s.playerStore.resume());s.playerStore.updatePendingSong(null),console.log("[Sharelist] 调用 playerStore.playSong"),s.playerStore.playSong(c),console.log("[Sharelist] 播放完成")}catch(u){console.error("[Sharelist] 播放失败:",u),e.index.showToast({title:"播放失败: "+(u.message||"未知错误"),icon:"none"})}}},V=()=>{if(console.log("[Sharelist] loadMoreSongs 被触发"),console.log("[Sharelist] hasMore:",w.value,"isLoading:",D.value,"isPreviewMode:",v.value,"allSongs.length:",b.value.length),!w.value)return void console.log("[Sharelist] 没有更多数据，跳过加载");if(D.value)return void console.log("[Sharelist] 正在加载中，跳过");if(!v.value)return void console.log("[Sharelist] 非预览模式，跳过分页加载");console.log("[Sharelist] 开始加载更多歌曲...");const e=C.value+1,l=50*(e-1),a=50*e;console.log("[Sharelist] 加载第",e,"页, 范围:",l,"-",a);const o=b.value.slice(l,a);o.length>0?(M.value=[...M.value,...o],C.value=e,console.log("[Sharelist] 已加载",o.length,"首, 当前共",M.value.length,"首"),w.value=M.value.length<b.value.length,console.log("[Sharelist] 是否还有更多:",w.value)):(w.value=!1,console.log("[Sharelist] 没有更多歌曲了"))};e.onReachBottom(()=>{console.log("[Sharelist] onReachBottom 触发"),V()});const X=()=>{ee()},Y=e=>e&&Array.isArray(e)?e.map(e=>{var l,a;const o={id:e.id,name:e.name,singer:e.singer||(e.ar?e.ar.map(e=>e.name).join("/"):""),ar:e.ar||(e.singer?e.singer.split("、").map(e=>({name:e})):[]),album:e.album||e.albumName||(e.al?e.al.name:""),duration:e.duration||e.dt||e.interval,dt:e.dt||e.duration||e.interval,interval:e.interval||e.dt||e.duration,source:e.source};return e.songmid&&(o.songmid=e.songmid),e.hash&&(o.hash=e.hash),e.copyrightId&&(o.copyrightId=e.copyrightId),(e.img||e.albumPic||(null==(l=e.al)?void 0:l.picUrl))&&(o.img=e.img||e.albumPic||(null==(a=e.al)?void 0:a.picUrl)),o}):[],Z=async()=>{if(!I.value)return;const l=`${h.value}__${S.value}`;let a=e.index.getStorageSync("imported_playlists")||[];const o=a.findIndex(e=>e.sourceListId===l);-1===o?e.index.showModal({title:"导入歌单",content:`是否将「${I.value}」导入到我的歌单？`,confirmText:"导入",cancelText:"取消",success:async o=>{if(o.confirm){e.index.showLoading({title:"获取数据中..."});try{console.log("[Sharelist] 使用已加载的歌曲数据...");const o=b.value||[];if(console.log("[Sharelist] 已加载歌曲数量:",o.length,"首"),0===o.length)return e.index.showToast({title:"歌单为空，无法导入",icon:"none"}),void e.index.hideLoading();const s=l;console.log("[Sharelist] 导入歌单使用的ID:",s);const i=Y(o);console.log("[Sharelist] 精简后歌曲数量:",i.length,"首");const n={id:s,name:I.value,coverImgUrl:L.value,trackCount:o.length,source:h.value,sourceListId:l,link:r.value,platform:(t=h.value,{wy:"网易云音乐",tx:"QQ音乐",kg:"酷狗音乐",kw:"酷我音乐",mg:"咪咕音乐",local:"本地音乐"}[t]||t||"未知平台"),songs:i,canAutoUpdate:!0,isFromImport:"import"===m.value,autoUpdate:!1};a.push(n),e.index.setStorageSync("imported_playlists",a),e.index.showToast({title:`导入成功（${o.length}首）`,icon:"success"}),console.log("[Sharelist] handleCollect - fromPage.value:",m.value),"import"===m.value?setTimeout(()=>{e.index.showModal({title:"自动更新",content:`「${I.value}」导入成功！是否开启自动更新？`,confirmText:"开启",cancelText:"暂不开启",success:l=>{if(l.confirm){const l=e.index.getStorageSync("imported_playlists")||[],a=l.findIndex(e=>e.id===s);-1!==a&&(l[a].autoUpdate=!0,e.index.setStorageSync("imported_playlists",l),e.index.showToast({title:"已开启自动更新",icon:"success"}))}e.index.navigateBack()}})},1500):setTimeout(()=>{e.index.navigateBack()},1500)}catch(s){console.error("导入失败:",s),e.index.showToast({title:"导入失败",icon:"none"})}finally{e.index.hideLoading()}}var t}}):e.index.showModal({title:"提示",content:`歌单「${a[o].name}」已存在，是否同步更新？`,confirmText:"更新",cancelText:"取消",success:async l=>{if(l.confirm){e.index.showLoading({title:"更新中..."});try{console.log("[Sharelist] 使用已加载的歌曲数据更新...");const l=b.value||[],t=Y(l);a[o].songs=t,a[o].trackCount=l.length,a[o].coverImgUrl=L.value,e.index.setStorageSync("imported_playlists",a),e.index.showToast({title:"更新成功",icon:"success"})}catch(t){console.error("[Sharelist] 更新失败:",t),e.index.showToast({title:"更新失败",icon:"none"})}finally{e.index.hideLoading()}}}})},ee=async()=>{var l,t,s,i,n,c,v,m,p,f,C,k;if(console.log("[Sharelist] loadPreviewList 开始执行"),D.value)console.log("[Sharelist] 正在加载中，跳过");else{D.value=!0,d.value="";try{let g;const D=getCurrentPages(),E=D[D.length-1],N=(null==(l=E.$page)?void 0:l.options)||E.options||{};let R=N.id;if(!R&&r.value){let l=decodeURIComponent(r.value);if(/^https?:\/\//.test(l)){let a=l.match(/[?&]id=(\d+)/);if(a)R=a[1],console.log("[Sharelist] 从URL查询参数解析出ID:",R);else if(a=l.match(/\/playlist(?:_detail)?\/(\d+)/),a)R=a[1],console.log("[Sharelist] 从URL路径解析出ID:",R);else if("mg"===u.value&&l.includes("c.migu.cn")){console.log("[Sharelist] 检测到咪咕短链接，尝试获取真实URL...");try{const a=await e.index.request({url:l,method:"HEAD",header:{"User-Agent":"Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15"}}),o=(null==(t=a.header)?void 0:t.Location)||(null==(s=a.header)?void 0:s.location);if(o){console.log("[Sharelist] 咪咕短链接重定向到:",o);const e=o.match(/[?&]id=(\d+)/);e&&(R=e[1],console.log("[Sharelist] 从咪咕重定向URL解析出ID:",R))}}catch(A){console.error("[Sharelist] 获取咪咕短链接失败:",A)}}}else R=l,console.log("[Sharelist] 直接使用作为ID:",R)}"tx"===u.value?(console.log("[Sharelist] QQ音乐使用后端接口:",u.value),console.log("[Sharelist] 调用 getListDetail:",u.value,r.value),g=await a.getListDetail(u.value,r.value,U.value)):(console.log("[Sharelist] 使用前端直接API:",u.value),console.log("[Sharelist] 调用 getListDetailDirect:",u.value,R),g=await o.getListDetailDirect(u.value,R,1)),console.log("[Sharelist] ========== 返回数据开始 =========="),console.log("[Sharelist] result.info:",JSON.stringify(g.info)),console.log("[Sharelist] result.list类型:",typeof g.list,"是否是数组:",Array.isArray(g.list)),console.log("[Sharelist] result.list长度:",null==(i=g.list)?void 0:i.length),console.log("[Sharelist] result.list前3项:",JSON.stringify(null==(n=g.list)?void 0:n.slice(0,3))),console.log("[Sharelist] ========== 返回数据结束 =========="),h.value=g.source,S.value=g.id||N.id||"",console.log("[Sharelist] 开始更新歌单信息..."),y.value=g.id||N.id||"",I.value=(null==(c=g.info)?void 0:c.name)||"未知歌单",L.value=(null==(v=g.info)?void 0:v.img)||"",x.value=(null==(m=g.info)?void 0:m.author)||"",T.value=(null==(p=g.info)?void 0:p.desc)||"",P.value=g.total||0,_.value=(null==(f=g.info)?void 0:f.play_count)||"",console.log("[Sharelist] 歌单信息已更新:",{name:I.value,author:x.value,playCount:_.value,trackCount:P.value}),console.log("[Sharelist] 开始更新歌曲列表..."),b.value=g.list||[],console.log("[Sharelist] 总歌曲数量:",null==(C=b.value)?void 0:C.length),console.log("[Sharelist] result.total:",g.total),console.log("[Sharelist] result.limit:",g.limit),E.value=1;const $=0,j=Math.min(50,b.value.length);M.value=b.value.slice($,j),console.log("[Sharelist] 当前显示:",null==(k=M.value)?void 0:k.length,"首"),console.log("[Sharelist] 第1页范围:",$,"-",j),w.value=b.value.length>M.value.length,console.log("[Sharelist] 是否还有更多:",w.value),0===b.value.length&&(console.log("[Sharelist] 歌单为空，可能原因："),console.log("[Sharelist] 1. 歌单ID无效或歌单不存在"),console.log("[Sharelist] 2. 歌单是私有的"),console.log("[Sharelist] 3. 歌单已被删除"),console.log("[Sharelist] 4. 网络请求失败"),d.value="歌单为空，可能原因：\n1. 歌单不存在或已被删除\n2. 歌单是私有的\n3. 网络请求失败\n\n请尝试其他歌单")}catch(E){console.error("[Sharelist] 加载歌单失败:",E),d.value=E.message||"加载失败，请检查链接是否正确",e.index.showToast({title:d.value,icon:"none",duration:3e3})}finally{D.value=!1,g.value=!0,console.log("[Sharelist] loadPreviewList 执行完成, isLoading:",D.value,"songs.length:",M.value.length),setTimeout(()=>{console.log("[Sharelist] 强制刷新后的 songs.length:",M.value.length)},100)}}};return e.onMounted(()=>{var l;console.log("[Sharelist] onMounted 开始执行"),R(),e.index.$on("miniPlayerHeightChange",j);const a=getCurrentPages(),o=a[a.length-1],i=(null==(l=o.$page)?void 0:l.options)||o.options||{};if(console.log("[Sharelist] 页面参数:",JSON.stringify(i)),console.log("[Sharelist] link:",i.link),console.log("[Sharelist] source:",i.source),console.log("[Sharelist] platform:",i.platform),console.log("[Sharelist] id:",i.id),console.log("[Sharelist] fromName:",i.fromName),console.log("[Sharelist] from:",i.from),m.value=i.from||"",console.log("[Sharelist] fromPage.value:",m.value),"true"===i.fromMyMusic&&i.playlistId)return console.log("[Sharelist] 从我的音乐页面进入，尝试加载本地数据"),console.log("[Sharelist] playlistId:",i.playlistId),D.value=!0,void setTimeout(()=>{if(i.playlistId&&i.playlistId.startsWith("userlist_")){console.log("[Sharelist] 用户自建歌单模式"),B.value=!0;const e=(t.listStore.state.userLists||[]).find(e=>e.id===i.playlistId);if(console.log("[Sharelist] 查找到的用户歌单:",e?e.name:"未找到"),e&&e.list&&e.list.length>0){console.log("[Sharelist] 使用用户自建歌单数据，数量:",e.list.length);const l=e.list.map(e=>({...e,ar:e.ar||(e.singer?e.singer.split("、").map(e=>({name:e})):[])})),a=i.playlistName?decodeURIComponent(i.playlistName):"";I.value=a||e.name||"未知歌单",L.value=e.coverImgUrl||"/static/logo.png",x.value=e.author||"",T.value=e.desc||"",P.value=e.list.length,_.value="",M.value=l,b.value=l,w.value=!1,D.value=!1,v.value=!1,g.value=!0,O.value=e.id,h.value="local",console.log("[Sharelist] 用户自建歌单数据加载完成")}else console.log("[Sharelist] 用户自建歌单未找到数据"),D.value=!1,d.value="歌单数据不存在"}else{console.log("[Sharelist] 导入歌单模式"),B.value=!0;let a=[];try{const l=e.index.getStorageSync("imported_playlists");l&&("string"==typeof l?a=JSON.parse(l):Array.isArray(l)&&(a=l))}catch(l){console.error("[Sharelist] 解析导入歌单失败:",l)}const o=a.find(e=>e.id===i.playlistId||e.sourceListId===i.playlistId);if(console.log("[Sharelist] 查找到的导入歌单:",o?o.name:"未找到"),o&&o.songs&&o.songs.length>0){console.log("[Sharelist] 使用导入歌单数据，数量:",o.songs.length);const e=o.songs.map(e=>({...e,ar:e.ar||(e.singer?e.singer.split("、").map(e=>({name:e})):[])}));I.value=o.name||"未知歌单",L.value=o.coverImgUrl||"/static/logo.png",x.value=o.author||"",T.value=o.desc||"",P.value=o.songs.length,_.value=o.playCount?z(o.playCount):"",M.value=e,b.value=e,w.value=!1,D.value=!1,v.value=!1,g.value=!0,O.value=o.id||o.sourceListId,h.value=o.platform||i.source||"",console.log("[Sharelist] 导入歌单数据加载完成")}else console.log("[Sharelist] 导入歌单未找到数据"),D.value=!1,d.value="歌单数据不存在"}},100);i.link&&i.source?(console.log("[Sharelist] 进入预览模式"),v.value=!0,r.value=decodeURIComponent(i.link),u.value=i.source,c.value=decodeURIComponent(i.platform||""),console.log("[Sharelist] pageLink:",r.value),console.log("[Sharelist] pageSource:",u.value),console.log("[Sharelist] pagePlatform:",c.value),i.name&&(I.value=decodeURIComponent(i.name)),i.picUrl&&(L.value=decodeURIComponent(i.picUrl)),i.author&&(x.value=decodeURIComponent(i.author)),i.playCount&&(_.value=z(i.playCount)),i.id&&(y.value=i.id),ee()):"user"===i.mode&&"true"===i.fromMyMusic?(console.log("[Sharelist] 进入用户自建歌单模式"),console.log("[Sharelist] playlistId:",i.playlistId),v.value=!1,g.value=!0,D.value=!0,setTimeout(()=>{const e=(t.listStore.state.userLists||[]).find(e=>e.id===i.playlistId);if(console.log("[Sharelist] 查找到的歌单:",e?e.name:"未找到"),e&&e.list&&e.list.length>0){M.value=e.list,b.value=e.list;const l=i.playlistName?decodeURIComponent(i.playlistName):"";I.value=l||e.name||"未知歌单",L.value=e.coverImgUrl||"/static/logo.png",P.value=e.list.length,w.value=!1,D.value=!1,O.value=e.id}else D.value=!1,d.value="歌单暂无歌曲"},100)):"love"===i.mode&&"true"===i.fromMyMusic?(console.log("[Sharelist] 进入我喜欢的音乐模式"),v.value=!1,g.value=!0,D.value=!0,setTimeout(()=>{const e=t.listStore.state.loveList.list||[];console.log("[Sharelist] 喜欢列表数量:",e.length),e.length>0?(M.value=e,b.value=e,I.value="我喜欢的音乐",L.value="/static/logo.png",P.value=e.length,w.value=!1,D.value=!1,O.value=t.LIST_IDS.LOVE):(D.value=!1,d.value="暂无喜欢的音乐")},100)):"recent"===i.mode&&"true"===i.fromMyMusic?(console.log("[Sharelist] 进入最近播放模式"),v.value=!1,g.value=!1,D.value=!0,setTimeout(()=>{const e=s.playerStore.getState().playHistory||[];console.log("[Sharelist] 播放历史数量:",e.length),e.length>0?(M.value=e,I.value="最近播放",L.value="/static/logo.png",P.value=e.length,w.value=!1,D.value=!1,O.value="recent_play_history"):(D.value=!1,d.value="暂无播放记录")},100)):"deleted"===i.mode&&"true"===i.fromMyMusic?(console.log("[Sharelist] 进入最近删除模式"),v.value=!1,g.value=!1,D.value=!0,setTimeout(()=>{let l=[];try{const a=e.index.getStorageSync("deleted_songs");a&&("string"==typeof a?l=JSON.parse(a):Array.isArray(a)?l=a:a.data&&Array.isArray(a.data)&&(l=a.data))}catch(a){console.error("[Sharelist] 解析删除列表失败:",a)}console.log("[Sharelist] 删除列表数量:",l.length),l.length>0?(M.value=l,I.value="最近删除",L.value="/static/logo.png",P.value=l.length,w.value=!1,D.value=!1,O.value="recent_deleted"):(D.value=!1,d.value="暂无删除记录")},100)):(console.log("[Sharelist] 缺少必要参数，无法加载"),d.value="缺少必要参数：link或source")}),e.onShow(()=>{l.setStatusBarTextColor("white"),R()}),e.onUnmounted(()=>{e.index.$off("miniPlayerHeightChange",j)}),(l,o)=>e.e({a:e.unref(i.proxyImageUrl)(L.value),b:e.o(e=>W(e)),c:e.s(f.value),d:e.p({name:"chevron-left",size:"24",color:"#fff"}),e:e.o(F),f:e.t(v.value?"歌单预览":"歌单详情"),g:e.unref(i.proxyImageUrl)(L.value),h:e.o(e=>W(e)),i:_.value},_.value?{j:e.p({name:"play",size:"10",color:"#fff"}),k:e.t(_.value)}:{},{l:e.t(I.value||"加载中..."),m:x.value},x.value?{n:e.t(x.value)}:{},{o:T.value},T.value?{p:e.t(T.value)}:{},{q:e.t(P.value),r:_.value},(_.value,{}),{s:_.value},_.value?{t:e.t(_.value)}:{},{v:g.value},g.value?e.e({w:v.value},v.value?{x:e.p({name:"heart",size:"14",color:"#fff"}),y:e.t("import"===m.value?"导入歌单":"收藏歌单"),z:e.o(Z)}:{},{A:e.p({name:"play",size:"14",color:"#fff"}),B:e.o(K)}):{},{C:D.value&&0===M.value.length},(D.value&&M.value.length,{}),{D:d.value&&!D.value},d.value&&!D.value?{E:e.p({name:"exclamation-circle",size:"48",color:"#999"}),F:e.t(d.value),G:e.o(X)}:{},{H:M.value.length>0},M.value.length>0?e.e({I:e.f(M.value,(l,o,t)=>{var i,n,r,u;return e.e({a:e.t(o+1),b:e.t(l.name),c:J(l)},(J(l),{}),{d:e.t(H(l.ar||l.singer)),e:(null==(i=l.al)?void 0:i.name)||l.album||l.albumName},(null==(n=l.al)?void 0:n.name)||l.album||l.albumName?{f:e.t((null==(r=l.al)?void 0:r.name)||l.album||l.albumName)}:{},{g:k.value===o&&A.value},k.value===o&&A.value?{h:"864f0795-5-"+t,i:e.p({name:"play",size:"18"})}:k.value!==o||A.value?{}:{k:"864f0795-6-"+t,l:e.p({name:"pause",size:"18"})},{j:k.value===o&&!A.value,m:e.t((u=l.dt||l.interval||l.duration,a.formatDuration(u))),n:l.id||o,o:k.value===o?1:"",p:e.o(e=>(e=>{k.value!==e?G(e):A.value?s.playerStore.pause():s.playerStore.resume()})(o),l.id||o)})}),J:D.value&&M.value.length>0},(D.value&&M.value.length,{}),{K:!w.value&&M.value.length>0&&!D.value},(!w.value&&M.value.length>0&&D.value,{}),{L:$.value+"px"}):{},{M:!D.value&&!d.value&&0===M.value.length},D.value||d.value||0!==M.value.length?{}:{N:e.p({name:"ban",size:"64",color:"#ccc"})},{O:q.value,P:e.o(V),Q:!v.value},v.value?{}:{R:e.p({"current-index":2})},{S:N.value?1:""})}},c=e._export_sfc(u,[["__scopeId","data-v-864f0795"]]);wx.createPage(c);
+"use strict";
+const common_vendor = require("../../common/vendor.js");
+const utils_system = require("../../utils/system.js");
+const utils_api_songlist = require("../../utils/api/songlist.js");
+const utils_api_songlistDirect = require("../../utils/api/songlist-direct.js");
+const store_modules_list = require("../../store/modules/list.js");
+const store_modules_player = require("../../store/modules/player.js");
+const utils_imageProxy = require("../../utils/imageProxy.js");
+if (!Array) {
+  const _component_custom_tabbar = common_vendor.resolveComponent("custom-tabbar");
+  _component_custom_tabbar();
+}
+if (!Math) {
+  (RocIconPlus + MiniPlayer)();
+}
+const RocIconPlus = () => "../../uni_modules/roc-icon-plus/components/roc-icon-plus/roc-icon-plus.js";
+const MiniPlayer = () => "../../components/player/MiniPlayer.js";
+const PAGE_SIZE = 50;
+const _sfc_main = {
+  __name: "index",
+  setup(__props) {
+    const pageLink = common_vendor.ref("");
+    const pageSource = common_vendor.ref("");
+    const pagePlatform = common_vendor.ref("");
+    const isPreviewMode = common_vendor.ref(false);
+    const showActionBar = common_vendor.ref(false);
+    const loadError = common_vendor.ref("");
+    const listSource = common_vendor.ref("");
+    const listId = common_vendor.ref("");
+    const fromPage = common_vendor.ref("");
+    const statusBarHeight = common_vendor.ref(utils_system.getStatusBarHeight());
+    const statusBarStyle = common_vendor.computed(() => ({
+      height: `${statusBarHeight.value}px`,
+      width: "100%"
+    }));
+    const playlistId = common_vendor.ref("");
+    const playlistName = common_vendor.ref("");
+    const playlistCover = common_vendor.ref("");
+    const playlistAuthor = common_vendor.ref("");
+    const playlistDesc = common_vendor.ref("");
+    const playlistTrackCount = common_vendor.ref(0);
+    const playlistPlayCount = common_vendor.ref("");
+    const songs = common_vendor.ref([]);
+    const isLoading = common_vendor.ref(false);
+    const hasMore = common_vendor.ref(true);
+    const page = common_vendor.ref(1);
+    const allSongs = common_vendor.ref([]);
+    const currentPage = common_vendor.ref(1);
+    const currentSongIndex = common_vendor.computed(() => {
+      var _a;
+      triggerRefresh.value;
+      const playerListId = store_modules_list.listStore.state.playInfo.playerListId;
+      const tempListMeta = store_modules_list.listStore.state.tempList.meta;
+      const playIndex = store_modules_list.listStore.state.playInfo.playIndex;
+      console.log("[Sharelist] currentSongIndex 计算:", {
+        playerListId,
+        tempListMetaId: tempListMeta == null ? void 0 : tempListMeta.id,
+        currentListId: currentListId.value,
+        playIndex,
+        songsLength: songs.value.length
+      });
+      const currentPlayingSongId = (_a = store_modules_player.playerStore.state.currentSong) == null ? void 0 : _a.id;
+      console.log("[Sharelist] 当前播放歌曲ID:", currentPlayingSongId);
+      if (playerListId === store_modules_list.LIST_IDS.TEMP) {
+        const tempId = tempListMeta == null ? void 0 : tempListMeta.id;
+        const isLocalTempList = tempId && (tempId === currentListId.value || tempId.startsWith("local_"));
+        if (isLocalTempList || tempId === currentListId.value) {
+          if (playIndex >= 0 && playIndex < songs.value.length) {
+            return playIndex;
+          }
+          if (currentPlayingSongId) {
+            const indexInSongs = songs.value.findIndex((song) => song.id === currentPlayingSongId);
+            console.log("[Sharelist] 临时列表匹配，在songs中查找索引:", currentPlayingSongId, "结果:", indexInSongs);
+            return indexInSongs;
+          }
+        }
+        console.log("[Sharelist] 临时列表不匹配当前列表，返回 -1");
+        return -1;
+      }
+      if (playerListId === currentListId.value) {
+        if (playIndex >= 0 && playIndex < songs.value.length) {
+          console.log("[Sharelist] 当前页面歌单播放，使用 playIndex:", playIndex);
+          return playIndex;
+        }
+        if (currentPlayingSongId) {
+          const indexInSongs = songs.value.findIndex((song) => song.id === currentPlayingSongId);
+          console.log("[Sharelist] 在songs中查找索引:", currentPlayingSongId, "结果:", indexInSongs);
+          return indexInSongs;
+        }
+        console.log("[Sharelist] 当前页面歌单播放，但未找到歌曲，返回 -1");
+        return -1;
+      }
+      if (playerListId === store_modules_list.LIST_IDS.DEFAULT && currentPlayingSongId) {
+        const indexInSongs = songs.value.findIndex((song) => song.id === currentPlayingSongId);
+        console.log("[Sharelist] 在songs中查找索引:", currentPlayingSongId, "结果:", indexInSongs);
+        return indexInSongs;
+      }
+      console.log("[Sharelist] 不在播放当前列表，返回 -1");
+      return -1;
+    });
+    common_vendor.computed(() => {
+      if (currentSongIndex.value >= 0 && songs.value.length > currentSongIndex.value) {
+        return songs.value[currentSongIndex.value];
+      }
+      return null;
+    });
+    const isPlaying = common_vendor.computed(() => store_modules_player.playerStore.state.isPlaying);
+    const triggerRefresh = common_vendor.ref(0);
+    common_vendor.watch(() => store_modules_player.playerStore.state.currentSong, (newSong, oldSong) => {
+      console.log("[Sharelist] playerStore.currentSong 变化:", newSong == null ? void 0 : newSong.name, "ID:", newSong == null ? void 0 : newSong.id);
+      triggerRefresh.value++;
+    }, { deep: true });
+    common_vendor.watch(() => [store_modules_list.listStore.state.playInfo.playerListId, store_modules_list.listStore.state.playInfo.playIndex], (newVal, oldVal) => {
+      console.log("[Sharelist] playInfo 变化:", newVal);
+      triggerRefresh.value++;
+    }, { deep: true });
+    const darkMode = common_vendor.ref(false);
+    const initDarkMode = () => {
+      darkMode.value = common_vendor.index.getStorageSync("darkMode") === "true";
+      console.log("[Sharelist] 初始化暗黑模式:", darkMode.value);
+    };
+    const miniPlayerBottomHeight = common_vendor.ref(0);
+    const handleMiniPlayerHeightChange = ({ height, isShowing }) => {
+      console.log("[Sharelist] MiniPlayer 高度变化:", height, "是否显示:", isShowing);
+      miniPlayerBottomHeight.value = isShowing ? height : 0;
+    };
+    const scrollTop = common_vendor.ref(0);
+    const formatPlayCount = (count) => {
+      if (!count)
+        return "0";
+      return utils_api_songlist.formatPlayCount(count);
+    };
+    const currentListId = common_vendor.ref("");
+    const isLocalPlaylist = common_vendor.ref(false);
+    const generateImportedPlaylistId = () => {
+      if (!currentListId.value) {
+        currentListId.value = `${listSource.value}_${Date.now()}`;
+      }
+      return currentListId.value;
+    };
+    const formatDuration = (duration) => {
+      return utils_api_songlist.formatDuration(duration);
+    };
+    const formatSingerName = (singers, nameKey = "name", join = "、") => {
+      if (!singers)
+        return "未知歌手";
+      if (Array.isArray(singers)) {
+        const singer = [];
+        singers.forEach((item) => {
+          let name = item[nameKey];
+          if (!name)
+            return;
+          singer.push(name);
+        });
+        return singer.length > 0 ? singer.join(join) : "未知歌手";
+      }
+      return String(singers || "未知歌手");
+    };
+    const hasHighQuality = (song) => {
+      if (song.types) {
+        return song.types.some((t) => t.type === "flac" || t.type === "flac24bit" || t.type === "SQ");
+      }
+      if (song.quality === "SQ")
+        return true;
+      return false;
+    };
+    const getPlatformName = (source) => {
+      const platformMap = {
+        "wy": "网易云音乐",
+        "tx": "QQ音乐",
+        "kg": "酷狗音乐",
+        "kw": "酷我音乐",
+        "mg": "咪咕音乐",
+        "local": "本地音乐"
+      };
+      return platformMap[source] || source || "未知平台";
+    };
+    const goBack = () => {
+      common_vendor.index.navigateBack();
+    };
+    const handleSharelistImageError = (event, type) => {
+      if (!playlistCover.value)
+        return;
+      let currentProxyIndex = 0;
+      if (playlistCover.value.includes("wsrv.nl"))
+        currentProxyIndex = 1;
+      else if (playlistCover.value.includes("weserv.nl"))
+        currentProxyIndex = 2;
+      else if (playlistCover.value.includes("jina.ai"))
+        currentProxyIndex = 3;
+      const nextUrl = utils_imageProxy.handleImageError(event, playlistCover.value, currentProxyIndex);
+      if (nextUrl) {
+        playlistCover.value = nextUrl;
+      }
+    };
+    const playAll = async () => {
+      if (songs.value.length === 0)
+        return;
+      console.log("[Sharelist] 播放全部");
+      console.log("[Sharelist] 是否是本地歌单:", isLocalPlaylist.value);
+      if (isLocalPlaylist.value) {
+        console.log("[Sharelist] 本地歌单，直接切换到对应列表播放");
+        store_modules_list.listStore.setPlayerListId(currentListId.value);
+        await playSongWithIndex(0, false);
+        return;
+      }
+      console.log("[Sharelist] 在线歌单，使用临时列表播放，添加到试听列表");
+      const importedId = generateImportedPlaylistId();
+      store_modules_list.listStore.setTempList(store_modules_list.LIST_IDS.TEMP, [], {});
+      store_modules_list.listStore.setTempList(
+        store_modules_list.LIST_IDS.TEMP,
+        songs.value,
+        {
+          id: importedId,
+          source: listSource.value,
+          name: playlistName.value
+        }
+      );
+      store_modules_list.listStore.setPlayerListId(store_modules_list.LIST_IDS.TEMP);
+      await playSongWithIndex(0, true);
+    };
+    const playSongWithIndex = async (index, addToDefaultList = true) => {
+      var _a, _b, _c;
+      const song = songs.value[index];
+      if (!song)
+        return;
+      console.log("[Sharelist] ========== 播放歌曲开始 ==========");
+      console.log("[Sharelist] 歌曲索引:", index);
+      console.log("[Sharelist] 是否添加到试听列表:", addToDefaultList);
+      console.log("[Sharelist] 是否是本地歌单:", isLocalPlaylist.value);
+      try {
+        const qualityMap = {
+          "standard": "320k",
+          "high": "flac",
+          "lossless": "flac24bit",
+          "low": "128k"
+        };
+        const playerQuality = store_modules_player.playerStore.getState().audioQuality || "standard";
+        const quality = qualityMap[playerQuality] || "320k";
+        console.log(`[Sharelist] 使用音质 ${quality} 获取歌曲播放URL`);
+        let targetListId;
+        if (isLocalPlaylist.value) {
+          console.log("[Sharelist] 本地歌单，使用临时列表播放，不添加到试听列表");
+          const tempId = `local_${currentListId.value}`;
+          store_modules_list.listStore.setTempList(store_modules_list.LIST_IDS.TEMP, [], {});
+          store_modules_list.listStore.setTempList(
+            store_modules_list.LIST_IDS.TEMP,
+            songs.value,
+            {
+              id: tempId,
+              source: listSource.value,
+              name: playlistName.value
+            }
+          );
+          store_modules_list.listStore.setPlayerListId(store_modules_list.LIST_IDS.TEMP);
+          targetListId = store_modules_list.LIST_IDS.TEMP;
+          addToDefaultList = false;
+        } else {
+          console.log("[Sharelist] 在线歌单，使用临时列表播放，添加到试听列表");
+          const importedId = generateImportedPlaylistId();
+          store_modules_list.listStore.setTempList(store_modules_list.LIST_IDS.TEMP, [], {});
+          store_modules_list.listStore.setTempList(
+            store_modules_list.LIST_IDS.TEMP,
+            songs.value,
+            {
+              id: importedId,
+              source: listSource.value,
+              name: playlistName.value
+            }
+          );
+          store_modules_list.listStore.setPlayerListId(store_modules_list.LIST_IDS.TEMP);
+          targetListId = store_modules_list.LIST_IDS.TEMP;
+          addToDefaultList = true;
+        }
+        if (addToDefaultList) {
+          const songToAdd = {
+            id: song.id,
+            name: song.name,
+            singer: song.singer,
+            ar: song.ar || (song.singer ? song.singer.split("、").map((name) => ({ name })) : []),
+            album: song.album || song.albumName,
+            duration: song.dt || song.interval || song.duration,
+            source: song.source || listSource.value,
+            songmid: song.songmid,
+            hash: song.hash,
+            copyrightId: song.copyrightId,
+            img: song.img || song.albumPic || ((_a = song.al) == null ? void 0 : _a.picUrl) || ""
+          };
+          const defaultList = store_modules_list.listStore.state.defaultList.list;
+          console.log("[Sharelist] 试听列表当前歌曲数:", defaultList.length);
+          const existingIds = new Set(defaultList.map((s) => s.id));
+          if (!existingIds.has(songToAdd.id)) {
+            store_modules_list.listStore.addListMusics(store_modules_list.LIST_IDS.DEFAULT, [songToAdd], "top");
+            console.log("[Sharelist] 已添加 1 首歌曲到试听列表:", songToAdd.name);
+          } else {
+            console.log("[Sharelist] 歌曲已在试听列表中:", songToAdd.name);
+          }
+        }
+        const previousSongId = (_b = store_modules_player.playerStore.state.currentSong) == null ? void 0 : _b.id;
+        console.log("[Sharelist] 之前播放的歌曲ID:", previousSongId, "即将播放的歌曲ID:", song.id);
+        const musicInfo = {
+          id: song.id,
+          name: song.name,
+          singer: song.singer,
+          ar: song.ar || (song.singer ? song.singer.split("、").map((name) => ({ name })) : []),
+          album: song.album || song.albumName,
+          duration: song.dt || song.interval || song.duration,
+          source: song.source || listSource.value,
+          songmid: song.songmid,
+          hash: song.hash,
+          copyrightId: song.copyrightId,
+          img: song.img || song.albumPic || ((_c = song.al) == null ? void 0 : _c.picUrl) || "",
+          // 不设置url和playUrl，让playerStore.playSong自己处理缓存和URL获取
+          url: "",
+          playUrl: "",
+          lyric: "",
+          tlyric: "",
+          rlyric: "",
+          lxlyric: ""
+        };
+        store_modules_list.listStore.setPlayMusicInfo(targetListId, musicInfo, false);
+        const isSameSong = previousSongId === musicInfo.id;
+        console.log("[Sharelist] 是否是同一首歌:", isSameSong, "previousSongId:", previousSongId, "currentId:", musicInfo.id);
+        if (isSameSong) {
+          console.log("[Sharelist] 同一首歌，切换播放/暂停状态");
+          if (store_modules_player.playerStore.state.isPlaying) {
+            store_modules_player.playerStore.pause();
+          } else {
+            store_modules_player.playerStore.resume();
+          }
+          return;
+        }
+        store_modules_player.playerStore.updatePendingSong(null);
+        console.log("[Sharelist] 调用 playerStore.playSong");
+        store_modules_player.playerStore.playSong(musicInfo);
+        console.log("[Sharelist] 播放完成");
+      } catch (error) {
+        console.error("[Sharelist] 播放失败:", error);
+        common_vendor.index.showToast({
+          title: "播放失败: " + (error.message || "未知错误"),
+          icon: "none"
+        });
+      }
+    };
+    const playSong = (index) => {
+      if (currentSongIndex.value === index) {
+        if (isPlaying.value) {
+          store_modules_player.playerStore.pause();
+        } else {
+          store_modules_player.playerStore.resume();
+        }
+        return;
+      }
+      playSongWithIndex(index);
+    };
+    const loadMoreSongs = () => {
+      console.log("[Sharelist] loadMoreSongs 被触发");
+      console.log("[Sharelist] hasMore:", hasMore.value, "isLoading:", isLoading.value, "isPreviewMode:", isPreviewMode.value, "allSongs.length:", allSongs.value.length);
+      if (!hasMore.value) {
+        console.log("[Sharelist] 没有更多数据，跳过加载");
+        return;
+      }
+      if (isLoading.value) {
+        console.log("[Sharelist] 正在加载中，跳过");
+        return;
+      }
+      if (!isPreviewMode.value) {
+        console.log("[Sharelist] 非预览模式，跳过分页加载");
+        return;
+      }
+      console.log("[Sharelist] 开始加载更多歌曲...");
+      const nextPage = currentPage.value + 1;
+      const start = (nextPage - 1) * PAGE_SIZE;
+      const end = nextPage * PAGE_SIZE;
+      console.log("[Sharelist] 加载第", nextPage, "页, 范围:", start, "-", end);
+      const newSongs = allSongs.value.slice(start, end);
+      if (newSongs.length > 0) {
+        songs.value = [...songs.value, ...newSongs];
+        currentPage.value = nextPage;
+        console.log("[Sharelist] 已加载", newSongs.length, "首, 当前共", songs.value.length, "首");
+        hasMore.value = songs.value.length < allSongs.value.length;
+        console.log("[Sharelist] 是否还有更多:", hasMore.value);
+      } else {
+        hasMore.value = false;
+        console.log("[Sharelist] 没有更多歌曲了");
+      }
+    };
+    common_vendor.onReachBottom(() => {
+      console.log("[Sharelist] onReachBottom 触发");
+      loadMoreSongs();
+    });
+    const retryLoad = () => {
+      loadPreviewList();
+    };
+    const simplifySongs = (songs2) => {
+      if (!songs2 || !Array.isArray(songs2))
+        return [];
+      return songs2.map((song) => {
+        var _a, _b;
+        const simplified = {
+          id: song.id,
+          name: song.name,
+          singer: song.singer || (song.ar ? song.ar.map((a) => a.name).join("/") : ""),
+          ar: song.ar || (song.singer ? song.singer.split("、").map((name) => ({ name })) : []),
+          // 保留 ar 字段
+          album: song.album || song.albumName || (song.al ? song.al.name : ""),
+          duration: song.duration || song.dt || song.interval,
+          dt: song.dt || song.duration || song.interval,
+          // 兼容 SongListItem 组件
+          interval: song.interval || song.dt || song.duration,
+          // 兼容播放器
+          source: song.source
+        };
+        if (song.songmid)
+          simplified.songmid = song.songmid;
+        if (song.hash)
+          simplified.hash = song.hash;
+        if (song.copyrightId)
+          simplified.copyrightId = song.copyrightId;
+        if (song.img || song.albumPic || ((_a = song.al) == null ? void 0 : _a.picUrl)) {
+          simplified.img = song.img || song.albumPic || ((_b = song.al) == null ? void 0 : _b.picUrl);
+        }
+        return simplified;
+      });
+    };
+    const handleCollect = async () => {
+      if (!playlistName.value)
+        return;
+      const sourceListId = `${listSource.value}__${listId.value}`;
+      let importedList = common_vendor.index.getStorageSync("imported_playlists") || [];
+      const existsIndex = importedList.findIndex((p) => p.sourceListId === sourceListId);
+      if (existsIndex !== -1) {
+        common_vendor.index.showModal({
+          title: "提示",
+          content: `歌单「${importedList[existsIndex].name}」已存在，是否同步更新？`,
+          confirmText: "更新",
+          cancelText: "取消",
+          success: async (res) => {
+            if (res.confirm) {
+              common_vendor.index.showLoading({ title: "更新中..." });
+              try {
+                console.log("[Sharelist] 使用已加载的歌曲数据更新...");
+                const fullSongList = allSongs.value || [];
+                const simplifiedSongs = simplifySongs(fullSongList);
+                importedList[existsIndex].songs = simplifiedSongs;
+                importedList[existsIndex].trackCount = fullSongList.length;
+                importedList[existsIndex].coverImgUrl = playlistCover.value;
+                common_vendor.index.setStorageSync("imported_playlists", importedList);
+                common_vendor.index.showToast({ title: "更新成功", icon: "success" });
+              } catch (error) {
+                console.error("[Sharelist] 更新失败:", error);
+                common_vendor.index.showToast({ title: "更新失败", icon: "none" });
+              } finally {
+                common_vendor.index.hideLoading();
+              }
+            }
+          }
+        });
+        return;
+      }
+      common_vendor.index.showModal({
+        title: "导入歌单",
+        content: `是否将「${playlistName.value}」导入到我的歌单？`,
+        confirmText: "导入",
+        cancelText: "取消",
+        success: async (res) => {
+          if (res.confirm) {
+            common_vendor.index.showLoading({ title: "获取数据中..." });
+            try {
+              console.log("[Sharelist] 使用已加载的歌曲数据...");
+              const fullSongList = allSongs.value || [];
+              console.log("[Sharelist] 已加载歌曲数量:", fullSongList.length, "首");
+              if (fullSongList.length === 0) {
+                common_vendor.index.showToast({
+                  title: "歌单为空，无法导入",
+                  icon: "none"
+                });
+                common_vendor.index.hideLoading();
+                return;
+              }
+              const importedId = sourceListId;
+              console.log("[Sharelist] 导入歌单使用的ID:", importedId);
+              const simplifiedSongs = simplifySongs(fullSongList);
+              console.log("[Sharelist] 精简后歌曲数量:", simplifiedSongs.length, "首");
+              const importedPlaylist = {
+                id: importedId,
+                name: playlistName.value,
+                coverImgUrl: playlistCover.value,
+                trackCount: fullSongList.length,
+                source: listSource.value,
+                sourceListId,
+                link: pageLink.value,
+                platform: getPlatformName(listSource.value),
+                songs: simplifiedSongs,
+                // 自动更新相关标志
+                canAutoUpdate: true,
+                // 支持自动更新
+                isFromImport: fromPage.value === "import",
+                // 只有从导入功能进入才标记为 true
+                autoUpdate: false
+                // 默认关闭自动更新
+              };
+              importedList.push(importedPlaylist);
+              common_vendor.index.setStorageSync("imported_playlists", importedList);
+              common_vendor.index.showToast({
+                title: `导入成功（${fullSongList.length}首）`,
+                icon: "success"
+              });
+              console.log("[Sharelist] handleCollect - fromPage.value:", fromPage.value);
+              if (fromPage.value === "import") {
+                setTimeout(() => {
+                  common_vendor.index.showModal({
+                    title: "自动更新",
+                    content: `「${playlistName.value}」导入成功！是否开启自动更新？`,
+                    confirmText: "开启",
+                    cancelText: "暂不开启",
+                    success: (res2) => {
+                      if (res2.confirm) {
+                        const updatedList = common_vendor.index.getStorageSync("imported_playlists") || [];
+                        const updateIndex = updatedList.findIndex((p) => p.id === importedId);
+                        if (updateIndex !== -1) {
+                          updatedList[updateIndex].autoUpdate = true;
+                          common_vendor.index.setStorageSync("imported_playlists", updatedList);
+                          common_vendor.index.showToast({
+                            title: "已开启自动更新",
+                            icon: "success"
+                          });
+                        }
+                      }
+                      common_vendor.index.navigateBack();
+                    }
+                  });
+                }, 1500);
+              } else {
+                setTimeout(() => {
+                  common_vendor.index.navigateBack();
+                }, 1500);
+              }
+            } catch (error) {
+              console.error("导入失败:", error);
+              common_vendor.index.showToast({
+                title: "导入失败",
+                icon: "none"
+              });
+            } finally {
+              common_vendor.index.hideLoading();
+            }
+          }
+        }
+      });
+    };
+    const loadPreviewList = async () => {
+      var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l;
+      console.log("[Sharelist] loadPreviewList 开始执行");
+      if (isLoading.value) {
+        console.log("[Sharelist] 正在加载中，跳过");
+        return;
+      }
+      isLoading.value = true;
+      loadError.value = "";
+      try {
+        let result;
+        const pages = getCurrentPages();
+        const currentPage2 = pages[pages.length - 1];
+        const options = ((_a = currentPage2.$page) == null ? void 0 : _a.options) || currentPage2.options || {};
+        let targetPlaylistId = options.id;
+        if (!targetPlaylistId && pageLink.value) {
+          let link = decodeURIComponent(pageLink.value);
+          if (/^https?:\/\//.test(link)) {
+            let match = link.match(/[?&]id=(\d+)/);
+            if (match) {
+              targetPlaylistId = match[1];
+              console.log("[Sharelist] 从URL查询参数解析出ID:", targetPlaylistId);
+            } else {
+              match = link.match(/\/playlist(?:_detail)?\/(\d+)/);
+              if (match) {
+                targetPlaylistId = match[1];
+                console.log("[Sharelist] 从URL路径解析出ID:", targetPlaylistId);
+              } else if (pageSource.value === "mg" && link.includes("c.migu.cn")) {
+                console.log("[Sharelist] 检测到咪咕短链接，尝试获取真实URL...");
+                try {
+                  const res = await common_vendor.index.request({
+                    url: link,
+                    method: "HEAD",
+                    header: {
+                      "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15"
+                    }
+                  });
+                  const location = ((_b = res.header) == null ? void 0 : _b.Location) || ((_c = res.header) == null ? void 0 : _c.location);
+                  if (location) {
+                    console.log("[Sharelist] 咪咕短链接重定向到:", location);
+                    const idMatch = location.match(/[?&]id=(\d+)/);
+                    if (idMatch) {
+                      targetPlaylistId = idMatch[1];
+                      console.log("[Sharelist] 从咪咕重定向URL解析出ID:", targetPlaylistId);
+                    }
+                  }
+                } catch (err) {
+                  console.error("[Sharelist] 获取咪咕短链接失败:", err);
+                }
+              }
+            }
+          } else {
+            targetPlaylistId = link;
+            console.log("[Sharelist] 直接使用作为ID:", targetPlaylistId);
+          }
+        }
+        const shouldUseBackend = pageSource.value === "tx";
+        if (shouldUseBackend) {
+          console.log("[Sharelist] QQ音乐使用后端接口:", pageSource.value);
+          console.log("[Sharelist] 调用 getListDetail:", pageSource.value, pageLink.value);
+          result = await utils_api_songlist.getListDetail(pageSource.value, pageLink.value, page.value);
+        } else {
+          console.log("[Sharelist] 使用前端直接API:", pageSource.value);
+          console.log("[Sharelist] 调用 getListDetailDirect:", pageSource.value, targetPlaylistId);
+          result = await utils_api_songlistDirect.getListDetailDirect(pageSource.value, targetPlaylistId, 1);
+        }
+        console.log("[Sharelist] ========== 返回数据开始 ==========");
+        console.log("[Sharelist] result.info:", JSON.stringify(result.info));
+        console.log("[Sharelist] result.list类型:", typeof result.list, "是否是数组:", Array.isArray(result.list));
+        console.log("[Sharelist] result.list长度:", (_d = result.list) == null ? void 0 : _d.length);
+        console.log("[Sharelist] result.list前3项:", JSON.stringify((_e = result.list) == null ? void 0 : _e.slice(0, 3)));
+        console.log("[Sharelist] ========== 返回数据结束 ==========");
+        listSource.value = result.source;
+        listId.value = result.id || options.id || "";
+        console.log("[Sharelist] 开始更新歌单信息...");
+        playlistId.value = result.id || options.id || "";
+        playlistName.value = ((_f = result.info) == null ? void 0 : _f.name) || "未知歌单";
+        playlistCover.value = ((_g = result.info) == null ? void 0 : _g.img) || "";
+        playlistAuthor.value = ((_h = result.info) == null ? void 0 : _h.author) || "";
+        playlistDesc.value = ((_i = result.info) == null ? void 0 : _i.desc) || "";
+        playlistTrackCount.value = result.total || 0;
+        playlistPlayCount.value = ((_j = result.info) == null ? void 0 : _j.play_count) || "";
+        console.log("[Sharelist] 歌单信息已更新:", {
+          name: playlistName.value,
+          author: playlistAuthor.value,
+          playCount: playlistPlayCount.value,
+          trackCount: playlistTrackCount.value
+        });
+        console.log("[Sharelist] 开始更新歌曲列表...");
+        allSongs.value = result.list || [];
+        console.log("[Sharelist] 总歌曲数量:", (_k = allSongs.value) == null ? void 0 : _k.length);
+        console.log("[Sharelist] result.total:", result.total);
+        console.log("[Sharelist] result.limit:", result.limit);
+        currentPage2.value = 1;
+        const start = 0;
+        const end = Math.min(PAGE_SIZE, allSongs.value.length);
+        songs.value = allSongs.value.slice(start, end);
+        console.log("[Sharelist] 当前显示:", (_l = songs.value) == null ? void 0 : _l.length, "首");
+        console.log("[Sharelist] 第1页范围:", start, "-", end);
+        hasMore.value = allSongs.value.length > songs.value.length;
+        console.log("[Sharelist] 是否还有更多:", hasMore.value);
+        if (allSongs.value.length === 0) {
+          console.log("[Sharelist] 歌单为空，可能原因：");
+          console.log("[Sharelist] 1. 歌单ID无效或歌单不存在");
+          console.log("[Sharelist] 2. 歌单是私有的");
+          console.log("[Sharelist] 3. 歌单已被删除");
+          console.log("[Sharelist] 4. 网络请求失败");
+          loadError.value = "歌单为空，可能原因：\n1. 歌单不存在或已被删除\n2. 歌单是私有的\n3. 网络请求失败\n\n请尝试其他歌单";
+        }
+      } catch (error) {
+        console.error("[Sharelist] 加载歌单失败:", error);
+        loadError.value = error.message || "加载失败，请检查链接是否正确";
+        common_vendor.index.showToast({
+          title: loadError.value,
+          icon: "none",
+          duration: 3e3
+        });
+      } finally {
+        isLoading.value = false;
+        showActionBar.value = true;
+        console.log("[Sharelist] loadPreviewList 执行完成, isLoading:", isLoading.value, "songs.length:", songs.value.length);
+        setTimeout(() => {
+          console.log("[Sharelist] 强制刷新后的 songs.length:", songs.value.length);
+        }, 100);
+      }
+    };
+    common_vendor.onMounted(() => {
+      var _a;
+      console.log("[Sharelist] onMounted 开始执行");
+      initDarkMode();
+      common_vendor.index.$on("miniPlayerHeightChange", handleMiniPlayerHeightChange);
+      const pages = getCurrentPages();
+      const currentPage2 = pages[pages.length - 1];
+      const options = ((_a = currentPage2.$page) == null ? void 0 : _a.options) || currentPage2.options || {};
+      console.log("[Sharelist] 页面参数:", JSON.stringify(options));
+      console.log("[Sharelist] link:", options.link);
+      console.log("[Sharelist] source:", options.source);
+      console.log("[Sharelist] platform:", options.platform);
+      console.log("[Sharelist] id:", options.id);
+      console.log("[Sharelist] fromName:", options.fromName);
+      console.log("[Sharelist] from:", options.from);
+      fromPage.value = options.from || "";
+      console.log("[Sharelist] fromPage.value:", fromPage.value);
+      if (options.fromMyMusic === "true" && options.playlistId) {
+        console.log("[Sharelist] 从我的音乐页面进入，尝试加载本地数据");
+        console.log("[Sharelist] playlistId:", options.playlistId);
+        isLoading.value = true;
+        setTimeout(() => {
+          const isUserList = options.playlistId && options.playlistId.startsWith("userlist_");
+          if (isUserList) {
+            console.log("[Sharelist] 用户自建歌单模式");
+            isLocalPlaylist.value = true;
+            const userLists = store_modules_list.listStore.state.userLists || [];
+            const targetList = userLists.find((l) => l.id === options.playlistId);
+            console.log("[Sharelist] 查找到的用户歌单:", targetList ? targetList.name : "未找到");
+            if (targetList && targetList.list && targetList.list.length > 0) {
+              console.log("[Sharelist] 使用用户自建歌单数据，数量:", targetList.list.length);
+              const songsWithAr = targetList.list.map((song) => ({
+                ...song,
+                ar: song.ar || (song.singer ? song.singer.split("、").map((name) => ({ name })) : [])
+              }));
+              const decodedName = options.playlistName ? decodeURIComponent(options.playlistName) : "";
+              playlistName.value = decodedName || targetList.name || "未知歌单";
+              playlistCover.value = targetList.coverImgUrl || "/static/logo.png";
+              playlistAuthor.value = targetList.author || "";
+              playlistDesc.value = targetList.desc || "";
+              playlistTrackCount.value = targetList.list.length;
+              playlistPlayCount.value = "";
+              songs.value = songsWithAr;
+              allSongs.value = songsWithAr;
+              hasMore.value = false;
+              isLoading.value = false;
+              isPreviewMode.value = false;
+              showActionBar.value = true;
+              currentListId.value = targetList.id;
+              listSource.value = "local";
+              console.log("[Sharelist] 用户自建歌单数据加载完成");
+            } else {
+              console.log("[Sharelist] 用户自建歌单未找到数据");
+              isLoading.value = false;
+              loadError.value = "歌单数据不存在";
+            }
+          } else {
+            console.log("[Sharelist] 导入歌单模式");
+            isLocalPlaylist.value = true;
+            let importedList = [];
+            try {
+              const rawData = common_vendor.index.getStorageSync("imported_playlists");
+              if (rawData) {
+                if (typeof rawData === "string") {
+                  importedList = JSON.parse(rawData);
+                } else if (Array.isArray(rawData)) {
+                  importedList = rawData;
+                }
+              }
+            } catch (e) {
+              console.error("[Sharelist] 解析导入歌单失败:", e);
+            }
+            const targetPlaylist = importedList.find((p) => p.id === options.playlistId || p.sourceListId === options.playlistId);
+            console.log("[Sharelist] 查找到的导入歌单:", targetPlaylist ? targetPlaylist.name : "未找到");
+            if (targetPlaylist && targetPlaylist.songs && targetPlaylist.songs.length > 0) {
+              console.log("[Sharelist] 使用导入歌单数据，数量:", targetPlaylist.songs.length);
+              const songsWithAr = targetPlaylist.songs.map((song) => ({
+                ...song,
+                ar: song.ar || (song.singer ? song.singer.split("、").map((name) => ({ name })) : [])
+              }));
+              playlistName.value = targetPlaylist.name || "未知歌单";
+              playlistCover.value = targetPlaylist.coverImgUrl || "/static/logo.png";
+              playlistAuthor.value = targetPlaylist.author || "";
+              playlistDesc.value = targetPlaylist.desc || "";
+              playlistTrackCount.value = targetPlaylist.songs.length;
+              playlistPlayCount.value = targetPlaylist.playCount ? formatPlayCount(targetPlaylist.playCount) : "";
+              songs.value = songsWithAr;
+              allSongs.value = songsWithAr;
+              hasMore.value = false;
+              isLoading.value = false;
+              isPreviewMode.value = false;
+              showActionBar.value = true;
+              currentListId.value = targetPlaylist.id || targetPlaylist.sourceListId;
+              listSource.value = targetPlaylist.platform || options.source || "";
+              console.log("[Sharelist] 导入歌单数据加载完成");
+            } else {
+              console.log("[Sharelist] 导入歌单未找到数据");
+              isLoading.value = false;
+              loadError.value = "歌单数据不存在";
+            }
+          }
+        }, 100);
+        return;
+      }
+      if (options.link && options.source) {
+        console.log("[Sharelist] 进入预览模式");
+        isPreviewMode.value = true;
+        pageLink.value = decodeURIComponent(options.link);
+        pageSource.value = options.source;
+        pagePlatform.value = decodeURIComponent(options.platform || "");
+        console.log("[Sharelist] pageLink:", pageLink.value);
+        console.log("[Sharelist] pageSource:", pageSource.value);
+        console.log("[Sharelist] pagePlatform:", pagePlatform.value);
+        if (options.name) {
+          playlistName.value = decodeURIComponent(options.name);
+        }
+        if (options.picUrl) {
+          playlistCover.value = decodeURIComponent(options.picUrl);
+        }
+        if (options.author) {
+          playlistAuthor.value = decodeURIComponent(options.author);
+        }
+        if (options.playCount) {
+          playlistPlayCount.value = formatPlayCount(options.playCount);
+        }
+        if (options.id) {
+          playlistId.value = options.id;
+        }
+        loadPreviewList();
+      } else if (options.mode === "user" && options.fromMyMusic === "true") {
+        console.log("[Sharelist] 进入用户自建歌单模式");
+        console.log("[Sharelist] playlistId:", options.playlistId);
+        isPreviewMode.value = false;
+        showActionBar.value = true;
+        isLoading.value = true;
+        setTimeout(() => {
+          const userLists = store_modules_list.listStore.state.userLists || [];
+          const targetList = userLists.find((l) => l.id === options.playlistId);
+          console.log("[Sharelist] 查找到的歌单:", targetList ? targetList.name : "未找到");
+          if (targetList && targetList.list && targetList.list.length > 0) {
+            songs.value = targetList.list;
+            allSongs.value = targetList.list;
+            const decodedName = options.playlistName ? decodeURIComponent(options.playlistName) : "";
+            playlistName.value = decodedName || targetList.name || "未知歌单";
+            playlistCover.value = targetList.coverImgUrl || "/static/logo.png";
+            playlistTrackCount.value = targetList.list.length;
+            hasMore.value = false;
+            isLoading.value = false;
+            currentListId.value = targetList.id;
+          } else {
+            isLoading.value = false;
+            loadError.value = "歌单暂无歌曲";
+          }
+        }, 100);
+      } else if (options.mode === "love" && options.fromMyMusic === "true") {
+        console.log("[Sharelist] 进入我喜欢的音乐模式");
+        isPreviewMode.value = false;
+        showActionBar.value = true;
+        isLoading.value = true;
+        setTimeout(() => {
+          const loveList = store_modules_list.listStore.state.loveList.list || [];
+          console.log("[Sharelist] 喜欢列表数量:", loveList.length);
+          if (loveList.length > 0) {
+            songs.value = loveList;
+            allSongs.value = loveList;
+            playlistName.value = "我喜欢的音乐";
+            playlistCover.value = "/static/logo.png";
+            playlistTrackCount.value = loveList.length;
+            hasMore.value = false;
+            isLoading.value = false;
+            currentListId.value = store_modules_list.LIST_IDS.LOVE;
+          } else {
+            isLoading.value = false;
+            loadError.value = "暂无喜欢的音乐";
+          }
+        }, 100);
+      } else if (options.mode === "recent" && options.fromMyMusic === "true") {
+        console.log("[Sharelist] 进入最近播放模式");
+        isPreviewMode.value = false;
+        showActionBar.value = false;
+        isLoading.value = true;
+        setTimeout(() => {
+          const playHistory = store_modules_player.playerStore.getState().playHistory || [];
+          console.log("[Sharelist] 播放历史数量:", playHistory.length);
+          if (playHistory.length > 0) {
+            songs.value = playHistory;
+            playlistName.value = "最近播放";
+            playlistCover.value = "/static/logo.png";
+            playlistTrackCount.value = playHistory.length;
+            hasMore.value = false;
+            isLoading.value = false;
+            currentListId.value = "recent_play_history";
+          } else {
+            isLoading.value = false;
+            loadError.value = "暂无播放记录";
+          }
+        }, 100);
+      } else if (options.mode === "deleted" && options.fromMyMusic === "true") {
+        console.log("[Sharelist] 进入最近删除模式");
+        isPreviewMode.value = false;
+        showActionBar.value = false;
+        isLoading.value = true;
+        setTimeout(() => {
+          let deletedList = [];
+          try {
+            const rawData = common_vendor.index.getStorageSync("deleted_songs");
+            if (rawData) {
+              if (typeof rawData === "string") {
+                deletedList = JSON.parse(rawData);
+              } else if (Array.isArray(rawData)) {
+                deletedList = rawData;
+              } else if (rawData.data && Array.isArray(rawData.data)) {
+                deletedList = rawData.data;
+              }
+            }
+          } catch (e) {
+            console.error("[Sharelist] 解析删除列表失败:", e);
+          }
+          console.log("[Sharelist] 删除列表数量:", deletedList.length);
+          if (deletedList.length > 0) {
+            songs.value = deletedList;
+            playlistName.value = "最近删除";
+            playlistCover.value = "/static/logo.png";
+            playlistTrackCount.value = deletedList.length;
+            hasMore.value = false;
+            isLoading.value = false;
+            currentListId.value = "recent_deleted";
+          } else {
+            isLoading.value = false;
+            loadError.value = "暂无删除记录";
+          }
+        }, 100);
+      } else {
+        console.log("[Sharelist] 缺少必要参数，无法加载");
+        loadError.value = "缺少必要参数：link或source";
+      }
+    });
+    common_vendor.onShow(() => {
+      utils_system.setStatusBarTextColor("white");
+      initDarkMode();
+    });
+    common_vendor.onUnmounted(() => {
+      common_vendor.index.$off("miniPlayerHeightChange", handleMiniPlayerHeightChange);
+    });
+    return (_ctx, _cache) => {
+      return common_vendor.e({
+        a: common_vendor.unref(utils_imageProxy.proxyImageUrl)(playlistCover.value),
+        b: common_vendor.o(($event) => handleSharelistImageError($event)),
+        c: common_vendor.s(statusBarStyle.value),
+        d: common_vendor.p({
+          name: "chevron-left",
+          size: "24",
+          color: "#fff"
+        }),
+        e: common_vendor.o(goBack),
+        f: common_vendor.t(isPreviewMode.value ? "歌单预览" : "歌单详情"),
+        g: common_vendor.unref(utils_imageProxy.proxyImageUrl)(playlistCover.value),
+        h: common_vendor.o(($event) => handleSharelistImageError($event)),
+        i: playlistPlayCount.value
+      }, playlistPlayCount.value ? {
+        j: common_vendor.p({
+          name: "play",
+          size: "10",
+          color: "#fff"
+        }),
+        k: common_vendor.t(playlistPlayCount.value)
+      } : {}, {
+        l: common_vendor.t(playlistName.value || "加载中..."),
+        m: playlistAuthor.value
+      }, playlistAuthor.value ? {
+        n: common_vendor.t(playlistAuthor.value)
+      } : {}, {
+        o: playlistDesc.value
+      }, playlistDesc.value ? {
+        p: common_vendor.t(playlistDesc.value)
+      } : {}, {
+        q: common_vendor.t(playlistTrackCount.value),
+        r: playlistPlayCount.value
+      }, playlistPlayCount.value ? {} : {}, {
+        s: playlistPlayCount.value
+      }, playlistPlayCount.value ? {
+        t: common_vendor.t(playlistPlayCount.value)
+      } : {}, {
+        v: showActionBar.value
+      }, showActionBar.value ? common_vendor.e({
+        w: isPreviewMode.value
+      }, isPreviewMode.value ? {
+        x: common_vendor.p({
+          name: "heart",
+          size: "14",
+          color: "#fff"
+        }),
+        y: common_vendor.t(fromPage.value === "import" ? "导入歌单" : "收藏歌单"),
+        z: common_vendor.o(handleCollect)
+      } : {}, {
+        A: common_vendor.p({
+          name: "play",
+          size: "14",
+          color: "#fff"
+        }),
+        B: common_vendor.o(playAll)
+      }) : {}, {
+        C: isLoading.value && songs.value.length === 0
+      }, isLoading.value && songs.value.length === 0 ? {} : {}, {
+        D: loadError.value && !isLoading.value
+      }, loadError.value && !isLoading.value ? {
+        E: common_vendor.p({
+          name: "exclamation-circle",
+          size: "48",
+          color: "#999"
+        }),
+        F: common_vendor.t(loadError.value),
+        G: common_vendor.o(retryLoad)
+      } : {}, {
+        H: songs.value.length > 0
+      }, songs.value.length > 0 ? common_vendor.e({
+        I: common_vendor.f(songs.value, (song, index, i0) => {
+          var _a, _b, _c;
+          return common_vendor.e({
+            a: common_vendor.t(index + 1),
+            b: common_vendor.t(song.name),
+            c: hasHighQuality(song)
+          }, hasHighQuality(song) ? {} : {}, {
+            d: common_vendor.t(formatSingerName(song.ar || song.singer)),
+            e: ((_a = song.al) == null ? void 0 : _a.name) || song.album || song.albumName
+          }, ((_b = song.al) == null ? void 0 : _b.name) || song.album || song.albumName ? {
+            f: common_vendor.t(((_c = song.al) == null ? void 0 : _c.name) || song.album || song.albumName)
+          } : {}, {
+            g: currentSongIndex.value === index && isPlaying.value
+          }, currentSongIndex.value === index && isPlaying.value ? {
+            h: "864f0795-5-" + i0,
+            i: common_vendor.p({
+              name: "play",
+              size: "18"
+            })
+          } : currentSongIndex.value === index && !isPlaying.value ? {
+            k: "864f0795-6-" + i0,
+            l: common_vendor.p({
+              name: "pause",
+              size: "18"
+            })
+          } : {}, {
+            j: currentSongIndex.value === index && !isPlaying.value,
+            m: common_vendor.t(formatDuration(song.dt || song.interval || song.duration)),
+            n: song.id || index,
+            o: currentSongIndex.value === index ? 1 : "",
+            p: common_vendor.o(($event) => playSong(index), song.id || index)
+          });
+        }),
+        J: isLoading.value && songs.value.length > 0
+      }, isLoading.value && songs.value.length > 0 ? {} : {}, {
+        K: !hasMore.value && songs.value.length > 0 && !isLoading.value
+      }, !hasMore.value && songs.value.length > 0 && !isLoading.value ? {} : {}, {
+        L: miniPlayerBottomHeight.value + "px"
+      }) : {}, {
+        M: !isLoading.value && !loadError.value && songs.value.length === 0
+      }, !isLoading.value && !loadError.value && songs.value.length === 0 ? {
+        N: common_vendor.p({
+          name: "ban",
+          size: "64",
+          color: "#ccc"
+        })
+      } : {}, {
+        O: scrollTop.value,
+        P: common_vendor.o(loadMoreSongs),
+        Q: !isPreviewMode.value
+      }, !isPreviewMode.value ? {
+        R: common_vendor.p({
+          ["current-index"]: 2
+        })
+      } : {}, {
+        S: darkMode.value ? 1 : ""
+      });
+    };
+  }
+};
+const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-864f0795"]]);
+wx.createPage(MiniProgramPage);

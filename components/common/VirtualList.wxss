@@ -1,1 +1,199 @@
-.virtual-list.data-v-f66f38f5{width:100%;height:100%}.song-item.data-v-f66f38f5{display:flex;align-items:center;padding:16rpx 24rpx;border-bottom:1rpx solid #f0f0f0;background-color:#fff}.song-item.playing.data-v-f66f38f5{background-color:rgba(0,215,205,.1)}.song-item.playing .song-name.data-v-f66f38f5,.song-item.playing .song-index.data-v-f66f38f5{color:#00d7cd}.song-item.data-v-f66f38f5:active{background-color:#f5f5f5}.song-index.data-v-f66f38f5{width:60rpx;text-align:center;font-size:28rpx;color:#999;flex-shrink:0;margin-right:40rpx}.song-info.data-v-f66f38f5{flex:1;display:flex;align-items:center;justify-content:space-between;min-width:0}.song-main-info.data-v-f66f38f5{flex:1;min-width:0;margin-right:20rpx}.song-name.data-v-f66f38f5{font-size:30rpx;color:#333;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:8rpx}.song-artist.data-v-f66f38f5{display:flex;align-items:center;font-size:24rpx;color:#999;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.album-name.data-v-f66f38f5{margin-left:4rpx;color:#999;font-size:24rpx}.quality-tag.data-v-f66f38f5{display:inline-block;padding:2rpx 8rpx;background:linear-gradient(135deg,#ff6b6b,#ff8e8e);color:#fff;font-size:18rpx;border-radius:4rpx;margin-right:8rpx;flex-shrink:0}.song-actions.data-v-f66f38f5{display:flex;align-items:center;flex-shrink:0}.play-icon.data-v-f66f38f5{color:#ccc;margin-right:16rpx}.play-icon.playing-icon.data-v-f66f38f5{animation:pulse-f66f38f5 1s infinite}.song-duration.data-v-f66f38f5{font-size:24rpx;color:#999;margin-right:20rpx;min-width:80rpx;text-align:right}.action-btn.data-v-f66f38f5{padding:10rpx}.action-btn.data-v-f66f38f5:active{opacity:.7}.more-icon.data-v-f66f38f5{color:#ccc}.song-item.dark-mode.data-v-f66f38f5{background-color:#1f2937;border-bottom-color:#374151}.song-item.dark-mode .song-name.data-v-f66f38f5{color:#f0f0f0}.song-item.dark-mode .song-artist.data-v-f66f38f5,.song-item.dark-mode .song-index.data-v-f66f38f5,.song-item.dark-mode .song-duration.data-v-f66f38f5,.song-item.dark-mode .more-icon.data-v-f66f38f5{color:#9ca3af}.song-item.dark-mode.data-v-f66f38f5:active{background-color:#374151}.song-item.dark-mode.playing.data-v-f66f38f5{background-color:rgba(0,215,205,.1)}.song-item.dark-mode.playing .song-name.data-v-f66f38f5,.song-item.dark-mode.playing .song-index.data-v-f66f38f5{color:#00d7cd}.virtual-empty.data-v-f66f38f5{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:100rpx 0}.empty-icon.data-v-f66f38f5{margin-bottom:20rpx}.empty-text.data-v-f66f38f5{font-size:28rpx;color:#999;margin-bottom:10rpx}.empty-tip.data-v-f66f38f5{font-size:24rpx;color:#ccc}.virtual-loading.data-v-f66f38f5{display:flex;align-items:center;justify-content:center;padding:40rpx 0;color:#999;font-size:28rpx}@keyframes pulse-f66f38f5{0%,to{opacity:1}50%{opacity:.5}}
+/**
+ * 这里是uni-app内置的常用样式变量
+ *
+ * uni-app 官方扩展插件及插件市场（https://ext.dcloud.net.cn）上很多三方插件均使用了这些样式变量
+ * 如果你是插件开发者，建议你使用scss预处理，并在插件代码中直接使用这些变量（无需 import 这个文件），方便用户通过搭积木的方式开发整体风格一致的App
+ *
+ */
+/**
+ * 如果你是App开发者（插件使用者），你可以通过修改这些变量来定制自己的插件主题，实现自定义主题功能
+ *
+ * 如果你的项目同样使用了scss预处理，你也可以直接在你的 scss 代码中使用如下变量，同时无需 import 这个文件
+ */
+/* 颜色变量 */
+/* 行为相关颜色 */
+/* 文字基本颜色 */
+/* 背景颜色 */
+/* 边框颜色 */
+/* 尺寸变量 */
+/* 文字尺寸 */
+/* 图片尺寸 */
+/* Border Radius */
+/* 水平间距 */
+/* 垂直间距 */
+/* 透明度 */
+/* 文章场景相关 */
+.virtual-list.data-v-815bdc95 {
+  width: 100%;
+  height: 100%;
+}
+
+/* 歌曲项样式 - 与 SongListItem 保持一致 */
+.song-item.data-v-815bdc95 {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 24rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+  background-color: #fff;
+}
+.song-item.playing.data-v-815bdc95 {
+  background-color: rgba(0, 215, 205, 0.1);
+}
+.song-item.playing .song-name.data-v-815bdc95 {
+  color: #00d7cd;
+}
+.song-item.playing .song-index.data-v-815bdc95 {
+  color: #00d7cd;
+}
+.song-item.data-v-815bdc95:active {
+  background-color: #f5f5f5;
+}
+.song-index.data-v-815bdc95 {
+  width: 60rpx;
+  text-align: center;
+  font-size: 28rpx;
+  color: #999;
+  flex-shrink: 0;
+  margin-right: 40rpx;
+}
+.song-info.data-v-815bdc95 {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+}
+.song-main-info.data-v-815bdc95 {
+  flex: 1;
+  min-width: 0;
+  margin-right: 20rpx;
+}
+.song-name.data-v-815bdc95 {
+  font-size: 30rpx;
+  color: #333;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 8rpx;
+}
+.song-artist.data-v-815bdc95 {
+  display: flex;
+  align-items: center;
+  font-size: 24rpx;
+  color: #999;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.album-name.data-v-815bdc95 {
+  margin-left: 4rpx;
+  color: #999;
+  font-size: 24rpx;
+}
+.quality-tag.data-v-815bdc95 {
+  display: inline-block;
+  padding: 2rpx 8rpx;
+  background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+  color: #fff;
+  font-size: 18rpx;
+  border-radius: 4rpx;
+  margin-right: 8rpx;
+  flex-shrink: 0;
+}
+.song-actions.data-v-815bdc95 {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.play-icon.data-v-815bdc95 {
+  color: #ccc;
+  margin-right: 16rpx;
+}
+.play-icon.playing-icon.data-v-815bdc95 {
+  animation: pulse-815bdc95 1s infinite;
+}
+.song-duration.data-v-815bdc95 {
+  font-size: 24rpx;
+  color: #999;
+  margin-right: 20rpx;
+  min-width: 80rpx;
+  text-align: right;
+}
+.action-btn.data-v-815bdc95 {
+  padding: 10rpx;
+}
+.action-btn.data-v-815bdc95:active {
+  opacity: 0.7;
+}
+.more-icon.data-v-815bdc95 {
+  color: #ccc;
+}
+
+/* 暗黑模式样式 */
+.song-item.dark-mode.data-v-815bdc95 {
+  background-color: #1f2937;
+  border-bottom-color: #374151;
+}
+.song-item.dark-mode .song-name.data-v-815bdc95 {
+  color: #f0f0f0;
+}
+.song-item.dark-mode .song-artist.data-v-815bdc95 {
+  color: #9ca3af;
+}
+.song-item.dark-mode .song-index.data-v-815bdc95 {
+  color: #9ca3af;
+}
+.song-item.dark-mode .song-duration.data-v-815bdc95 {
+  color: #9ca3af;
+}
+.song-item.dark-mode .more-icon.data-v-815bdc95 {
+  color: #9ca3af;
+}
+.song-item.dark-mode.data-v-815bdc95:active {
+  background-color: #374151;
+}
+.song-item.dark-mode.playing.data-v-815bdc95 {
+  background-color: rgba(0, 215, 205, 0.1);
+}
+.song-item.dark-mode.playing .song-name.data-v-815bdc95 {
+  color: #00d7cd;
+}
+.song-item.dark-mode.playing .song-index.data-v-815bdc95 {
+  color: #00d7cd;
+}
+.virtual-empty.data-v-815bdc95 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100rpx 0;
+}
+.empty-icon.data-v-815bdc95 {
+  margin-bottom: 20rpx;
+}
+.empty-text.data-v-815bdc95 {
+  font-size: 28rpx;
+  color: #999;
+  margin-bottom: 10rpx;
+}
+.empty-tip.data-v-815bdc95 {
+  font-size: 24rpx;
+  color: #ccc;
+}
+.virtual-loading.data-v-815bdc95 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40rpx 0;
+  color: #999;
+  font-size: 28rpx;
+}
+@keyframes pulse-815bdc95 {
+0%, 100% {
+    opacity: 1;
+}
+50% {
+    opacity: 0.5;
+}
+}

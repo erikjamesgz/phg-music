@@ -1,1 +1,32 @@
-"use strict";const e=require("./storage.js"),t="musicSwitchSource";function c(){return e.getStorage(t,{})}exports.getMusicSwitchSourceById=function(e){const t=c(),o=String(e||""),r=o.replace(/^(tx|wy|kg|kw|mg)_/,"");let u=t[r]||null;return u||(u=t[o]||null),u&&console.log("[MusicSwitchSource] 找到换源信息, 歌曲ID:",r,"换源后:",u.newSource),u},exports.saveMusicSwitchSource=function(o,r){const u=c(),i=String(o||"").replace(/^(tx|wy|kg|kw|mg)_/,"");u[i]={...r,switchTime:Date.now()},e.setStorage(t,u),console.log("[MusicSwitchSource] 已保存换源信息, 原始歌曲ID:",i,r)};
+"use strict";
+const utils_storage = require("./storage.js");
+const MUSIC_SWITCH_SOURCE_KEY = "musicSwitchSource";
+function getMusicSwitchSource() {
+  return utils_storage.getStorage(MUSIC_SWITCH_SOURCE_KEY, {});
+}
+function saveMusicSwitchSource(songId, switchInfo) {
+  const switchSources = getMusicSwitchSource();
+  const songIdStr = String(songId || "");
+  const pureSongId = songIdStr.replace(/^(tx|wy|kg|kw|mg)_/, "");
+  switchSources[pureSongId] = {
+    ...switchInfo,
+    switchTime: Date.now()
+  };
+  utils_storage.setStorage(MUSIC_SWITCH_SOURCE_KEY, switchSources);
+  console.log("[MusicSwitchSource] 已保存换源信息, 原始歌曲ID:", pureSongId, switchInfo);
+}
+function getMusicSwitchSourceById(songId) {
+  const switchSources = getMusicSwitchSource();
+  const songIdStr = String(songId || "");
+  const pureSongId = songIdStr.replace(/^(tx|wy|kg|kw|mg)_/, "");
+  let result = switchSources[pureSongId] || null;
+  if (!result) {
+    result = switchSources[songIdStr] || null;
+  }
+  if (result) {
+    console.log("[MusicSwitchSource] 找到换源信息, 歌曲ID:", pureSongId, "换源后:", result.newSource);
+  }
+  return result;
+}
+exports.getMusicSwitchSourceById = getMusicSwitchSourceById;
+exports.saveMusicSwitchSource = saveMusicSwitchSource;

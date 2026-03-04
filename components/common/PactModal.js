@@ -1,1 +1,104 @@
-"use strict";const e=require("../../common/vendor.js"),t={name:"PactModal",props:{visible:{type:Boolean,default:!1},isAgreed:{type:Boolean,default:!1}},data:()=>({countdown:20,timer:null,isDarkMode:!1}),watch:{visible:{immediate:!0,handler(e){console.log("[PactModal] visible 变化:",e),e?(this.checkDarkMode(),this.isAgreed||this.startCountdown()):this.clearTimer()}}},methods:{checkDarkMode(){if("false"!==e.index.getStorageSync("followSystem")){const t=e.index.getSystemInfoSync();this.isDarkMode="dark"===t.theme}else this.isDarkMode="true"===e.index.getStorageSync("darkMode");console.log("[PactModal] isDarkMode:",this.isDarkMode)},startCountdown(){this.countdown=20,this.clearTimer(),this.timer=setInterval(()=>{console.log("[PactModal] 倒计时:",this.countdown),this.countdown>0?this.countdown--:this.clearTimer()},1e3)},clearTimer(){this.timer&&(clearInterval(this.timer),this.timer=null)},handleReject(){console.log("[PactModal] 用户点击拒绝"),this.$emit("reject")},handleAccept(){console.log("[PactModal] 用户点击接受，countdown:",this.countdown),this.countdown>0||(this.clearTimer(),console.log("[PactModal] 发射 agree 事件"),this.$emit("agree"))}},beforeDestroy(){this.clearTimer()}};const o=e._export_sfc(t,[["render",function(t,o,i,s,n,d){return e.e({a:i.visible},i.visible?e.e({b:!i.isAgreed},(i.isAgreed,{}),{c:!i.isAgreed},(i.isAgreed,{}),{d:!i.isAgreed},i.isAgreed?{}:{e:e.o((...e)=>d.handleReject&&d.handleReject(...e))},{f:e.t(n.countdown>0?`接受（${n.countdown}）`:"接受"),g:n.countdown>0?1:"",h:e.o((...e)=>d.handleAccept&&d.handleAccept(...e)),i:n.isDarkMode?1:""}):{})}],["__scopeId","data-v-dcedfdba"]]);wx.createComponent(o);
+"use strict";
+const common_vendor = require("../../common/vendor.js");
+const _sfc_main = {
+  name: "PactModal",
+  props: {
+    visible: {
+      type: Boolean,
+      default: false
+    },
+    isAgreed: {
+      type: Boolean,
+      default: false
+    }
+  },
+  data() {
+    return {
+      countdown: 20,
+      timer: null,
+      isDarkMode: false
+    };
+  },
+  watch: {
+    visible: {
+      immediate: true,
+      handler(newVal) {
+        console.log("[PactModal] visible 变化:", newVal);
+        if (newVal) {
+          this.checkDarkMode();
+          if (!this.isAgreed) {
+            this.startCountdown();
+          }
+        } else {
+          this.clearTimer();
+        }
+      }
+    }
+  },
+  methods: {
+    checkDarkMode() {
+      const followSystem = common_vendor.index.getStorageSync("followSystem") !== "false";
+      if (followSystem) {
+        const systemInfo = common_vendor.index.getSystemInfoSync();
+        this.isDarkMode = systemInfo.theme === "dark";
+      } else {
+        this.isDarkMode = common_vendor.index.getStorageSync("darkMode") === "true";
+      }
+      console.log("[PactModal] isDarkMode:", this.isDarkMode);
+    },
+    startCountdown() {
+      this.countdown = 20;
+      this.clearTimer();
+      this.timer = setInterval(() => {
+        console.log("[PactModal] 倒计时:", this.countdown);
+        if (this.countdown > 0) {
+          this.countdown--;
+        } else {
+          this.clearTimer();
+        }
+      }, 1e3);
+    },
+    clearTimer() {
+      if (this.timer) {
+        clearInterval(this.timer);
+        this.timer = null;
+      }
+    },
+    handleReject() {
+      console.log("[PactModal] 用户点击拒绝");
+      this.$emit("reject");
+    },
+    handleAccept() {
+      console.log("[PactModal] 用户点击接受，countdown:", this.countdown);
+      if (this.countdown > 0) {
+        return;
+      }
+      this.clearTimer();
+      console.log("[PactModal] 发射 agree 事件");
+      this.$emit("agree");
+    }
+  },
+  beforeDestroy() {
+    this.clearTimer();
+  }
+};
+function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
+  return common_vendor.e({
+    a: $props.visible
+  }, $props.visible ? common_vendor.e({
+    b: !$props.isAgreed
+  }, !$props.isAgreed ? {} : {}, {
+    c: !$props.isAgreed
+  }, !$props.isAgreed ? {} : {}, {
+    d: !$props.isAgreed
+  }, !$props.isAgreed ? {
+    e: common_vendor.o((...args) => $options.handleReject && $options.handleReject(...args))
+  } : {}, {
+    f: common_vendor.t($data.countdown > 0 ? `接受（${$data.countdown}）` : "接受"),
+    g: $data.countdown > 0 ? 1 : "",
+    h: common_vendor.o((...args) => $options.handleAccept && $options.handleAccept(...args)),
+    i: $data.isDarkMode ? 1 : ""
+  }) : {});
+}
+const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-dcedfdba"]]);
+wx.createComponent(Component);

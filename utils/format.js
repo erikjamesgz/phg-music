@@ -1,1 +1,87 @@
-"use strict";function t(t){if(!t&&0!==t)return"00:00";const e=Math.floor(t/60),o=Math.floor(t%60);return`${e<10?"0"+e:e}:${o<10?"0"+o:o}`}function e(t){return t||0===t?t<1e4?t.toString():t<1e8?Math.floor(t/1e4)+"万":Math.floor(t/1e8)+"亿":"0"}function o(t){if(!t)return"";let e;if(e="number"==typeof t||"string"==typeof t?new Date(t):t,isNaN(e.getTime()))return"";const o=e.getFullYear(),r=e.getMonth()+1,n=e.getDate();return`${o}-${r<10?"0"+r:r}-${n<10?"0"+n:n}`}const r=Object.freeze(Object.defineProperty({__proto__:null,formatDate:o,formatDuration:function(e){return e||0===e?t(Math.floor(e/1e3)):"00:00"},formatFileSize:function(t){if(!t&&0!==t)return"0 B";const e=["B","KB","MB","GB","TB"];let o=0;for(;t>=1024&&o<e.length-1;)t/=1024,o++;return t.toFixed(2)+" "+e[o]},formatPlayCount:e,formatRelativeTime:function(t){if(!t)return"";const e="string"==typeof t?new Date(t):t,o=new Date-e,r=Math.floor(o/1e3);return r<60?"刚刚":r<3600?Math.floor(r/60)+"分钟前":r<86400?Math.floor(r/3600)+"小时前":r<2592e3?Math.floor(r/86400)+"天前":r<31536e3?Math.floor(r/2592e3)+"个月前":Math.floor(r/31536e3)+"年前"},formatTime:t},Symbol.toStringTag,{value:"Module"}));exports.formatDate=o,exports.formatPlayCount=e,exports.formatUtils=r;
+"use strict";
+function formatTime(seconds) {
+  if (!seconds && seconds !== 0)
+    return "00:00";
+  const min = Math.floor(seconds / 60);
+  const sec = Math.floor(seconds % 60);
+  return `${min < 10 ? "0" + min : min}:${sec < 10 ? "0" + sec : sec}`;
+}
+function formatPlayCount(count) {
+  if (!count && count !== 0)
+    return "0";
+  if (count < 1e4) {
+    return count.toString();
+  } else if (count < 1e8) {
+    return Math.floor(count / 1e4) + "万";
+  } else {
+    return Math.floor(count / 1e8) + "亿";
+  }
+}
+function formatDate(date) {
+  if (!date)
+    return "";
+  let d;
+  if (typeof date === "number") {
+    d = new Date(date);
+  } else if (typeof date === "string") {
+    d = new Date(date);
+  } else {
+    d = date;
+  }
+  if (isNaN(d.getTime()))
+    return "";
+  const year = d.getFullYear();
+  const month = d.getMonth() + 1;
+  const day = d.getDate();
+  return `${year}-${month < 10 ? "0" + month : month}-${day < 10 ? "0" + day : day}`;
+}
+function formatFileSize(bytes) {
+  if (!bytes && bytes !== 0)
+    return "0 B";
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  let i = 0;
+  while (bytes >= 1024 && i < units.length - 1) {
+    bytes /= 1024;
+    i++;
+  }
+  return bytes.toFixed(2) + " " + units[i];
+}
+function formatDuration(ms) {
+  if (!ms && ms !== 0)
+    return "00:00";
+  const seconds = Math.floor(ms / 1e3);
+  return formatTime(seconds);
+}
+function formatRelativeTime(date) {
+  if (!date)
+    return "";
+  const d = typeof date === "string" ? new Date(date) : date;
+  const now = /* @__PURE__ */ new Date();
+  const diff = now - d;
+  const seconds = Math.floor(diff / 1e3);
+  if (seconds < 60) {
+    return "刚刚";
+  } else if (seconds < 3600) {
+    return Math.floor(seconds / 60) + "分钟前";
+  } else if (seconds < 86400) {
+    return Math.floor(seconds / 3600) + "小时前";
+  } else if (seconds < 2592e3) {
+    return Math.floor(seconds / 86400) + "天前";
+  } else if (seconds < 31536e3) {
+    return Math.floor(seconds / 2592e3) + "个月前";
+  } else {
+    return Math.floor(seconds / 31536e3) + "年前";
+  }
+}
+const formatUtils = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  __proto__: null,
+  formatDate,
+  formatDuration,
+  formatFileSize,
+  formatPlayCount,
+  formatRelativeTime,
+  formatTime
+}, Symbol.toStringTag, { value: "Module" }));
+exports.formatDate = formatDate;
+exports.formatPlayCount = formatPlayCount;
+exports.formatUtils = formatUtils;

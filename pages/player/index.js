@@ -1,1 +1,1555 @@
-"use strict";const e=require("../../common/vendor.js"),l=require("../../store/modules/list.js"),o=require("../../store/modules/player.js"),a=require("../../utils/lyricCache.js"),t=require("../../utils/musicPic.js"),r=require("../../utils/lyric.js"),n=require("../../utils/kgLyricDecoder.js"),i=require("../../utils/system.js"),u=require("../../utils/imageProxy.js");Math||(s+c)();const s=()=>"../../uni_modules/roc-icon-plus/components/roc-icon-plus/roc-icon-plus.js",c=()=>"../../components/comment/MusicComment.js",v={__name:"index",setup(s){const c=e.getCurrentInstance(),v=e.ref(i.getStatusBarHeight()),y=e.computed(()=>({height:`${v.value}px`,width:"100%",backgroundColor:"transparent"})),d=e.computed(()=>({paddingTop:`${v.value}px`})),g=e.computed(()=>{var e,l;const a=o.playerStore.state.currentSong;return console.log("[player] currentSong computed:",{name:null==a?void 0:a.name,al:null==a?void 0:a.al,albumName:null==a?void 0:a.albumName,album:null==a?void 0:a.album,"al?.name":null==(e=null==a?void 0:a.al)?void 0:e.name,albumName:null==a?void 0:a.albumName,"album?.name":null==(l=null==a?void 0:a.album)?void 0:l.name}),a}),p=e.computed(()=>{const e=o.playerStore.state.originalSong;return console.log("[player] originalSong computed:",{name:null==e?void 0:e.name,source:null==e?void 0:e.source,id:null==e?void 0:e.id}),e}),f=e.computed(()=>o.playerStore.state.playing),m=e.computed(()=>o.playerStore.state.playMode),h=e.computed(()=>o.playerStore.state.currentTime),S=e.computed(()=>o.playerStore.state.duration),x=e.ref(!1),L=e.ref(0),w=e.ref(0),b=e.ref([]),T=e.ref(0),I=e.ref(!1),P=e.ref(0),$=e.ref("");let k=-1,M=!1;const C=e.ref(!1),j=e.computed(()=>l.listStore.getAllAvailableLists()),U=e.computed(()=>!!g.value&&l.listStore.isInLoveList(g.value.id)),z=e.ref(!1),q=e.ref("喜欢这首歌？点击收藏");let D=null;const N=e.ref(""),_=e.ref(!0);e.ref(null);const A=e.ref(!1);e.ref(null);const R=e.ref(!1),F=e.ref(""),K=e.ref(!1),G=e.ref([]),B=e.ref(""),E=e.ref(!1),O=e.ref(!1),H=()=>{var l,a,t,i;const u=o.playerStore.state;console.log("[player] updateCachedLyricsForStatus 调用:",{lyricLength:null==(l=u.lyric)?void 0:l.length,tlyricLength:null==(a=u.tlyric)?void 0:a.length,lxlyricLength:null==(t=u.lxlyric)?void 0:t.length,cachedLength:G.value.length});const s={lyric:u.lyric||"",tlyric:u.tlyric||"",rlyric:u.rlyric||"",lxlyric:u.lxlyric||""},{lyric:c,tlyric:v,rlyric:y,lxlyric:d}=r.extractLyricsFromMusicData(s);let g=c||"",p=d||"";if(n.isKgCompressedLyric(g))try{g=n.tryDecodeKgLyric(g).lyric||g}catch(m){}if(n.isKgCompressedLyric(p))try{const e=n.tryDecodeKgLyric(p);p=e.lxlyric||p,!g&&e.lyric&&(g=e.lyric)}catch(m){}const f=p||g;console.log("[player] updateCachedLyricsForStatus finalLyric:",{length:null==f?void 0:f.length,lastLyricLength:null==(i=B.value)?void 0:i.length,isSame:f===B.value}),f!==B.value&&(B.value=f,f?(G.value=r.parseLyric(f),console.log("[player] 解析歌词成功，行数:",G.value.length),O.value=!0,e.nextTick$1(()=>{Q()})):(G.value=[],console.log("[player] 歌词为空，清空缓存"),O.value=!0,e.nextTick$1(()=>{Q()})))},Q=()=>{const e=o.playerStore.state;if(e.statusText)return F.value=e.statusText,K.value=!0,void(O.value=!1);if(K.value=!1,e.playing&&!E.value&&(E.value=!0,O.value=!0),e.playing&&!O.value&&(O.value=!0),O.value){if(!(G.value.length>0))return void(F.value="暂无歌词")}const l=e.currentTime;if(l&&G.value.length>0){const e=r.getCurrentLyricIndex(G.value,l);if(e>=0&&e<G.value.length)return void(F.value=G.value[e].text||"")}F.value=""},W=e.computed(()=>F.value),V=e.ref(!1),J=e.ref(!1),X=e.ref(0),Y=e.ref(!1),Z=e.ref([0,0]),ee=e.ref(0),le=e.ref(0),oe=e.computed(()=>{const e=[];for(let l=0;l<=99;l++)e.push(l<10?`0${l}`:`${l}`);return e}),ae=e.computed(()=>{const e=[];for(let l=0;l<=59;l++)e.push(l<10?`0${l}`:`${l}`);return e}),te=e.computed(()=>{const e=Math.floor(X.value/3600),l=Math.floor(X.value%3600/60),o=X.value%60;return e>0?`${e}时${l}分${o}秒`:l>0?`${l}分${o}秒`:`${o}秒`}),re=e.computed(()=>{const e=Math.floor(X.value/3600),l=Math.floor(X.value%3600/60);return e>0?`${e}h${l}m`:`${l}m`}),ne=e=>{X.value=e.remaining},ie=()=>{Z.value=[0,0],ee.value=0,le.value=0,Y.value=!0},ue=()=>{Y.value=!1},se=e=>{const l=e.detail.value;Z.value=l,ee.value=l[0],le.value=l[1]},ce=()=>{e.index.$emit("sleepTimerCancel")},ve=()=>{const l=ee.value,o=le.value,a=3600*l+60*o;if(a<=0)return void e.index.showToast({title:"请选择有效的时间",icon:"none"});e.index.$emit("sleepTimerSet",{totalSeconds:a});const t=l>0?`${l}时${o}分后停止播放`:`${o}分钟后停止播放`;e.index.showToast({title:t,icon:"success"}),ue()};e.watch(()=>f.value,e=>{console.log("[Player] 播放状态变化:",e)});let ye=!1,de=!1;const ge=async()=>{de||(o.playerStore.setOnPlayEndedCallback(async e=>{var a,t,r,n;if(console.log("[player] 播放结束回调触发，模式:",e),"singleLoop"===e){if(console.log("[player] 单曲循环，重新播放当前歌曲"),g.value){const e=o.playerStore.state.audioContext,l=g.value;if(e&&l){let o=l.url||l.playUrl;if(!o)return void console.log("[player] 当前歌曲没有播放URL");const i=o.replace(/^http:/,"https:");console.log("[player] 微信小程序，重新设置src播放"),e.title=l.name||"未知歌曲",e.singer=me(l);let u=(null==(a=l.al)?void 0:a.picUrl)||(null==(t=l.album)?void 0:t.picUrl)||l.img||"";u&&(u=u.replace(/^http:/,"https:")),e.coverImgUrl=u,e.epname=(null==(r=l.al)?void 0:r.name)||(null==(n=l.album)?void 0:n.name)||"未知专辑",e.src=i,console.log("[player] 单曲循环播放已触发")}}return}if("list"===e){console.log("[player] 顺序播放模式，检查是否最后一首");const e=l.listStore.state.playInfo.playerListId,a=e===l.LIST_IDS.DEFAULT?l.listStore.state.defaultList.list:e===l.LIST_IDS.LOVE?l.listStore.state.loveList.list:l.listStore.state.tempList.list;if(l.listStore.state.playInfo.playerPlayIndex>=a.length-1)return console.log("[player] 顺序播放模式：已是最后一首，停止播放"),void o.playerStore.pause();console.log("[player] 顺序播放模式：不是最后一首，切换到下一首");const t=l.listStore.getNextSong("list",!0);return void(t&&t.musicInfo?(console.log("[player] 自动播放下一首:",t.musicInfo.name),await ke(t)):console.log("[player] 没有下一首歌曲可播放"))}if("none"===e)return console.log("[player] 禁用模式，不自动切换下一首"),void o.playerStore.pause();const i="random"===e?"random":"listLoop",u=l.listStore.getNextSong(i,!0);u&&u.musicInfo?(console.log("[player] 自动播放下一首:",u.musicInfo.name),await ke(u)):console.log("[player] 没有下一首歌曲可播放")}),de=!0,console.log("[player] 播放结束回调已设置"))};e.onMounted(()=>{console.log("[player] onMounted 调用"),J.value="true"===e.index.getStorageSync("darkMode"),console.log("[Player] 初始化暗黑模式:",J.value),!ye&&g.value&&g.value.id&&(console.log("[player] onMounted - 调用loadLyrics"),ye=!0,e.nextTick$1(()=>{ze&&ze()})),ge(),e.nextTick$1(()=>{we()})}),e.onShow(()=>{console.log("[player] onShow 调用"),i.setStatusBarTextColor("black"),J.value="true"===e.index.getStorageSync("darkMode"),console.log("[Player] 刷新暗黑模式:",J.value),ge(),g.value&&console.log("[player] onShow currentSong 歌手字段检查:",{singer:g.value.singer,ar:g.value.ar,artists:g.value.artists,name:g.value.name}),!ye&&0===b.value.length&&g.value&&g.value.id&&(console.log("[player] onShow - 歌词为空，调用loadLyrics"),ye=!0,e.nextTick$1(()=>{ze&&ze()})),e.index.$on("sleepTimerUpdate",ne);const l=getApp();l&&l.getSleepTimerRemaining&&(X.value=l.getSleepTimerRemaining())}),e.onHide(()=>{console.log("[player] onHide 调用 - 页面隐藏，不做任何操作"),e.index.$off("sleepTimerUpdate",ne)}),e.onUnload(()=>{console.log("[player] onUnload 调用 - 页面卸载，清理资源"),b.value=[],T.value=0,e.index.$off("sleepTimerUpdate",ne)}),e.onUnmounted(()=>{console.log("[player] onUnmounted 调用 - 组件卸载")}),e.onBackPress(()=>(console.log("[player] onBackPress 触发 - 系统返回按钮被按下，销毁页面"),!1)),e.watch(()=>{var e;return null==(e=g.value)?void 0:e.id},async(l,o)=>{if(l!==o){const l=g.value;if(l){const e=l.sourceId||l.source;let o=t.getSongPicUrl(l,e);o?(N.value=o,_.value=!1):(N.value="",_.value=!0,o=await t.fetchSongPicUrl(l,e),o&&(N.value=o,_.value=!1)),console.log("[songPicCache] 更新图片缓存:",N.value,"showDefaultCover:",_.value,"source:",e)}else N.value="",_.value=!0;A.value=!1,e.nextTick$1(()=>{we()})}},{immediate:!0}),e.watch(()=>W.value,()=>{R.value=!1,e.nextTick$1(()=>{be()})});const pe=e.computed(()=>x.value?L.value:S.value>0?h.value/S.value*100:0),fe=e.computed(()=>({listLoop:"repeat",random:"shuffle",list:"arrow-right-arrow-left",singleLoop:"rotate-right",none:"ban"}[m.value]||"repeat"));e.computed(()=>({listLoop:"列表循环",random:"随机播放",list:"顺序播放",singleLoop:"单曲循环",none:"禁用歌曲切换"}[m.value]||"列表循环"));const me=e=>e?e.singer?e.singer:e.ar&&e.ar.length>0?e.ar.map(e=>e.name).join("/"):e.artists&&e.artists.length>0?e.artists.map(e=>e.name).join("/"):"未知歌手":"未知歌手",he=e=>{var l,o;if(!e)return"未知";let a="";e.ar&&Array.isArray(e.ar)&&e.ar.length>0?a=e.ar.map(e=>e.name).join("/"):e.artists&&Array.isArray(e.artists)&&e.artists.length>0?a=e.artists.map(e=>e.name).join("/"):e.singer&&(a=e.singer);let t="";return(null==(l=e.al)?void 0:l.name)?t=e.al.name:e.albumName?t=e.albumName:(null==(o=e.album)?void 0:o.name)?t=e.album.name:e.album&&(t=e.album),a&&t?`${a}-${t}`:a||(t||"未知")},Se=()=>{console.log("[onPicError] 图片加载失败，使用默认图标"),N.value="",_.value=!0},xe=e=>{if(!N.value)return void Se();let l=0;N.value.includes("wsrv.nl")?l=1:N.value.includes("weserv.nl")?l=2:N.value.includes("jina.ai")&&(l=3);const o=u.handleImageError(e,N.value,l);o?N.value=o:Se()},Le=e=>{if(!e||isNaN(e))return"00:00";const l=(e=Math.floor(e))%60;return`${Math.floor(e/60).toString().padStart(2,"0")}:${l.toString().padStart(2,"0")}`},we=()=>{try{const l=e.index.createSelectorQuery().in(c);l.select(".player-navbar__marquee").boundingClientRect(),l.select(".player-navbar__marquee-content").boundingClientRect(),l.exec(e=>{if(!e||!e[0]||!e[1])return;const l=e[0],o=e[1],a=A.value?o.width/2:o.width;A.value=a>l.width+5})}catch(l){}},be=()=>{if(W.value)try{const l=e.index.createSelectorQuery().in(c);l.select(".song-info__status-marquee").boundingClientRect(),l.select(".song-info__status-content").boundingClientRect(),l.exec(e=>{if(!e||!e[0]||!e[1])return;const l=e[0],o=e[1],a=R.value?o.width/2:o.width;console.log("[player] checkStatusMarquee:",{marqueeWidth:l.width,contentWidth:o.width,singleContentWidth:a,statusMarqueeScroll:R.value,needScroll:a>l.width+5}),R.value=a>l.width+5})}catch(l){}},Te=()=>{console.log("[player] goBack 调用 - 用户点击返回，销毁页面"),e.index.navigateBack()},Ie=()=>{o.playerStore.togglePlay()},Pe=async()=>{console.log("[Player] 播放下一首");const a="random"===m.value?"random":"listLoop";if(o.playerStore.getState().isGettingUrl){console.log("[Player] 正在获取播放链接，只更新待播放歌曲");const e=l.listStore.getNextSong(a,!1);return void(e&&e.musicInfo&&(console.log("[Player] 更新待播放歌曲:",e.musicInfo.name),o.playerStore.updatePendingSong(e.musicInfo)))}o.playerStore.setGettingUrl(!0);const t=l.listStore.getNextSong(a,!1);if(!t||!t.musicInfo)return console.log("[Player] 没有下一首歌曲"),o.playerStore.setGettingUrl(!1),void e.index.showToast({title:"已经是最后一首了",icon:"none"});console.log("[Player] 下一首歌曲:",t.musicInfo.name),await ke(t)},$e=async()=>{if(console.log("[Player] 播放上一首"),o.playerStore.getState().isGettingUrl){console.log("[Player] 正在获取播放链接，只更新待播放歌曲");const e="random"===m.value?"random":"listLoop",a=l.listStore.getPrevSong(e);return void(a&&a.musicInfo&&(console.log("[Player] 更新待播放歌曲:",a.musicInfo.name),o.playerStore.updatePendingSong(a.musicInfo)))}o.playerStore.setGettingUrl(!0);const a="random"===m.value?"random":"listLoop",t=l.listStore.getPrevSong(a);if(!t||!t.musicInfo)return console.log("[Player] 没有上一首歌曲"),o.playerStore.setGettingUrl(!1),void e.index.showToast({title:"已经是第一首了",icon:"none"});console.log("[Player] 上一首歌曲:",t.musicInfo.name),await ke(t)},ke=async a=>{const t=a.musicInfo,r=a.listId,n=a.isTempPlay;try{const a={...t,url:"",playUrl:""};l.listStore.setPlayMusicInfo(r,a,n),l.listStore.addPlayedList({listId:r,musicInfo:a,isTempPlay:n}),await o.playerStore.playSong(a),b.value=[],T.value=0,I.value=!1,ye=!1,e.nextTick$1(()=>{ze()})}catch(i){console.error("[Player] 播放失败:",i),o.playerStore.setGettingUrl(!1),e.index.showToast({title:"播放失败: "+(i.message||"未知错误"),icon:"none"})}},Me=()=>{const l=["listLoop","random","list","singleLoop","none"],a=l.indexOf(m.value),t=l[(a+1)%l.length];o.playerStore.setPlayMode(t);e.index.showToast({title:{listLoop:"列表循环",random:"随机播放",list:"顺序播放",singleLoop:"单曲循环",none:"禁用歌曲切换"}[t],icon:"none"})},Ce=e=>{w.value=e.detail.current,console.log("[player] 滑动切换到:",0===w.value?"专辑":"歌词")},je=()=>{w.value=1,console.log("[player] 点击左箭头，切换到歌词视图")},Ue=()=>{w.value=0,console.log("[player] 点击右箭头，切换到专辑视图")},ze=async()=>{var l,t,i,u,s,c,v,y;if(I.value)return void console.log("[player] 歌词正在加载中，跳过重复请求");if(b.value.length>0)return void console.log("[player] 已有歌词，跳过加载");I.value=!0,console.log("[player] ========== 开始加载歌词 ==========");const d=o.playerStore.state.currentSong;console.log("[player] 当前歌曲信息:",{id:null==d?void 0:d.id,name:null==d?void 0:d.name,source:(null==d?void 0:d.source)||(null==d?void 0:d.sourceId)});try{let g={lyric:o.playerStore.state.lyric||"",tlyric:o.playerStore.state.tlyric||"",rlyric:o.playerStore.state.rlyric||"",lxlyric:o.playerStore.state.lxlyric||""};if(console.log("[player] 从playerStore获取歌词:",{lyricLength:null==(l=g.lyric)?void 0:l.length,tlyricLength:null==(t=g.tlyric)?void 0:t.length,rlyricLength:null==(i=g.rlyric)?void 0:i.length,lxlyricLength:null==(u=g.lxlyric)?void 0:u.length,source:(null==d?void 0:d.source)||(null==d?void 0:d.sourceId)}),!(g.lyric||g.tlyric||g.rlyric||g.lxlyric)){console.log("[player] playerStore中无歌词，尝试从缓存获取");const e=(null==d?void 0:d.source)||(null==d?void 0:d.sourceId)||"tx";console.log("[player] 获取歌词缓存，歌曲ID:",null==d?void 0:d.id,"音源:",e);const l=[e];(null==d?void 0:d.source)&&(null==d?void 0:d.sourceId)&&(null==d?void 0:d.source)!==(null==d?void 0:d.sourceId)&&l.push(null==d?void 0:d.sourceId),"tx"!==e&&l.push("tx");let o=null;for(const t of l)if(console.log("[player] 尝试获取歌词缓存，source:",t),o=await a.getCachedLyric(null==d?void 0:d.id,t),o){console.log("[player] 从缓存获取到歌词，source:",t);break}o?g={lyric:o.lyric||"",tlyric:o.tlyric||"",rlyric:o.rlyric||"",lxlyric:o.lxlyric||""}:console.log("[player] 缓存中也没有歌词，已尝试的source:",l)}const p=(null==d?void 0:d.source)||(null==d?void 0:d.sourceId);if("酷狗"===p||"kg"===p){if(console.log("[player] 检测到酷狗音源，检查歌词格式"),n.isKgCompressedLyric(g.lyric)){console.log("[player] 检测到酷狗压缩歌词，开始解码");const e=await n.tryDecodeKgLyric(g.lyric);console.log("[player] 酷狗歌词解码结果:",{lyricLength:null==(s=e.lyric)?void 0:s.length,tlyricLength:null==(c=e.tlyric)?void 0:c.length,rlyricLength:null==(v=e.rlyric)?void 0:v.length,lxlyricLength:null==(y=e.lxlyric)?void 0:y.length}),g={lyric:e.lyric||g.lyric,tlyric:e.tlyric||g.tlyric,rlyric:e.rlyric||g.rlyric,lxlyric:e.lxlyric||g.lxlyric}}if(n.isKgCompressedLyric(g.lxlyric)){console.log("[player] 检测到酷狗压缩lxlyric，开始解码");const e=await n.tryDecodeKgLyric(g.lxlyric);g.lxlyric=e.lxlyric||g.lxlyric,!g.lyric&&e.lyric&&(g.lyric=e.lyric)}}b.value=(e=>{console.log("[player] processLyricData 输入:",{hasLyric:!!(null==e?void 0:e.lyric),hasTlyric:!!(null==e?void 0:e.tlyric),hasRlyric:!!(null==e?void 0:e.rlyric),hasLxlyric:!!(null==e?void 0:e.lxlyric)});const{lyric:l,tlyric:o,rlyric:a,lxlyric:t}=r.extractLyricsFromMusicData(e);console.log("[player] extractLyricsFromMusicData 提取结果:",{lyricLength:null==l?void 0:l.length,tlyricLength:null==o?void 0:o.length,rlyricLength:null==a?void 0:a.length,lxlyricLength:null==t?void 0:t.length,lyricPreview:null==l?void 0:l.substring(0,100)}),console.log("[player] 开始解析歌词...");const n=r.parseLyric(l);console.log("[player] parseLyric 结果:",{inputLength:null==l?void 0:l.length,outputLength:null==n?void 0:n.length,firstLine:null==n?void 0:n[0],lastLine:null==n?void 0:n[(null==n?void 0:n.length)-1]});const i=r.parseTranslation(o);console.log("[player] parseTranslation 结果:",{inputLength:null==o?void 0:o.length,outputLength:null==i?void 0:i.length});const u=r.mergeLyrics(n,i);return console.log("[player] 歌词处理完成，共",u.length,"行"),console.log("[player] 歌词数组前3行:",u.slice(0,3)),u})(g),o.playerStore.setLyrics({lyric:g.lyric,tlyric:g.tlyric,rlyric:g.rlyric,lxlyric:g.lxlyric}),e.nextTick$1(()=>{setTimeout(()=>{qe()},50)})}catch(g){console.error("[player] 获取歌词失败:",g),console.error("[player] 错误详情:",null==g?void 0:g.message,null==g?void 0:g.stack),b.value=[]}finally{I.value=!1}console.log("[player] ========== 歌词加载结束 ==========")},qe=()=>{if(0===b.value.length)return;const e=r.getCurrentLyricIndex(b.value,h.value);e!==T.value&&(T.value=e,De())},De=()=>{T.value<0||0===b.value.length||T.value===k&&M||(k=T.value,M=!0,setTimeout(()=>{$.value="lyric-line-"+T.value},50),setTimeout(()=>{M=!1},650))},Ne=e=>{},_e=()=>{De()};e.watch(()=>h.value,()=>{1===w.value&&qe()}),e.watch(()=>o.playerStore.state.lyric,H,{immediate:!0}),e.watch(()=>o.playerStore.state.lxlyric,H),e.watch(()=>o.playerStore.state.currentTime,Q),e.watch(()=>o.playerStore.state.statusText,()=>{Q()},{immediate:!0}),e.watch(()=>g.value,(l,o)=>{console.log("[player] watch currentSong 变化:",{newId:null==l?void 0:l.id,oldId:null==o?void 0:o.id,hasNewSong:!(!l||!l.id)}),l&&(console.log("[player] currentSong 完整信息:",JSON.stringify(l,null,2)),console.log("[player] currentSong 歌手字段检查:",{singer:l.singer,ar:l.ar,artists:l.artists})),(null==l?void 0:l.id)!==(null==o?void 0:o.id)&&(console.log("[player] 歌曲变化，清空歌词状态"),b.value=[],T.value=0,I.value=!1,ye=!1,E.value=!1,O.value=!1,Ee=null,Oe.delete(null==l?void 0:l.id),z.value=!1,D&&(clearTimeout(D),D=null),console.log("[player] 收藏提示跟踪已重置")),l&&l.id&&!ye&&(console.log("[player] watch currentSong - 调用loadLyrics"),ye=!0,e.nextTick$1(()=>{ze()}))});const Ae=e=>{x.value=!0,Ke(e)},Re=e=>{x.value&&Ke(e)},Fe=()=>{x.value&&(x.value=!1,L.value,S.value,o.playerStore.seek(L.value))},Ke=l=>{const o=l.touches[0],a=e.index.createSelectorQuery();a.select(".progress-bar-wrapper").boundingClientRect(),a.exec(e=>{if(e[0]){const l=e[0],a=o.clientX-l.left,t=Math.min(Math.max(a/l.width*100,0),100);L.value=t}})},Ge=()=>{e.index.showToast({title:"下载功能开发中",icon:"none"})},Be=[{text:"喜欢这首歌？点击收藏",emoji:"💚"},{text:"这首歌不错吧？点爱心收藏",emoji:"❤️"},{text:"好听的歌值得收藏",emoji:"💖"},{text:"这首歌唱进心里了",emoji:"💗"},{text:"收藏起来慢慢听",emoji:"💓"},{text:"这首歌是你的菜吗？",emoji:"🤍"},{text:"设为喜欢的歌吧",emoji:"💘"},{text:"音乐值得被珍藏",emoji:"💝"}];let Ee=null;const Oe=new Set,He=()=>{const e=Math.floor(Math.random()*Be.length),l=Be[e];return`${l.emoji} ${l.text}`};e.watch(()=>h.value,(e,l)=>{var o;if(!f.value||U.value)return;const a=null==(o=g.value)?void 0:o.id;if(!a)return;if(Ee!==a)return Ee=a,void Oe.delete(a);if(Oe.has(a))return;const t=(()=>{const e=S.value;if(!e||e<=60)return 60;const l=Math.max(60,e-30);return Math.floor(Math.random()*(l-60+1))+60})();e>=t&&l<t&&(console.log(`[Player] 播放时长达到${Math.floor(t)}秒，显示收藏提示`),Oe.add(a),U.value||z.value||(console.log("[Player] 显示收藏提示"),q.value=He(),z.value=!0,D&&clearTimeout(D),D=setTimeout(()=>{z.value=!1,console.log("[Player] 收藏提示已自动隐藏")},5e3)))},{immediate:!1});const Qe=()=>{if(!g.value)return void e.index.showToast({title:"没有正在播放的歌曲",icon:"none"});z.value=!1,D&&(clearTimeout(D),D=null);const l=j.value;if(console.log("[Player] handleFavorite - 可用列表数量:",l.length),1===l.length&&"love"===l[0].type)return console.log("[Player] 只有一个列表，切换收藏状态"),void We();console.log("[Player] 有多个列表，显示选择弹窗"),C.value=!0},We=()=>{if(!g.value)return;l.listStore.isInLoveList(g.value.id)?(l.listStore.removeFromLoveList(g.value.id),console.log("[Player] 取消收藏:",g.value.name),e.index.showToast({title:"已取消喜欢",icon:"none"})):(l.listStore.addListMusics(l.LIST_IDS.LOVE,g.value,"top"),console.log("[Player] 添加到我的收藏:",g.value.name),e.index.showToast({title:"已添加到我喜欢的音乐",icon:"success"}))},Ve=()=>{C.value=!1},Je=(e,l=!1)=>l?{default:"rgba(0, 215, 205, 0.4)",love:"rgba(255, 107, 107, 0.4)",user:"rgba(107, 114, 128, 0.4)",custom:"rgba(245, 158, 11, 0.4)",imported:"rgba(59, 130, 246, 0.4)"}[e]||"rgba(107, 114, 128, 0.4)":{default:"#00d7cd",love:"#ff6b6b",user:"#6b7280",custom:"#f59e0b",imported:"#3b82f6"}[e]||"#6b7280",Xe=e=>!!g.value&&l.listStore.checkSongInList(e,g.value.id),Ye=()=>{e.index.showModal({title:"新建歌单",editable:!0,placeholderText:"请输入歌单名称",success:o=>{if(o.confirm&&o.content){const a=o.content.trim();if(!a)return void e.index.showToast({title:"歌单名称不能为空",icon:"none"});l.listStore.createUserList(a)&&(e.index.showToast({title:"创建成功",icon:"success"}),Ve())}}})},Ze=()=>{V.value=!0},el=()=>{V.value=!1};return(a,t)=>e.e({a:e.s(y.value),b:e.p({type:"fas",name:"chevron-down",size:"20",color:J.value?"#ffffff":"#4b5563"}),c:e.o(Te),d:e.t(he(g.value)),e:A.value},(A.value,{}),{f:A.value},A.value?{g:e.t(he(g.value))}:{},{h:A.value?1:"",i:0===w.value?1:"",j:1===w.value?1:"",k:e.s(d.value),l:!_.value&&N.value},!_.value&&N.value?{m:e.unref(u.proxyImageUrl)(N.value),n:e.o(xe)}:{o:e.p({type:"fas",name:"music",size:"80",color:"rgba(0, 215, 205, 0.4)"})},{p:!_.value&&N.value?1:"",q:f.value?1:"",r:f.value?1:"",s:e.t(g.value.name),t:W.value},W.value?e.e({v:e.t(W.value),w:R.value},(R.value,{}),{x:R.value},R.value?{y:e.t(W.value)}:{},{z:R.value?1:""}):{},{A:f.value?"":1,B:b.value.length>0},b.value.length>0?{C:e.f(b.value,(l,a,t)=>e.e({a:e.t(l.text),b:l.translation},l.translation?{c:e.t(l.translation)}:{},{d:T.value===a?1:"",e:a,f:"lyric-line-"+a,g:a,h:e.o(e=>(e=>{if(0===b.value.length||e<0||e>=b.value.length)return;const l=b.value[e].time/1e3,a=S.value>0?l/S.value*100:0;o.playerStore.seek(a)})(a),a)})),D:P.value,E:$.value,F:e.o(Ne),G:e.o(_e)}:{},{H:w.value,I:e.o(Ce),J:1===w.value},1===w.value?{K:e.p({type:"fas",name:"chevron-left",size:"16",color:J.value?"#ffffff":"#4b5563"}),L:e.o(Ue)}:{},{M:0===w.value},0===w.value?{N:e.p({type:"fas",name:"chevron-right",size:"16",color:J.value?"#ffffff":"#4b5563"}),O:e.o(je)}:{},{P:x.value?L.value+"%":pe.value+"%",Q:x.value?L.value+"%":pe.value+"%",R:e.o(Ae),S:e.o(Re),T:e.o(Fe),U:e.t(Le(h.value)),V:e.t(Le(S.value)),W:e.p({type:"fas",name:fe.value,size:"20",color:J.value?"#ffffff":"#6b7280"}),X:e.o(Me),Y:e.p({type:"fas",name:"backward-step",size:"28",color:J.value?"#ffffff":"#374151"}),Z:e.o($e),aa:e.p({type:"fas",name:f.value?"pause":"play",size:"28",color:"#ffffff"}),ab:e.o(Ie),ac:e.p({type:"fas",name:"forward-step",size:"28",color:J.value?"#ffffff":"#374151"}),ad:e.o(Pe),ae:e.p({type:"fas",name:"comment",size:"20",color:J.value?"#ffffff":"#6b7280"}),af:e.o(Ze),ag:e.p({type:"fas",name:"clock",size:"18",color:X.value>0?"#00d7cd":J.value?"#ffffff":"#6b7280"}),ah:X.value>0},X.value>0?{ai:e.t(re.value)}:{},{aj:X.value>0?1:"",ak:e.o(ie),al:z.value},z.value?{am:e.t(q.value),an:e.p({type:"fas",name:"xmark",size:"10",color:"rgba(255,255,255,0.7)"}),ao:e.o(e=>z.value=!1),ap:e.o(Qe)}:{},{aq:e.p({type:"fas",name:(U.value,"heart"),size:18,color:U.value?"#ff6b6b":J.value?"#ffffff":"#6b7280"}),ar:U.value?1:"",as:e.o(Qe),at:e.p({type:"fas",name:"plus",size:"18",color:J.value?"#ffffff":"#6b7280"}),av:e.o(Ye),aw:e.p({type:"fas",name:"download",size:"18",color:J.value?"#ffffff":"#6b7280"}),ax:e.o(Ge),ay:C.value},C.value?{az:e.p({type:"fas",name:"xmark",size:"20",color:"#999"}),aA:e.o(Ve),aB:e.p({type:"fas",name:"plus",size:"18",color:"#00d7cd"}),aC:e.o(Ye),aD:e.f(j.value,(o,a,t)=>{return{a:"54811c87-16-"+t,b:e.p({type:"fas",name:(n=o.type,{default:"music",love:"heart",user:"list-ul",custom:"folder",imported:"download"}[n]||"list-ul"),size:"18",color:Xe(o.id)?Je(o.type,!0):Je(o.type,!1)}),c:e.t(o.name),d:Xe(o.id)?1:"",e:e.t(Xe(o.id)?"已添加":(r=o.id,l.listStore.getListCount(r)+"首")),f:Xe(o.id)?1:"",g:Xe(o.id)?1:"",h:o.id,i:e.o(a=>(o=>{var a,t;if(!g.value)return;if(l.listStore.checkSongInList(o,g.value.id)){l.listStore.removeListMusics(o,g.value.id);const t=(null==(a=j.value.find(e=>e.id===o))?void 0:a.name)||"列表";e.index.showToast({title:`已从${t}移除`,icon:"none"})}else if(l.listStore.addMusicToAnyList(o,g.value,"top")){const l=(null==(t=j.value.find(e=>e.id===o))?void 0:t.name)||"列表";e.index.showToast({title:`已添加到${l}`,icon:"success"})}else e.index.showToast({title:"操作失败",icon:"none"});Ve()})(o.id),o.id)};var r,n}),aE:e.o(()=>{}),aF:e.o(Ve)}:{},{aG:Y.value},Y.value?e.e({aH:e.p({type:"fas",name:"xmark",size:"16",color:"#6b7280"}),aI:e.o(ue),aJ:X.value>0},X.value>0?{aK:e.t(te.value),aL:e.o(ce)}:{},{aM:e.f(oe.value,(l,o,a)=>({a:e.t(l),b:o})),aN:e.f(ae.value,(l,o,a)=>({a:e.t(l),b:o})),aO:Z.value,aP:e.o(se),aQ:e.o(ue),aR:e.o(ve),aS:e.o(()=>{}),aT:e.o(ue)}):{},{aU:e.o(el),aV:e.p({show:V.value,"music-info":p.value}),aW:J.value?1:""})}};wx.createPage(v);
+"use strict";
+const common_vendor = require("../../common/vendor.js");
+const store_modules_list = require("../../store/modules/list.js");
+const store_modules_player = require("../../store/modules/player.js");
+const store_modules_comment = require("../../store/modules/comment.js");
+const utils_lyricCache = require("../../utils/lyricCache.js");
+const utils_musicPic = require("../../utils/musicPic.js");
+const utils_lyric = require("../../utils/lyric.js");
+const utils_kgLyricDecoder = require("../../utils/kgLyricDecoder.js");
+const utils_system = require("../../utils/system.js");
+const utils_imageProxy = require("../../utils/imageProxy.js");
+if (!Math) {
+  (RocIconPlus + DanmakuView + MusicComment)();
+}
+const RocIconPlus = () => "../../uni_modules/roc-icon-plus/components/roc-icon-plus/roc-icon-plus.js";
+const DanmakuView = () => "../../components/danmaku/DanmakuView.js";
+const MusicComment = () => "../../components/comment/MusicComment.js";
+const _sfc_main = {
+  __name: "index",
+  setup(__props) {
+    const instance = common_vendor.getCurrentInstance();
+    const statusBarHeight = common_vendor.ref(utils_system.getStatusBarHeight());
+    const statusBarStyle = common_vendor.computed(() => ({
+      height: `${statusBarHeight.value}px`,
+      width: "100%",
+      backgroundColor: "transparent"
+    }));
+    const navbarStyle = common_vendor.computed(() => ({
+      paddingTop: `${statusBarHeight.value}px`
+    }));
+    const currentSong = common_vendor.computed(() => {
+      var _a, _b;
+      const song = store_modules_player.playerStore.state.currentSong;
+      console.log("[player] currentSong computed:", {
+        name: song == null ? void 0 : song.name,
+        al: song == null ? void 0 : song.al,
+        albumName: song == null ? void 0 : song.albumName,
+        album: song == null ? void 0 : song.album,
+        "al?.name": (_a = song == null ? void 0 : song.al) == null ? void 0 : _a.name,
+        "albumName": song == null ? void 0 : song.albumName,
+        "album?.name": (_b = song == null ? void 0 : song.album) == null ? void 0 : _b.name
+      });
+      return song;
+    });
+    const originalSong = common_vendor.computed(() => {
+      const song = store_modules_player.playerStore.state.originalSong;
+      console.log("[player] originalSong computed:", {
+        name: song == null ? void 0 : song.name,
+        source: song == null ? void 0 : song.source,
+        id: song == null ? void 0 : song.id
+      });
+      return song;
+    });
+    const playing = common_vendor.computed(() => store_modules_player.playerStore.state.playing);
+    const playMode = common_vendor.computed(() => store_modules_player.playerStore.state.playMode);
+    const currentTime = common_vendor.computed(() => store_modules_player.playerStore.state.currentTime);
+    const duration = common_vendor.computed(() => store_modules_player.playerStore.state.duration);
+    const isDragging = common_vendor.ref(false);
+    const dragPercent = common_vendor.ref(0);
+    const currentSlide = common_vendor.ref(0);
+    const lyrics = common_vendor.ref([]);
+    const currentLyricIndex = common_vendor.ref(0);
+    const isLoadingLyrics = common_vendor.ref(false);
+    const lyricScrollTop = common_vendor.ref(0);
+    const scrollIntoViewId = common_vendor.ref("");
+    let lastScrollIndex = -1;
+    let isScrollToActive = false;
+    const showAddToModalFlag = common_vendor.ref(false);
+    const availableLists = common_vendor.computed(() => store_modules_list.listStore.getAllAvailableLists());
+    const isCurrentSongFavorite = common_vendor.computed(() => {
+      if (!currentSong.value)
+        return false;
+      return store_modules_list.listStore.isInLoveList(currentSong.value.id);
+    });
+    const showFavoriteHint = common_vendor.ref(false);
+    const currentFavoriteHintText = common_vendor.ref("喜欢这首歌？点击收藏");
+    let favoriteHintTimer = null;
+    const songPicCache = common_vendor.ref("");
+    const showDefaultCover = common_vendor.ref(true);
+    common_vendor.ref(null);
+    const navbarMarqueeScroll = common_vendor.ref(false);
+    common_vendor.ref(null);
+    const statusMarqueeScroll = common_vendor.ref(false);
+    const playerStatusText = common_vendor.ref("");
+    const isShowingStatusText = common_vendor.ref(false);
+    const showDanmaku = common_vendor.ref(common_vendor.index.getStorageSync("showCommentDanmaku") !== "false");
+    const danmakuList = common_vendor.ref([]);
+    const commentTotalCount = common_vendor.ref(0);
+    let danmakuLoadedForSong = null;
+    let lyricsLoadedForSong = null;
+    const cachedParsedLyricsForStatus = common_vendor.ref([]);
+    const lastLyricTextForStatus = common_vendor.ref("");
+    const wasPlayingForStatus = common_vendor.ref(false);
+    const hasCheckedLyricsForStatus = common_vendor.ref(false);
+    const updateCachedLyricsForStatus = () => {
+      var _a, _b, _c, _d;
+      const store = store_modules_player.playerStore.state;
+      console.log("[player] updateCachedLyricsForStatus 调用:", {
+        lyricLength: (_a = store.lyric) == null ? void 0 : _a.length,
+        tlyricLength: (_b = store.tlyric) == null ? void 0 : _b.length,
+        lxlyricLength: (_c = store.lxlyric) == null ? void 0 : _c.length,
+        cachedLength: cachedParsedLyricsForStatus.value.length
+      });
+      const lyricInfo = {
+        lyric: store.lyric || "",
+        tlyric: store.tlyric || "",
+        rlyric: store.rlyric || "",
+        lxlyric: store.lxlyric || ""
+      };
+      const { lyric, tlyric, rlyric, lxlyric } = utils_lyric.extractLyricsFromMusicData(lyricInfo);
+      let lyricText = lyric || "";
+      let lxlyricText = lxlyric || "";
+      if (utils_kgLyricDecoder.isKgCompressedLyric(lyricText)) {
+        try {
+          const decoded = utils_kgLyricDecoder.tryDecodeKgLyric(lyricText);
+          lyricText = decoded.lyric || lyricText;
+        } catch (e) {
+        }
+      }
+      if (utils_kgLyricDecoder.isKgCompressedLyric(lxlyricText)) {
+        try {
+          const decoded = utils_kgLyricDecoder.tryDecodeKgLyric(lxlyricText);
+          lxlyricText = decoded.lxlyric || lxlyricText;
+          if (!lyricText && decoded.lyric) {
+            lyricText = decoded.lyric;
+          }
+        } catch (e) {
+        }
+      }
+      const finalLyric = lxlyricText || lyricText;
+      console.log("[player] updateCachedLyricsForStatus finalLyric:", {
+        length: finalLyric == null ? void 0 : finalLyric.length,
+        lastLyricLength: (_d = lastLyricTextForStatus.value) == null ? void 0 : _d.length,
+        isSame: finalLyric === lastLyricTextForStatus.value
+      });
+      if (finalLyric !== lastLyricTextForStatus.value) {
+        lastLyricTextForStatus.value = finalLyric;
+        if (finalLyric) {
+          cachedParsedLyricsForStatus.value = utils_lyric.parseLyric(finalLyric);
+          console.log("[player] 解析歌词成功，行数:", cachedParsedLyricsForStatus.value.length);
+          hasCheckedLyricsForStatus.value = true;
+          common_vendor.nextTick$1(() => {
+            updateCurrentLyricTextForStatus();
+          });
+        } else {
+          cachedParsedLyricsForStatus.value = [];
+          console.log("[player] 歌词为空，清空缓存");
+          hasCheckedLyricsForStatus.value = true;
+          common_vendor.nextTick$1(() => {
+            updateCurrentLyricTextForStatus();
+          });
+        }
+      }
+    };
+    const updateCurrentLyricTextForStatus = () => {
+      const store = store_modules_player.playerStore.state;
+      if (store.statusText) {
+        playerStatusText.value = store.statusText;
+        isShowingStatusText.value = true;
+        hasCheckedLyricsForStatus.value = false;
+        return;
+      }
+      isShowingStatusText.value = false;
+      if (store.playing && !wasPlayingForStatus.value) {
+        wasPlayingForStatus.value = true;
+        hasCheckedLyricsForStatus.value = true;
+      }
+      if (store.playing && !hasCheckedLyricsForStatus.value) {
+        hasCheckedLyricsForStatus.value = true;
+      }
+      if (hasCheckedLyricsForStatus.value) {
+        const hasLyrics = cachedParsedLyricsForStatus.value.length > 0;
+        if (!hasLyrics) {
+          playerStatusText.value = "暂无歌词";
+          return;
+        }
+      }
+      const currentTime2 = store.currentTime;
+      if (currentTime2 && cachedParsedLyricsForStatus.value.length > 0) {
+        const index = utils_lyric.getCurrentLyricIndex(cachedParsedLyricsForStatus.value, currentTime2);
+        if (index >= 0 && index < cachedParsedLyricsForStatus.value.length) {
+          playerStatusText.value = cachedParsedLyricsForStatus.value[index].text || "";
+          return;
+        }
+      }
+      playerStatusText.value = "";
+    };
+    const statusText = common_vendor.computed(() => playerStatusText.value);
+    const showCommentFlag = common_vendor.ref(false);
+    const darkMode = common_vendor.ref(false);
+    const initDarkMode = () => {
+      darkMode.value = common_vendor.index.getStorageSync("darkMode") === "true";
+      console.log("[Player] 初始化暗黑模式:", darkMode.value);
+      const storedDanmaku = common_vendor.index.getStorageSync("showCommentDanmaku");
+      showDanmaku.value = storedDanmaku !== "false";
+      console.log("[Player] 初始化弹幕设置:", showDanmaku.value, "storage:", storedDanmaku);
+      common_vendor.index.$on("commentDanmakuChanged", (show) => {
+        showDanmaku.value = show;
+        console.log("[Player] 弹幕设置变化:", show);
+      });
+    };
+    const refreshDarkMode = () => {
+      darkMode.value = common_vendor.index.getStorageSync("darkMode") === "true";
+      console.log("[Player] 刷新暗黑模式:", darkMode.value);
+    };
+    const checkAndLoadDanmaku = () => {
+      var _a;
+      const store = store_modules_player.playerStore.state;
+      const currentSongId = (_a = store.currentSong) == null ? void 0 : _a.id;
+      if (store.playing && currentSongId && danmakuLoadedForSong !== currentSongId) {
+        danmakuLoadedForSong = currentSongId;
+        fetchDanmakuComments();
+      }
+    };
+    const fetchDanmakuComments = async () => {
+      console.log("[Player] fetchDanmakuComments 被调用, showDanmaku:", showDanmaku.value);
+      if (!showDanmaku.value) {
+        console.log("[Player] 弹幕未开启");
+        return;
+      }
+      const song = originalSong.value || currentSong.value;
+      console.log("[Player] 获取弹幕评论, song:", song ? { id: song.id, source: song.source, name: song.name } : null);
+      if (!song || !song.id || !song.source) {
+        console.log("[Player] 歌曲信息不完整，无法获取弹幕");
+        return;
+      }
+      try {
+        const result = await store_modules_comment.commentStore.fetchComments({
+          id: song.id,
+          name: song.name,
+          singer: song.singer,
+          source: song.source,
+          songmid: song.songmid,
+          hash: song.hash,
+          copyrightId: song.copyrightId
+        });
+        if (result) {
+          const hotComments = result.hotComments || [];
+          const latestComments = result.latestComments || [];
+          commentTotalCount.value = result.totalCount || 0;
+          const allComments = [...hotComments];
+          const hotIds = new Set(hotComments.map((c) => c.id));
+          for (const comment of latestComments) {
+            if (!hotIds.has(comment.id)) {
+              allComments.push(comment);
+            }
+          }
+          danmakuList.value = allComments.slice(0, 30);
+          console.log("[Player] 弹幕评论获取成功:", danmakuList.value.length, "(热门:", hotComments.length, "最新:", latestComments.length + ")");
+        } else {
+          console.log("[Player] 弹幕评论为空");
+          danmakuList.value = [];
+          commentTotalCount.value = 0;
+        }
+      } catch (e) {
+        console.log("[Player] 获取弹幕评论失败:", e);
+        danmakuList.value = [];
+        commentTotalCount.value = 0;
+      }
+    };
+    const handleDanmakuLoadMore = async ({ requestIndex, callback }) => {
+      console.log("[Player] 弹幕请求加载更多评论, 次数:", requestIndex);
+      try {
+        const result = await store_modules_comment.commentStore.fetchMoreComments(requestIndex);
+        if (result === "loading") {
+          console.log("[Player] 正在加载中，稍后重试");
+          callback([]);
+        } else if (result && result.alreadyLoaded) {
+          console.log("[Player] 其他组件已加载过");
+          callback(result);
+        } else if (result && result.length > 0) {
+          console.log("[Player] 加载更多评论成功:", result.length);
+          callback(result);
+        } else {
+          console.log("[Player] 没有更多评论了");
+          callback([]);
+        }
+      } catch (e) {
+        console.log("[Player] 加载更多评论失败:", e);
+        callback([]);
+      }
+    };
+    const sleepTimerRemaining = common_vendor.ref(0);
+    const showSleepTimerPopupFlag = common_vendor.ref(false);
+    const sleepTimerPickerValue = common_vendor.ref([0, 0]);
+    const tempSelectedHour = common_vendor.ref(0);
+    const tempSelectedMinute = common_vendor.ref(0);
+    const hourOptions = common_vendor.computed(() => {
+      const hours = [];
+      for (let i = 0; i <= 99; i++) {
+        hours.push(i < 10 ? `0${i}` : `${i}`);
+      }
+      return hours;
+    });
+    const minuteOptions = common_vendor.computed(() => {
+      const minutes = [];
+      for (let i = 0; i <= 59; i++) {
+        minutes.push(i < 10 ? `0${i}` : `${i}`);
+      }
+      return minutes;
+    });
+    const formatSleepTimerRemaining = common_vendor.computed(() => {
+      const hours = Math.floor(sleepTimerRemaining.value / 3600);
+      const minutes = Math.floor(sleepTimerRemaining.value % 3600 / 60);
+      const seconds = sleepTimerRemaining.value % 60;
+      if (hours > 0) {
+        return `${hours}时${minutes}分${seconds}秒`;
+      } else if (minutes > 0) {
+        return `${minutes}分${seconds}秒`;
+      } else {
+        return `${seconds}秒`;
+      }
+    });
+    const formatSleepTimerShort = common_vendor.computed(() => {
+      const hours = Math.floor(sleepTimerRemaining.value / 3600);
+      const minutes = Math.floor(sleepTimerRemaining.value % 3600 / 60);
+      if (hours > 0) {
+        return `${hours}h${minutes}m`;
+      } else {
+        return `${minutes}m`;
+      }
+    });
+    const handleSleepTimerUpdate = (data) => {
+      sleepTimerRemaining.value = data.remaining;
+    };
+    const showSleepTimerPopup = () => {
+      sleepTimerPickerValue.value = [0, 0];
+      tempSelectedHour.value = 0;
+      tempSelectedMinute.value = 0;
+      showSleepTimerPopupFlag.value = true;
+    };
+    const closeSleepTimerPopup = () => {
+      showSleepTimerPopupFlag.value = false;
+    };
+    const onSleepTimerPickerChange = (e) => {
+      const value = e.detail.value;
+      sleepTimerPickerValue.value = value;
+      tempSelectedHour.value = value[0];
+      tempSelectedMinute.value = value[1];
+    };
+    const cancelSleepTimer = () => {
+      common_vendor.index.$emit("sleepTimerCancel");
+    };
+    const confirmSleepTimerSelection = () => {
+      const hours = tempSelectedHour.value;
+      const minutes = tempSelectedMinute.value;
+      const totalSeconds = hours * 3600 + minutes * 60;
+      if (totalSeconds <= 0) {
+        common_vendor.index.showToast({
+          title: "请选择有效的时间",
+          icon: "none"
+        });
+        return;
+      }
+      common_vendor.index.$emit("sleepTimerSet", { totalSeconds });
+      const displayText = hours > 0 ? `${hours}时${minutes}分后停止播放` : `${minutes}分钟后停止播放`;
+      common_vendor.index.showToast({
+        title: displayText,
+        icon: "success"
+      });
+      closeSleepTimerPopup();
+    };
+    common_vendor.watch(() => playing.value, (isPlaying, oldIsPlaying) => {
+      console.log("[Player] 播放状态变化:", isPlaying);
+      if (isPlaying) {
+        console.log("[Player] 播放状态变为true，尝试触发弹幕加载");
+        checkAndLoadDanmaku();
+      }
+    });
+    let hasLoadedLyricsOnMount = false;
+    let playEndedCallbackSet = false;
+    const setupPlayEndedCallback = async () => {
+      if (playEndedCallbackSet)
+        return;
+      store_modules_player.playerStore.setOnPlayEndedCallback(async (playMode2) => {
+        var _a, _b, _c, _d;
+        console.log("[player] 播放结束回调触发，模式:", playMode2);
+        if (playMode2 === "singleLoop") {
+          console.log("[player] 单曲循环，重新播放当前歌曲");
+          if (currentSong.value) {
+            const audioContext = store_modules_player.playerStore.state.audioContext;
+            const currentSongData = currentSong.value;
+            if (audioContext && currentSongData) {
+              let playUrl = currentSongData.url || currentSongData.playUrl;
+              if (!playUrl) {
+                console.log("[player] 当前歌曲没有播放URL");
+                return;
+              }
+              const secureUrl = playUrl.replace(/^http:/, "https:");
+              console.log("[player] 微信小程序，重新设置src播放");
+              audioContext.title = currentSongData.name || "未知歌曲";
+              audioContext.singer = formatArtists(currentSongData);
+              let coverImgUrl = ((_a = currentSongData.al) == null ? void 0 : _a.picUrl) || ((_b = currentSongData.album) == null ? void 0 : _b.picUrl) || currentSongData.img || "";
+              if (coverImgUrl) {
+                coverImgUrl = coverImgUrl.replace(/^http:/, "https:");
+              }
+              audioContext.coverImgUrl = coverImgUrl;
+              audioContext.epname = ((_c = currentSongData.al) == null ? void 0 : _c.name) || ((_d = currentSongData.album) == null ? void 0 : _d.name) || "未知专辑";
+              audioContext.src = secureUrl;
+              console.log("[player] 单曲循环播放已触发");
+            }
+          }
+          return;
+        }
+        if (playMode2 === "list") {
+          console.log("[player] 顺序播放模式，检查是否最后一首");
+          const currentListId = store_modules_list.listStore.state.playInfo.playerListId;
+          const currentList = currentListId === store_modules_list.LIST_IDS.DEFAULT ? store_modules_list.listStore.state.defaultList.list : currentListId === store_modules_list.LIST_IDS.LOVE ? store_modules_list.listStore.state.loveList.list : store_modules_list.listStore.state.tempList.list;
+          const currentIndex = store_modules_list.listStore.state.playInfo.playerPlayIndex;
+          if (currentIndex >= currentList.length - 1) {
+            console.log("[player] 顺序播放模式：已是最后一首，停止播放");
+            store_modules_player.playerStore.pause();
+            return;
+          }
+          console.log("[player] 顺序播放模式：不是最后一首，切换到下一首");
+          const nextSongInfo2 = store_modules_list.listStore.getNextSong("list", true);
+          if (nextSongInfo2 && nextSongInfo2.musicInfo) {
+            console.log("[player] 自动播放下一首:", nextSongInfo2.musicInfo.name);
+            await playSongFromList(nextSongInfo2);
+          } else {
+            console.log("[player] 没有下一首歌曲可播放");
+          }
+          return;
+        }
+        if (playMode2 === "none") {
+          console.log("[player] 禁用模式，不自动切换下一首");
+          store_modules_player.playerStore.pause();
+          return;
+        }
+        const togglePlayMethod = playMode2 === "random" ? "random" : "listLoop";
+        const nextSongInfo = store_modules_list.listStore.getNextSong(togglePlayMethod, true);
+        if (nextSongInfo && nextSongInfo.musicInfo) {
+          console.log("[player] 自动播放下一首:", nextSongInfo.musicInfo.name);
+          await playSongFromList(nextSongInfo);
+        } else {
+          console.log("[player] 没有下一首歌曲可播放");
+        }
+      });
+      playEndedCallbackSet = true;
+      console.log("[player] 播放结束回调已设置");
+    };
+    common_vendor.onMounted(() => {
+      console.log("[player] onMounted 调用");
+      initDarkMode();
+      if (!hasLoadedLyricsOnMount && currentSong.value && currentSong.value.id) {
+        console.log("[player] onMounted - 调用loadLyrics");
+        hasLoadedLyricsOnMount = true;
+        common_vendor.nextTick$1(() => {
+          loadLyrics && loadLyrics();
+        });
+      }
+      setupPlayEndedCallback();
+      common_vendor.nextTick$1(() => {
+        checkNavbarMarquee();
+      });
+    });
+    common_vendor.onShow(() => {
+      console.log("[player] onShow 调用");
+      utils_system.setStatusBarTextColor("black");
+      refreshDarkMode();
+      setupPlayEndedCallback();
+      if (currentSong.value) {
+        console.log("[player] onShow currentSong 歌手字段检查:", {
+          singer: currentSong.value.singer,
+          ar: currentSong.value.ar,
+          artists: currentSong.value.artists,
+          name: currentSong.value.name
+        });
+      }
+      if (!hasLoadedLyricsOnMount && lyrics.value.length === 0 && currentSong.value && currentSong.value.id) {
+        console.log("[player] onShow - 歌词为空，调用loadLyrics");
+        hasLoadedLyricsOnMount = true;
+        common_vendor.nextTick$1(() => {
+          loadLyrics && loadLyrics();
+        });
+      }
+      common_vendor.index.$on("sleepTimerUpdate", handleSleepTimerUpdate);
+      const app = getApp();
+      if (app && app.getSleepTimerRemaining) {
+        sleepTimerRemaining.value = app.getSleepTimerRemaining();
+      }
+    });
+    common_vendor.onHide(() => {
+      console.log("[player] onHide 调用 - 页面隐藏，不做任何操作");
+      common_vendor.index.$off("sleepTimerUpdate", handleSleepTimerUpdate);
+    });
+    common_vendor.onUnload(() => {
+      console.log("[player] onUnload 调用 - 页面卸载，清理资源");
+      lyrics.value = [];
+      currentLyricIndex.value = 0;
+      common_vendor.index.$off("sleepTimerUpdate", handleSleepTimerUpdate);
+    });
+    common_vendor.onUnmounted(() => {
+      console.log("[player] onUnmounted 调用 - 组件卸载");
+    });
+    common_vendor.onBackPress(() => {
+      console.log("[player] onBackPress 触发 - 系统返回按钮被按下，销毁页面");
+      return false;
+    });
+    common_vendor.watch(() => {
+      var _a;
+      return (_a = currentSong.value) == null ? void 0 : _a.id;
+    }, async (newId, oldId) => {
+      if (newId !== oldId) {
+        const song = currentSong.value;
+        if (song) {
+          const source = song.sourceId || song.source;
+          let picUrl = utils_musicPic.getSongPicUrl(song, source);
+          if (picUrl) {
+            songPicCache.value = picUrl;
+            showDefaultCover.value = false;
+          } else {
+            songPicCache.value = "";
+            showDefaultCover.value = true;
+            picUrl = await utils_musicPic.fetchSongPicUrl(song, source);
+            if (picUrl) {
+              songPicCache.value = picUrl;
+              showDefaultCover.value = false;
+            }
+          }
+          console.log("[songPicCache] 更新图片缓存:", songPicCache.value, "showDefaultCover:", showDefaultCover.value, "source:", source);
+        } else {
+          songPicCache.value = "";
+          showDefaultCover.value = true;
+        }
+        navbarMarqueeScroll.value = false;
+        common_vendor.nextTick$1(() => {
+          checkNavbarMarquee();
+        });
+        if (danmakuList.value.length > 0) {
+          danmakuList.value = [];
+        }
+        if (oldId && oldId !== newId) {
+          const oldSong = store_modules_player.playerStore.getState().originalSong;
+          if (oldSong && oldSong.source) {
+            store_modules_comment.commentStore.clearCommentCache(oldId, oldSong.source);
+          }
+        }
+      }
+    }, { immediate: true });
+    common_vendor.watch(() => statusText.value, () => {
+      statusMarqueeScroll.value = false;
+      common_vendor.nextTick$1(() => {
+        checkStatusMarquee();
+      });
+    });
+    const progressPercent = common_vendor.computed(() => {
+      if (isDragging.value) {
+        return dragPercent.value;
+      }
+      return duration.value > 0 ? currentTime.value / duration.value * 100 : 0;
+    });
+    const playModeIcon = common_vendor.computed(() => {
+      const modeIcons = {
+        "listLoop": "repeat",
+        "random": "shuffle",
+        "list": "arrow-right-arrow-left",
+        "singleLoop": "rotate-right",
+        "none": "ban"
+      };
+      return modeIcons[playMode.value] || "repeat";
+    });
+    common_vendor.computed(() => {
+      const modeNames = {
+        "listLoop": "列表循环",
+        "random": "随机播放",
+        "list": "顺序播放",
+        "singleLoop": "单曲循环",
+        "none": "禁用歌曲切换"
+      };
+      return modeNames[playMode.value] || "列表循环";
+    });
+    const formatArtists = (song) => {
+      if (!song)
+        return "未知歌手";
+      if (song.singer) {
+        return song.singer;
+      }
+      if (song.ar && song.ar.length > 0) {
+        return song.ar.map((a) => a.name).join("/");
+      }
+      if (song.artists && song.artists.length > 0) {
+        return song.artists.map((a) => a.name).join("/");
+      }
+      return "未知歌手";
+    };
+    const formatAlbum = (song) => {
+      var _a, _b;
+      if (!song)
+        return "未知";
+      let artistName = "";
+      if (song.ar && Array.isArray(song.ar) && song.ar.length > 0) {
+        artistName = song.ar.map((a) => a.name).join("/");
+      } else if (song.artists && Array.isArray(song.artists) && song.artists.length > 0) {
+        artistName = song.artists.map((a) => a.name).join("/");
+      } else if (song.singer) {
+        artistName = song.singer;
+      }
+      let albumName = "";
+      if ((_a = song.al) == null ? void 0 : _a.name) {
+        albumName = song.al.name;
+      } else if (song.albumName) {
+        albumName = song.albumName;
+      } else if ((_b = song.album) == null ? void 0 : _b.name) {
+        albumName = song.album.name;
+      } else if (song.album) {
+        albumName = song.album;
+      }
+      if (artistName && albumName) {
+        return `${artistName}-${albumName}`;
+      } else if (artistName) {
+        return artistName;
+      } else if (albumName) {
+        return albumName;
+      }
+      return "未知";
+    };
+    const onPicError = () => {
+      console.log("[onPicError] 图片加载失败，使用默认图标");
+      songPicCache.value = "";
+      showDefaultCover.value = true;
+    };
+    const handlePlayerImageError = (event) => {
+      if (!songPicCache.value) {
+        onPicError();
+        return;
+      }
+      let currentProxyIndex = 0;
+      if (songPicCache.value.includes("wsrv.nl"))
+        currentProxyIndex = 1;
+      else if (songPicCache.value.includes("weserv.nl"))
+        currentProxyIndex = 2;
+      else if (songPicCache.value.includes("jina.ai"))
+        currentProxyIndex = 3;
+      const nextUrl = utils_imageProxy.handleImageError(event, songPicCache.value, currentProxyIndex);
+      if (nextUrl) {
+        songPicCache.value = nextUrl;
+      } else {
+        onPicError();
+      }
+    };
+    const formatTime = (time) => {
+      if (!time || isNaN(time))
+        return "00:00";
+      time = Math.floor(time);
+      const minutes = Math.floor(time / 60);
+      const seconds = time % 60;
+      return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+    };
+    const checkNavbarMarquee = () => {
+      try {
+        const query = common_vendor.index.createSelectorQuery().in(instance);
+        query.select(".player-navbar__marquee").boundingClientRect();
+        query.select(".player-navbar__marquee-content").boundingClientRect();
+        query.exec((rects) => {
+          if (!rects || !rects[0] || !rects[1])
+            return;
+          const marqueeRect = rects[0];
+          const contentRect = rects[1];
+          const singleContentWidth = navbarMarqueeScroll.value ? contentRect.width / 2 : contentRect.width;
+          navbarMarqueeScroll.value = singleContentWidth > marqueeRect.width + 5;
+        });
+      } catch (e) {
+      }
+    };
+    const checkStatusMarquee = () => {
+      if (!statusText.value)
+        return;
+      try {
+        const query = common_vendor.index.createSelectorQuery().in(instance);
+        query.select(".song-info__status-marquee").boundingClientRect();
+        query.select(".song-info__status-content").boundingClientRect();
+        query.exec((rects) => {
+          if (!rects || !rects[0] || !rects[1])
+            return;
+          const marqueeRect = rects[0];
+          const contentRect = rects[1];
+          const singleContentWidth = statusMarqueeScroll.value ? contentRect.width / 2 : contentRect.width;
+          statusMarqueeScroll.value = singleContentWidth > marqueeRect.width + 5;
+        });
+      } catch (e) {
+      }
+    };
+    const goBack = () => {
+      console.log("[player] goBack 调用 - 用户点击返回，销毁页面");
+      common_vendor.index.navigateBack();
+    };
+    const togglePlay = () => {
+      store_modules_player.playerStore.togglePlay();
+    };
+    const playNext = async () => {
+      console.log("[Player] 播放下一首");
+      const togglePlayMethod = playMode.value === "random" ? "random" : "listLoop";
+      if (store_modules_player.playerStore.getState().isGettingUrl) {
+        console.log("[Player] 正在获取播放链接，只更新待播放歌曲");
+        const nextSongInfo2 = store_modules_list.listStore.getNextSong(togglePlayMethod, false);
+        if (nextSongInfo2 && nextSongInfo2.musicInfo) {
+          console.log("[Player] 更新待播放歌曲:", nextSongInfo2.musicInfo.name);
+          store_modules_player.playerStore.updatePendingSong(nextSongInfo2.musicInfo);
+        }
+        return;
+      }
+      store_modules_player.playerStore.setGettingUrl(true);
+      const nextSongInfo = store_modules_list.listStore.getNextSong(togglePlayMethod, false);
+      if (!nextSongInfo || !nextSongInfo.musicInfo) {
+        console.log("[Player] 没有下一首歌曲");
+        store_modules_player.playerStore.setGettingUrl(false);
+        common_vendor.index.showToast({
+          title: "已经是最后一首了",
+          icon: "none"
+        });
+        return;
+      }
+      console.log("[Player] 下一首歌曲:", nextSongInfo.musicInfo.name);
+      await playSongFromList(nextSongInfo);
+    };
+    const playPrev = async () => {
+      console.log("[Player] 播放上一首");
+      if (store_modules_player.playerStore.getState().isGettingUrl) {
+        console.log("[Player] 正在获取播放链接，只更新待播放歌曲");
+        const togglePlayMethod2 = playMode.value === "random" ? "random" : "listLoop";
+        const prevSongInfo2 = store_modules_list.listStore.getPrevSong(togglePlayMethod2);
+        if (prevSongInfo2 && prevSongInfo2.musicInfo) {
+          console.log("[Player] 更新待播放歌曲:", prevSongInfo2.musicInfo.name);
+          store_modules_player.playerStore.updatePendingSong(prevSongInfo2.musicInfo);
+        }
+        return;
+      }
+      store_modules_player.playerStore.setGettingUrl(true);
+      const togglePlayMethod = playMode.value === "random" ? "random" : "listLoop";
+      const prevSongInfo = store_modules_list.listStore.getPrevSong(togglePlayMethod);
+      if (!prevSongInfo || !prevSongInfo.musicInfo) {
+        console.log("[Player] 没有上一首歌曲");
+        store_modules_player.playerStore.setGettingUrl(false);
+        common_vendor.index.showToast({
+          title: "已经是第一首了",
+          icon: "none"
+        });
+        return;
+      }
+      console.log("[Player] 上一首歌曲:", prevSongInfo.musicInfo.name);
+      await playSongFromList(prevSongInfo);
+    };
+    const playSongFromList = async (playMusicInfo) => {
+      const song = playMusicInfo.musicInfo;
+      const listId = playMusicInfo.listId;
+      const isTempPlay = playMusicInfo.isTempPlay;
+      try {
+        const songWithoutUrl = {
+          ...song,
+          url: "",
+          playUrl: ""
+        };
+        store_modules_list.listStore.setPlayMusicInfo(listId, songWithoutUrl, isTempPlay);
+        store_modules_list.listStore.addPlayedList({
+          listId,
+          musicInfo: songWithoutUrl,
+          isTempPlay
+        });
+        await store_modules_player.playerStore.playSong(songWithoutUrl);
+        lyrics.value = [];
+        currentLyricIndex.value = 0;
+        isLoadingLyrics.value = false;
+        hasLoadedLyricsOnMount = false;
+        common_vendor.nextTick$1(() => {
+          loadLyrics();
+        });
+      } catch (error) {
+        console.error("[Player] 播放失败:", error);
+        store_modules_player.playerStore.setGettingUrl(false);
+        common_vendor.index.showToast({
+          title: "播放失败: " + (error.message || "未知错误"),
+          icon: "none"
+        });
+      }
+    };
+    const togglePlayMode = () => {
+      const modes = ["listLoop", "random", "list", "singleLoop", "none"];
+      const currentIndex = modes.indexOf(playMode.value);
+      const nextIndex = (currentIndex + 1) % modes.length;
+      const nextMode = modes[nextIndex];
+      store_modules_player.playerStore.setPlayMode(nextMode);
+      const modeNames = {
+        "listLoop": "列表循环",
+        "random": "随机播放",
+        "list": "顺序播放",
+        "singleLoop": "单曲循环",
+        "none": "禁用歌曲切换"
+      };
+      common_vendor.index.showToast({
+        title: modeNames[nextMode],
+        icon: "none"
+      });
+    };
+    const onSwiperChange = (e) => {
+      currentSlide.value = e.detail.current;
+      console.log("[player] 滑动切换到:", currentSlide.value === 0 ? "专辑" : "歌词");
+    };
+    const switchToLyrics = () => {
+      currentSlide.value = 1;
+      console.log("[player] 点击左箭头，切换到歌词视图");
+    };
+    const switchToAlbum = () => {
+      currentSlide.value = 0;
+      console.log("[player] 点击右箭头，切换到专辑视图");
+    };
+    const processLyricData = (lyricInfo) => {
+      console.log("[player] processLyricData 输入:", {
+        hasLyric: !!(lyricInfo == null ? void 0 : lyricInfo.lyric),
+        hasTlyric: !!(lyricInfo == null ? void 0 : lyricInfo.tlyric),
+        hasRlyric: !!(lyricInfo == null ? void 0 : lyricInfo.rlyric),
+        hasLxlyric: !!(lyricInfo == null ? void 0 : lyricInfo.lxlyric)
+      });
+      const { lyric, tlyric, rlyric, lxlyric } = utils_lyric.extractLyricsFromMusicData(lyricInfo);
+      console.log("[player] extractLyricsFromMusicData 提取结果:", {
+        lyricLength: lyric == null ? void 0 : lyric.length,
+        tlyricLength: tlyric == null ? void 0 : tlyric.length,
+        rlyricLength: rlyric == null ? void 0 : rlyric.length,
+        lxlyricLength: lxlyric == null ? void 0 : lxlyric.length,
+        lyricPreview: lyric == null ? void 0 : lyric.substring(0, 100)
+      });
+      console.log("[player] 开始解析歌词...");
+      const parsedLyrics = utils_lyric.parseLyric(lyric);
+      console.log("[player] parseLyric 结果:", {
+        inputLength: lyric == null ? void 0 : lyric.length,
+        outputLength: parsedLyrics == null ? void 0 : parsedLyrics.length,
+        firstLine: parsedLyrics == null ? void 0 : parsedLyrics[0],
+        lastLine: parsedLyrics == null ? void 0 : parsedLyrics[(parsedLyrics == null ? void 0 : parsedLyrics.length) - 1]
+      });
+      const parsedTranslations = utils_lyric.parseTranslation(tlyric);
+      console.log("[player] parseTranslation 结果:", {
+        inputLength: tlyric == null ? void 0 : tlyric.length,
+        outputLength: parsedTranslations == null ? void 0 : parsedTranslations.length
+      });
+      const mergedLyrics = utils_lyric.mergeLyrics(parsedLyrics, parsedTranslations);
+      console.log("[player] 歌词处理完成，共", mergedLyrics.length, "行");
+      console.log("[player] 歌词数组前3行:", mergedLyrics.slice(0, 3));
+      return mergedLyrics;
+    };
+    const loadLyrics = async () => {
+      var _a, _b, _c, _d, _e, _f, _g, _h, _i;
+      if (isLoadingLyrics.value) {
+        console.log("[player] 歌词正在加载中，跳过重复请求");
+        return;
+      }
+      if (lyrics.value.length > 0) {
+        console.log("[player] 已有歌词，跳过加载");
+        return;
+      }
+      isLoadingLyrics.value = true;
+      console.log("[player] ========== 开始加载歌词 ==========");
+      const songInfo = store_modules_player.playerStore.state.currentSong;
+      console.log("[player] 当前歌曲信息:", {
+        id: songInfo == null ? void 0 : songInfo.id,
+        name: songInfo == null ? void 0 : songInfo.name,
+        source: (songInfo == null ? void 0 : songInfo.source) || (songInfo == null ? void 0 : songInfo.sourceId)
+      });
+      try {
+        let lyricInfo = {
+          lyric: store_modules_player.playerStore.state.lyric || "",
+          tlyric: store_modules_player.playerStore.state.tlyric || "",
+          rlyric: store_modules_player.playerStore.state.rlyric || "",
+          lxlyric: store_modules_player.playerStore.state.lxlyric || ""
+        };
+        console.log("[player] 从playerStore获取歌词:", {
+          lyricLength: (_a = lyricInfo.lyric) == null ? void 0 : _a.length,
+          tlyricLength: (_b = lyricInfo.tlyric) == null ? void 0 : _b.length,
+          rlyricLength: (_c = lyricInfo.rlyric) == null ? void 0 : _c.length,
+          lxlyricLength: (_d = lyricInfo.lxlyric) == null ? void 0 : _d.length,
+          source: (songInfo == null ? void 0 : songInfo.source) || (songInfo == null ? void 0 : songInfo.sourceId)
+        });
+        if (!lyricInfo.lyric && !lyricInfo.tlyric && !lyricInfo.rlyric && !lyricInfo.lxlyric) {
+          console.log("[player] playerStore中无歌词，尝试从缓存获取");
+          const songSource = (songInfo == null ? void 0 : songInfo.source) || (songInfo == null ? void 0 : songInfo.sourceId) || "tx";
+          console.log("[player] 获取歌词缓存，歌曲ID:", songInfo == null ? void 0 : songInfo.id, "音源:", songSource);
+          const possibleSources = [songSource];
+          if ((songInfo == null ? void 0 : songInfo.source) && (songInfo == null ? void 0 : songInfo.sourceId) && (songInfo == null ? void 0 : songInfo.source) !== (songInfo == null ? void 0 : songInfo.sourceId)) {
+            possibleSources.push(songInfo == null ? void 0 : songInfo.sourceId);
+          }
+          if (songSource !== "tx") {
+            possibleSources.push("tx");
+          }
+          let cachedLyric = null;
+          for (const source2 of possibleSources) {
+            console.log("[player] 尝试获取歌词缓存，source:", source2);
+            cachedLyric = await utils_lyricCache.getCachedLyric(songInfo == null ? void 0 : songInfo.id, source2);
+            if (cachedLyric) {
+              console.log("[player] 从缓存获取到歌词，source:", source2);
+              break;
+            }
+          }
+          if (cachedLyric) {
+            lyricInfo = {
+              lyric: cachedLyric.lyric || "",
+              tlyric: cachedLyric.tlyric || "",
+              rlyric: cachedLyric.rlyric || "",
+              lxlyric: cachedLyric.lxlyric || ""
+            };
+          } else {
+            console.log("[player] 缓存中也没有歌词，已尝试的source:", possibleSources);
+          }
+        }
+        const source = (songInfo == null ? void 0 : songInfo.source) || (songInfo == null ? void 0 : songInfo.sourceId);
+        if (source === "酷狗" || source === "kg") {
+          console.log("[player] 检测到酷狗音源，检查歌词格式");
+          if (utils_kgLyricDecoder.isKgCompressedLyric(lyricInfo.lyric)) {
+            console.log("[player] 检测到酷狗压缩歌词，开始解码");
+            const decodedLyrics = await utils_kgLyricDecoder.tryDecodeKgLyric(lyricInfo.lyric);
+            console.log("[player] 酷狗歌词解码结果:", {
+              lyricLength: (_e = decodedLyrics.lyric) == null ? void 0 : _e.length,
+              tlyricLength: (_f = decodedLyrics.tlyric) == null ? void 0 : _f.length,
+              rlyricLength: (_g = decodedLyrics.rlyric) == null ? void 0 : _g.length,
+              lxlyricLength: (_h = decodedLyrics.lxlyric) == null ? void 0 : _h.length
+            });
+            lyricInfo = {
+              lyric: decodedLyrics.lyric || lyricInfo.lyric,
+              tlyric: decodedLyrics.tlyric || lyricInfo.tlyric,
+              rlyric: decodedLyrics.rlyric || lyricInfo.rlyric,
+              lxlyric: decodedLyrics.lxlyric || lyricInfo.lxlyric
+            };
+          }
+          if (utils_kgLyricDecoder.isKgCompressedLyric(lyricInfo.lxlyric)) {
+            console.log("[player] 检测到酷狗压缩lxlyric，开始解码");
+            const decodedLxLyrics = await utils_kgLyricDecoder.tryDecodeKgLyric(lyricInfo.lxlyric);
+            lyricInfo.lxlyric = decodedLxLyrics.lxlyric || lyricInfo.lxlyric;
+            if (!lyricInfo.lyric && decodedLxLyrics.lyric) {
+              lyricInfo.lyric = decodedLxLyrics.lyric;
+            }
+          }
+        }
+        lyrics.value = processLyricData(lyricInfo);
+        store_modules_player.playerStore.setLyrics({
+          lyric: lyricInfo.lyric,
+          tlyric: lyricInfo.tlyric,
+          rlyric: lyricInfo.rlyric,
+          lxlyric: lyricInfo.lxlyric
+        });
+        const currentSongId = (_i = store_modules_player.playerStore.state.currentSong) == null ? void 0 : _i.id;
+        if (currentSongId) {
+          lyricsLoadedForSong = currentSongId;
+          console.log("[Player] 歌词加载完成，尝试触发弹幕加载");
+          checkAndLoadDanmaku();
+        }
+        common_vendor.nextTick$1(() => {
+          setTimeout(() => {
+            updateCurrentLyricIndex();
+          }, 50);
+        });
+      } catch (error) {
+        console.error("[player] 获取歌词失败:", error);
+        console.error("[player] 错误详情:", error == null ? void 0 : error.message, error == null ? void 0 : error.stack);
+        lyrics.value = [];
+      } finally {
+        isLoadingLyrics.value = false;
+      }
+      console.log("[player] ========== 歌词加载结束 ==========");
+    };
+    const updateCurrentLyricIndex = () => {
+      if (lyrics.value.length === 0)
+        return;
+      const index = utils_lyric.getCurrentLyricIndex(lyrics.value, currentTime.value);
+      if (index !== currentLyricIndex.value) {
+        currentLyricIndex.value = index;
+        scrollToCurrentLyric();
+      }
+    };
+    const scrollToCurrentLyric = () => {
+      if (currentLyricIndex.value < 0 || lyrics.value.length === 0)
+        return;
+      if (currentLyricIndex.value === lastScrollIndex && isScrollToActive) {
+        return;
+      }
+      lastScrollIndex = currentLyricIndex.value;
+      isScrollToActive = true;
+      setTimeout(() => {
+        scrollIntoViewId.value = "lyric-line-" + currentLyricIndex.value;
+      }, 50);
+      setTimeout(() => {
+        isScrollToActive = false;
+      }, 650);
+    };
+    const onLyricScroll = (e) => {
+    };
+    const onLyricScrollTap = () => {
+      scrollToCurrentLyric();
+    };
+    const onLyricLineTap = (index) => {
+      if (lyrics.value.length === 0 || index < 0 || index >= lyrics.value.length)
+        return;
+      const lyricTime = lyrics.value[index].time / 1e3;
+      const seekPercent = duration.value > 0 ? lyricTime / duration.value * 100 : 0;
+      store_modules_player.playerStore.seek(seekPercent);
+    };
+    common_vendor.watch(() => currentTime.value, () => {
+      if (currentSlide.value === 1) {
+        updateCurrentLyricIndex();
+      }
+    });
+    common_vendor.watch(() => store_modules_player.playerStore.state.lyric, updateCachedLyricsForStatus, { immediate: true });
+    common_vendor.watch(() => store_modules_player.playerStore.state.lxlyric, updateCachedLyricsForStatus);
+    common_vendor.watch(() => store_modules_player.playerStore.state.currentTime, updateCurrentLyricTextForStatus);
+    common_vendor.watch(() => store_modules_player.playerStore.state.statusText, () => {
+      updateCurrentLyricTextForStatus();
+    }, { immediate: true });
+    common_vendor.watch(() => currentSong.value, (newSong, oldSong) => {
+      console.log("[player] watch currentSong 变化:", {
+        newId: newSong == null ? void 0 : newSong.id,
+        oldId: oldSong == null ? void 0 : oldSong.id,
+        hasNewSong: !!(newSong && newSong.id)
+      });
+      if (newSong) {
+        console.log("[player] currentSong 完整信息:", JSON.stringify(newSong, null, 2));
+        console.log("[player] currentSong 歌手字段检查:", {
+          singer: newSong.singer,
+          ar: newSong.ar,
+          artists: newSong.artists
+        });
+      }
+      if ((newSong == null ? void 0 : newSong.id) !== (oldSong == null ? void 0 : oldSong.id)) {
+        console.log("[player] 歌曲变化，清空歌词状态");
+        lyrics.value = [];
+        currentLyricIndex.value = 0;
+        isLoadingLyrics.value = false;
+        hasLoadedLyricsOnMount = false;
+        wasPlayingForStatus.value = false;
+        hasCheckedLyricsForStatus.value = false;
+        danmakuLoadedForSong = null;
+        lyricsLoadedForSong = null;
+        danmakuList.value = [];
+        commentTotalCount.value = 0;
+        currentFavoriteHintSongId = null;
+        shownHintSongs.delete(newSong == null ? void 0 : newSong.id);
+        showFavoriteHint.value = false;
+        if (favoriteHintTimer) {
+          clearTimeout(favoriteHintTimer);
+          favoriteHintTimer = null;
+        }
+        console.log("[player] 收藏提示跟踪已重置");
+      }
+      if (newSong && newSong.id && !hasLoadedLyricsOnMount) {
+        console.log("[player] watch currentSong - 调用loadLyrics");
+        hasLoadedLyricsOnMount = true;
+        common_vendor.nextTick$1(() => {
+          loadLyrics();
+        });
+      }
+    });
+    const onProgressTouchStart = (e) => {
+      isDragging.value = true;
+      updateDragPercent(e);
+    };
+    const onProgressTouchMove = (e) => {
+      if (!isDragging.value)
+        return;
+      updateDragPercent(e);
+    };
+    const onProgressTouchEnd = () => {
+      if (!isDragging.value)
+        return;
+      isDragging.value = false;
+      dragPercent.value / 100 * duration.value;
+      store_modules_player.playerStore.seek(dragPercent.value);
+    };
+    const updateDragPercent = (e) => {
+      const touch = e.touches[0];
+      const query = common_vendor.index.createSelectorQuery();
+      query.select(".progress-bar-wrapper").boundingClientRect();
+      query.exec((res) => {
+        if (res[0]) {
+          const rect = res[0];
+          const offsetX = touch.clientX - rect.left;
+          const percent = Math.min(Math.max(offsetX / rect.width * 100, 0), 100);
+          dragPercent.value = percent;
+        }
+      });
+    };
+    const downloadSong = () => {
+      common_vendor.index.showToast({
+        title: "下载功能开发中",
+        icon: "none"
+      });
+    };
+    const showFavoriteTooltip = () => {
+      if (isCurrentSongFavorite.value)
+        return;
+      if (showFavoriteHint.value)
+        return;
+      console.log("[Player] 显示收藏提示");
+      currentFavoriteHintText.value = getRandomHintMessage();
+      showFavoriteHint.value = true;
+      if (favoriteHintTimer) {
+        clearTimeout(favoriteHintTimer);
+      }
+      favoriteHintTimer = setTimeout(() => {
+        showFavoriteHint.value = false;
+        console.log("[Player] 收藏提示已自动隐藏");
+      }, 5e3);
+    };
+    const favoriteHintMessages = [
+      { text: "喜欢这首歌？点击收藏", emoji: "💚" },
+      { text: "这首歌不错吧？点爱心收藏", emoji: "❤️" },
+      { text: "好听的歌值得收藏", emoji: "💖" },
+      { text: "这首歌唱进心里了", emoji: "💗" },
+      { text: "收藏起来慢慢听", emoji: "💓" },
+      { text: "这首歌是你的菜吗？", emoji: "🤍" },
+      { text: "设为喜欢的歌吧", emoji: "💘" },
+      { text: "音乐值得被珍藏", emoji: "💝" }
+    ];
+    let currentFavoriteHintSongId = null;
+    const shownHintSongs = /* @__PURE__ */ new Set();
+    const getRandomHintMessage = () => {
+      const randomIndex = Math.floor(Math.random() * favoriteHintMessages.length);
+      const msg = favoriteHintMessages[randomIndex];
+      return `${msg.emoji} ${msg.text}`;
+    };
+    const getRandomHintTime = () => {
+      const songDuration = duration.value;
+      if (!songDuration || songDuration <= 60)
+        return 60;
+      const maxTime = Math.max(60, songDuration - 30);
+      return Math.floor(Math.random() * (maxTime - 60 + 1)) + 60;
+    };
+    common_vendor.watch(() => currentTime.value, (newTime, oldTime) => {
+      var _a;
+      if (!playing.value || isCurrentSongFavorite.value)
+        return;
+      const songId = (_a = currentSong.value) == null ? void 0 : _a.id;
+      if (!songId)
+        return;
+      if (currentFavoriteHintSongId !== songId) {
+        currentFavoriteHintSongId = songId;
+        shownHintSongs.delete(songId);
+        return;
+      }
+      if (shownHintSongs.has(songId))
+        return;
+      const hintTime = getRandomHintTime();
+      if (newTime >= hintTime && oldTime < hintTime) {
+        console.log(`[Player] 播放时长达到${Math.floor(hintTime)}秒，显示收藏提示`);
+        shownHintSongs.add(songId);
+        showFavoriteTooltip();
+      }
+    }, { immediate: false });
+    const handleFavorite = () => {
+      if (!currentSong.value) {
+        common_vendor.index.showToast({ title: "没有正在播放的歌曲", icon: "none" });
+        return;
+      }
+      showFavoriteHint.value = false;
+      if (favoriteHintTimer) {
+        clearTimeout(favoriteHintTimer);
+        favoriteHintTimer = null;
+      }
+      const lists = availableLists.value;
+      console.log("[Player] handleFavorite - 可用列表数量:", lists.length);
+      if (lists.length === 1 && lists[0].type === "love") {
+        console.log("[Player] 只有一个列表，切换收藏状态");
+        toggleLove();
+        return;
+      }
+      console.log("[Player] 有多个列表，显示选择弹窗");
+      showAddToModalFlag.value = true;
+    };
+    const toggleLove = () => {
+      if (!currentSong.value)
+        return;
+      const isInLove = store_modules_list.listStore.isInLoveList(currentSong.value.id);
+      if (isInLove) {
+        store_modules_list.listStore.removeFromLoveList(currentSong.value.id);
+        console.log("[Player] 取消收藏:", currentSong.value.name);
+        common_vendor.index.showToast({ title: "已取消喜欢", icon: "none" });
+      } else {
+        store_modules_list.listStore.addListMusics(store_modules_list.LIST_IDS.LOVE, currentSong.value, "top");
+        console.log("[Player] 添加到我的收藏:", currentSong.value.name);
+        common_vendor.index.showToast({ title: "已添加到我喜欢的音乐", icon: "success" });
+      }
+    };
+    const closeAddToModal = () => {
+      showAddToModalFlag.value = false;
+    };
+    const getListIcon = (type) => {
+      const iconMap = {
+        "default": "music",
+        "love": "heart",
+        "user": "list-ul",
+        "custom": "folder",
+        "imported": "download"
+      };
+      return iconMap[type] || "list-ul";
+    };
+    const getListColor = (type, disabled = false) => {
+      const colorMap = {
+        "default": "#00d7cd",
+        "love": "#ff6b6b",
+        "user": "#6b7280",
+        "custom": "#f59e0b",
+        "imported": "#3b82f6"
+      };
+      const disabledColorMap = {
+        "default": "rgba(0, 215, 205, 0.4)",
+        "love": "rgba(255, 107, 107, 0.4)",
+        "user": "rgba(107, 114, 128, 0.4)",
+        "custom": "rgba(245, 158, 11, 0.4)",
+        "imported": "rgba(59, 130, 246, 0.4)"
+      };
+      if (disabled) {
+        return disabledColorMap[type] || "rgba(107, 114, 128, 0.4)";
+      }
+      return colorMap[type] || "#6b7280";
+    };
+    const isSongInList = (listId) => {
+      if (!currentSong.value)
+        return false;
+      return store_modules_list.listStore.checkSongInList(listId, currentSong.value.id);
+    };
+    const getListCount = (listId) => {
+      return store_modules_list.listStore.getListCount(listId);
+    };
+    const addToList = (listId) => {
+      var _a, _b;
+      if (!currentSong.value)
+        return;
+      const isInList = store_modules_list.listStore.checkSongInList(listId, currentSong.value.id);
+      if (isInList) {
+        store_modules_list.listStore.removeListMusics(listId, currentSong.value.id);
+        const listName = ((_a = availableLists.value.find((l) => l.id === listId)) == null ? void 0 : _a.name) || "列表";
+        common_vendor.index.showToast({
+          title: `已从${listName}移除`,
+          icon: "none"
+        });
+      } else {
+        const success = store_modules_list.listStore.addMusicToAnyList(listId, currentSong.value, "top");
+        if (success) {
+          const listName = ((_b = availableLists.value.find((l) => l.id === listId)) == null ? void 0 : _b.name) || "列表";
+          common_vendor.index.showToast({
+            title: `已添加到${listName}`,
+            icon: "success"
+          });
+        } else {
+          common_vendor.index.showToast({
+            title: "操作失败",
+            icon: "none"
+          });
+        }
+      }
+      closeAddToModal();
+    };
+    const createNewList = () => {
+      common_vendor.index.showModal({
+        title: "新建歌单",
+        editable: true,
+        placeholderText: "请输入歌单名称",
+        success: (res) => {
+          if (res.confirm && res.content) {
+            const name = res.content.trim();
+            if (!name) {
+              common_vendor.index.showToast({ title: "歌单名称不能为空", icon: "none" });
+              return;
+            }
+            const newList = store_modules_list.listStore.createUserList(name);
+            if (newList) {
+              common_vendor.index.showToast({
+                title: "创建成功",
+                icon: "success"
+              });
+              closeAddToModal();
+            }
+          }
+        }
+      });
+    };
+    const showComment = () => {
+      showCommentFlag.value = true;
+    };
+    const closeComment = () => {
+      showCommentFlag.value = false;
+    };
+    return (_ctx, _cache) => {
+      return common_vendor.e({
+        a: common_vendor.s(statusBarStyle.value),
+        b: common_vendor.p({
+          type: "fas",
+          name: "chevron-down",
+          size: "20",
+          color: darkMode.value ? "#ffffff" : "#4b5563"
+        }),
+        c: common_vendor.o(goBack),
+        d: common_vendor.t(formatAlbum(currentSong.value)),
+        e: navbarMarqueeScroll.value
+      }, navbarMarqueeScroll.value ? {} : {}, {
+        f: navbarMarqueeScroll.value
+      }, navbarMarqueeScroll.value ? {
+        g: common_vendor.t(formatAlbum(currentSong.value))
+      } : {}, {
+        h: navbarMarqueeScroll.value ? 1 : "",
+        i: currentSlide.value === 0 ? 1 : "",
+        j: currentSlide.value === 1 ? 1 : "",
+        k: common_vendor.s(navbarStyle.value),
+        l: !showDefaultCover.value && songPicCache.value
+      }, !showDefaultCover.value && songPicCache.value ? {
+        m: common_vendor.unref(utils_imageProxy.proxyImageUrl)(songPicCache.value),
+        n: common_vendor.o(handlePlayerImageError)
+      } : {
+        o: common_vendor.p({
+          type: "fas",
+          name: "music",
+          size: "80",
+          color: "rgba(0, 215, 205, 0.4)"
+        })
+      }, {
+        p: !showDefaultCover.value && songPicCache.value ? 1 : "",
+        q: playing.value ? 1 : "",
+        r: playing.value ? 1 : "",
+        s: common_vendor.t(currentSong.value.name),
+        t: statusText.value
+      }, statusText.value ? common_vendor.e({
+        v: common_vendor.t(statusText.value),
+        w: statusMarqueeScroll.value
+      }, statusMarqueeScroll.value ? {} : {}, {
+        x: statusMarqueeScroll.value
+      }, statusMarqueeScroll.value ? {
+        y: common_vendor.t(statusText.value)
+      } : {}, {
+        z: statusMarqueeScroll.value ? 1 : ""
+      }) : {}, {
+        A: !playing.value ? 1 : "",
+        B: showDanmaku.value && danmakuList.value.length > 0
+      }, showDanmaku.value && danmakuList.value.length > 0 ? {
+        C: common_vendor.o(handleDanmakuLoadMore),
+        D: common_vendor.p({
+          ["danmaku-list"]: danmakuList.value,
+          ["dark-mode"]: darkMode.value,
+          visible: true,
+          playing: playing.value,
+          ["song-info"]: originalSong.value
+        })
+      } : {}, {
+        E: lyrics.value.length > 0
+      }, lyrics.value.length > 0 ? {
+        F: common_vendor.f(lyrics.value, (line, index, i0) => {
+          return common_vendor.e({
+            a: common_vendor.t(line.text),
+            b: line.translation
+          }, line.translation ? {
+            c: common_vendor.t(line.translation)
+          } : {}, {
+            d: currentLyricIndex.value === index ? 1 : "",
+            e: index,
+            f: "lyric-line-" + index,
+            g: index,
+            h: common_vendor.o(($event) => onLyricLineTap(index), index)
+          });
+        }),
+        G: lyricScrollTop.value,
+        H: scrollIntoViewId.value,
+        I: common_vendor.o(onLyricScroll),
+        J: common_vendor.o(onLyricScrollTap)
+      } : {}, {
+        K: currentSlide.value,
+        L: common_vendor.o(onSwiperChange),
+        M: currentSlide.value === 1
+      }, currentSlide.value === 1 ? {
+        N: common_vendor.p({
+          type: "fas",
+          name: "chevron-left",
+          size: "16",
+          color: darkMode.value ? "#ffffff" : "#4b5563"
+        }),
+        O: common_vendor.o(switchToAlbum)
+      } : {}, {
+        P: currentSlide.value === 0
+      }, currentSlide.value === 0 ? {
+        Q: common_vendor.p({
+          type: "fas",
+          name: "chevron-right",
+          size: "16",
+          color: darkMode.value ? "#ffffff" : "#4b5563"
+        }),
+        R: common_vendor.o(switchToLyrics)
+      } : {}, {
+        S: isDragging.value ? dragPercent.value + "%" : progressPercent.value + "%",
+        T: isDragging.value ? dragPercent.value + "%" : progressPercent.value + "%",
+        U: common_vendor.o(onProgressTouchStart),
+        V: common_vendor.o(onProgressTouchMove),
+        W: common_vendor.o(onProgressTouchEnd),
+        X: common_vendor.t(formatTime(currentTime.value)),
+        Y: common_vendor.t(formatTime(duration.value)),
+        Z: common_vendor.p({
+          type: "fas",
+          name: playModeIcon.value,
+          size: "20",
+          color: darkMode.value ? "#ffffff" : "#6b7280"
+        }),
+        aa: common_vendor.o(togglePlayMode),
+        ab: common_vendor.p({
+          type: "fas",
+          name: "backward-step",
+          size: "28",
+          color: darkMode.value ? "#ffffff" : "#374151"
+        }),
+        ac: common_vendor.o(playPrev),
+        ad: common_vendor.p({
+          type: "fas",
+          name: playing.value ? "pause" : "play",
+          size: "28",
+          color: "#ffffff"
+        }),
+        ae: common_vendor.o(togglePlay),
+        af: common_vendor.p({
+          type: "fas",
+          name: "forward-step",
+          size: "28",
+          color: darkMode.value ? "#ffffff" : "#374151"
+        }),
+        ag: common_vendor.o(playNext),
+        ah: common_vendor.p({
+          type: "fas",
+          name: "comment",
+          size: "20",
+          color: darkMode.value ? "#ffffff" : "#6b7280"
+        }),
+        ai: commentTotalCount.value > 0
+      }, commentTotalCount.value > 0 ? {
+        aj: common_vendor.t(commentTotalCount.value > 999 ? "999+" : commentTotalCount.value)
+      } : {}, {
+        ak: common_vendor.o(showComment),
+        al: common_vendor.p({
+          type: "fas",
+          name: "clock",
+          size: "18",
+          color: sleepTimerRemaining.value > 0 ? "#00d7cd" : darkMode.value ? "#ffffff" : "#6b7280"
+        }),
+        am: sleepTimerRemaining.value > 0
+      }, sleepTimerRemaining.value > 0 ? {
+        an: common_vendor.t(formatSleepTimerShort.value)
+      } : {}, {
+        ao: sleepTimerRemaining.value > 0 ? 1 : "",
+        ap: common_vendor.o(showSleepTimerPopup),
+        aq: showFavoriteHint.value
+      }, showFavoriteHint.value ? {
+        ar: common_vendor.t(currentFavoriteHintText.value),
+        as: common_vendor.p({
+          type: "fas",
+          name: "xmark",
+          size: "10",
+          color: "rgba(255,255,255,0.7)"
+        }),
+        at: common_vendor.o(($event) => showFavoriteHint.value = false),
+        av: common_vendor.o(handleFavorite)
+      } : {}, {
+        aw: common_vendor.p({
+          type: "fas",
+          name: isCurrentSongFavorite.value ? "heart" : "heart",
+          size: 18,
+          color: isCurrentSongFavorite.value ? "#ff6b6b" : darkMode.value ? "#ffffff" : "#6b7280"
+        }),
+        ax: isCurrentSongFavorite.value ? 1 : "",
+        ay: common_vendor.o(handleFavorite),
+        az: common_vendor.p({
+          type: "fas",
+          name: "plus",
+          size: "18",
+          color: darkMode.value ? "#ffffff" : "#6b7280"
+        }),
+        aA: common_vendor.o(createNewList),
+        aB: common_vendor.p({
+          type: "fas",
+          name: "download",
+          size: "18",
+          color: darkMode.value ? "#ffffff" : "#6b7280"
+        }),
+        aC: common_vendor.o(downloadSong),
+        aD: showAddToModalFlag.value
+      }, showAddToModalFlag.value ? {
+        aE: common_vendor.p({
+          type: "fas",
+          name: "xmark",
+          size: "20",
+          color: "#999"
+        }),
+        aF: common_vendor.o(closeAddToModal),
+        aG: common_vendor.p({
+          type: "fas",
+          name: "plus",
+          size: "18",
+          color: "#00d7cd"
+        }),
+        aH: common_vendor.o(createNewList),
+        aI: common_vendor.f(availableLists.value, (list, k0, i0) => {
+          return {
+            a: "54811c87-17-" + i0,
+            b: common_vendor.p({
+              type: "fas",
+              name: getListIcon(list.type),
+              size: "18",
+              color: isSongInList(list.id) ? getListColor(list.type, true) : getListColor(list.type, false)
+            }),
+            c: common_vendor.t(list.name),
+            d: isSongInList(list.id) ? 1 : "",
+            e: common_vendor.t(isSongInList(list.id) ? "已添加" : getListCount(list.id) + "首"),
+            f: isSongInList(list.id) ? 1 : "",
+            g: isSongInList(list.id) ? 1 : "",
+            h: list.id,
+            i: common_vendor.o(($event) => addToList(list.id), list.id)
+          };
+        }),
+        aJ: common_vendor.o(() => {
+        }),
+        aK: common_vendor.o(closeAddToModal)
+      } : {}, {
+        aL: showSleepTimerPopupFlag.value
+      }, showSleepTimerPopupFlag.value ? common_vendor.e({
+        aM: common_vendor.p({
+          type: "fas",
+          name: "xmark",
+          size: "16",
+          color: "#6b7280"
+        }),
+        aN: common_vendor.o(closeSleepTimerPopup),
+        aO: sleepTimerRemaining.value > 0
+      }, sleepTimerRemaining.value > 0 ? {
+        aP: common_vendor.t(formatSleepTimerRemaining.value),
+        aQ: common_vendor.o(cancelSleepTimer)
+      } : {}, {
+        aR: common_vendor.f(hourOptions.value, (hour, index, i0) => {
+          return {
+            a: common_vendor.t(hour),
+            b: index
+          };
+        }),
+        aS: common_vendor.f(minuteOptions.value, (minute, index, i0) => {
+          return {
+            a: common_vendor.t(minute),
+            b: index
+          };
+        }),
+        aT: sleepTimerPickerValue.value,
+        aU: common_vendor.o(onSleepTimerPickerChange),
+        aV: common_vendor.o(closeSleepTimerPopup),
+        aW: common_vendor.o(confirmSleepTimerSelection),
+        aX: common_vendor.o(() => {
+        }),
+        aY: common_vendor.o(closeSleepTimerPopup)
+      }) : {}, {
+        aZ: common_vendor.o(closeComment),
+        ba: common_vendor.p({
+          show: showCommentFlag.value,
+          ["music-info"]: originalSong.value
+        }),
+        bb: darkMode.value ? 1 : ""
+      });
+    };
+  }
+};
+wx.createPage(_sfc_main);

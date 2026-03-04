@@ -1,1 +1,128 @@
-"use strict";function r(r){if(!r||"string"!=typeof r)return[];const t=r.split("\n"),l=[];t.forEach(r=>{const t=function(r){const t=[],l=/\[(\d{2}):(\d{2})\.(\d{2,3})\]/g,i=[];let e;for(;null!==(e=l.exec(r));){const r=60*parseInt(e[1])*1e3+1e3*parseInt(e[2])+parseInt(e[3].padEnd(3,"0"));i.push(r)}let c=r.replace(l,"").trim();return c=c.replace(/<-?\d+,-?\d+>/g,""),i.forEach(r=>{t.push({time:r,text:c})}),t}(r);t.length>0&&l.push(...t)}),l.sort((r,t)=>r.time-t.time);return l.filter((r,t)=>0===t||""!==r.text.trim())}function t(r){return!(!r||"string"!=typeof r)&&/\[\d{1,2}:\d{2}\.\d{1,3}\]/.test(r)}exports.extractLyricsFromMusicData=function(r){var l,i,e;if(console.log("[lyric] extractLyricsFromMusicData 输入:",{hasMusicData:!!r,musicDataKeys:r?Object.keys(r):[],rawLyric:null==(l=null==r?void 0:r.lyric)?void 0:l.substring(0,50),rawLxlyric:null==(i=null==r?void 0:r.lxlyric)?void 0:i.substring(0,50),rawRlyric:null==(e=null==r?void 0:r.rlyric)?void 0:e.substring(0,50)}),!r)return console.log("[lyric] musicData 为空，返回空歌词"),{lyric:"",tlyric:"",rlyric:"",lxlyric:""};let c=r.lyric||"",n=r.tlyric||"",s=r.rlyric||"",o=r.lxlyric||"";console.log("[lyric] 原始字段长度:",{lyricLength:c.length,tlyricLength:n.length,rlyricLength:s.length,lxlyricLength:o.length});const y=t(c),a=t(o),u=t(s);console.log("[lyric] 时间标签检查结果:",{lyricHasTimeTag:y,lxlyricHasTimeTag:a,rlyricHasTimeTag:u}),!y&&a&&(console.log("[lyric] lyric 无时间标签，使用 lxlyric"),c=o),y||a||!u||(console.log("[lyric] lyric 和 lxlyric 都无时间标签，使用 rlyric"),c=s);const g={lyric:c,tlyric:n,rlyric:s,lxlyric:o};return console.log("[lyric] extractLyricsFromMusicData 输出:",{lyricLength:g.lyric.length,tlyricLength:g.tlyric.length,lyricPreview:g.lyric.substring(0,100)}),g},exports.getCurrentLyricIndex=function(r,t){if(!r||0===r.length)return-1;const l=1e3*t;for(let i=r.length-1;i>=0;i--)if(l>=r[i].time)return i;return 0},exports.mergeLyrics=function(r,t){return t&&0!==t.length?r.map(r=>{const l=t.find(t=>Math.abs(t.time-r.time)<100);return{...r,translation:l?l.text:""}}):r.map(r=>({...r,translation:""}))},exports.parseLyric=r,exports.parseTranslation=function(t){return r(t)};
+"use strict";
+function parseLine(line) {
+  const result = [];
+  const timeRegex = /\[(\d{2}):(\d{2})\.(\d{2,3})\]/g;
+  const timeTags = [];
+  let match;
+  while ((match = timeRegex.exec(line)) !== null) {
+    const minutes = parseInt(match[1]);
+    const seconds = parseInt(match[2]);
+    const milliseconds = parseInt(match[3].padEnd(3, "0"));
+    const time = minutes * 60 * 1e3 + seconds * 1e3 + milliseconds;
+    timeTags.push(time);
+  }
+  let text = line.replace(timeRegex, "").trim();
+  text = text.replace(/<-?\d+,-?\d+>/g, "");
+  timeTags.forEach((time) => {
+    result.push({ time, text });
+  });
+  return result;
+}
+function parseLyric(lyricText) {
+  if (!lyricText || typeof lyricText !== "string") {
+    return [];
+  }
+  const lines = lyricText.split("\n");
+  const lyrics = [];
+  lines.forEach((line) => {
+    const parsedLines = parseLine(line);
+    if (parsedLines.length > 0) {
+      lyrics.push(...parsedLines);
+    }
+  });
+  lyrics.sort((a, b) => a.time - b.time);
+  const filtered = lyrics.filter((item, index) => {
+    if (index === 0)
+      return true;
+    return item.text.trim() !== "";
+  });
+  return filtered;
+}
+function parseTranslation(tlyricText) {
+  return parseLyric(tlyricText);
+}
+function mergeLyrics(lyrics, translations) {
+  if (!translations || translations.length === 0) {
+    return lyrics.map((line) => ({ ...line, translation: "" }));
+  }
+  return lyrics.map((line) => {
+    const translation = translations.find((t) => Math.abs(t.time - line.time) < 100);
+    return {
+      ...line,
+      translation: translation ? translation.text : ""
+    };
+  });
+}
+function getCurrentLyricIndex(lyrics, currentTime) {
+  if (!lyrics || lyrics.length === 0)
+    return -1;
+  const currentTimeMs = currentTime * 1e3;
+  for (let i = lyrics.length - 1; i >= 0; i--) {
+    if (currentTimeMs >= lyrics[i].time) {
+      return i;
+    }
+  }
+  return 0;
+}
+function hasTimeTag(lyricText) {
+  if (!lyricText || typeof lyricText !== "string")
+    return false;
+  return /\[\d{1,2}:\d{2}\.\d{1,3}\]/.test(lyricText);
+}
+function extractLyricsFromMusicData(musicData) {
+  var _a, _b, _c;
+  console.log("[lyric] extractLyricsFromMusicData 输入:", {
+    hasMusicData: !!musicData,
+    musicDataKeys: musicData ? Object.keys(musicData) : [],
+    rawLyric: (_a = musicData == null ? void 0 : musicData.lyric) == null ? void 0 : _a.substring(0, 50),
+    rawLxlyric: (_b = musicData == null ? void 0 : musicData.lxlyric) == null ? void 0 : _b.substring(0, 50),
+    rawRlyric: (_c = musicData == null ? void 0 : musicData.rlyric) == null ? void 0 : _c.substring(0, 50)
+  });
+  if (!musicData) {
+    console.log("[lyric] musicData 为空，返回空歌词");
+    return { lyric: "", tlyric: "", rlyric: "", lxlyric: "" };
+  }
+  let lyric = musicData.lyric || "";
+  let tlyric = musicData.tlyric || "";
+  let rlyric = musicData.rlyric || "";
+  let lxlyric = musicData.lxlyric || "";
+  console.log("[lyric] 原始字段长度:", {
+    lyricLength: lyric.length,
+    tlyricLength: tlyric.length,
+    rlyricLength: rlyric.length,
+    lxlyricLength: lxlyric.length
+  });
+  const lyricHasTimeTag = hasTimeTag(lyric);
+  const lxlyricHasTimeTag = hasTimeTag(lxlyric);
+  const rlyricHasTimeTag = hasTimeTag(rlyric);
+  console.log("[lyric] 时间标签检查结果:", {
+    lyricHasTimeTag,
+    lxlyricHasTimeTag,
+    rlyricHasTimeTag
+  });
+  if (!lyricHasTimeTag && lxlyricHasTimeTag) {
+    console.log("[lyric] lyric 无时间标签，使用 lxlyric");
+    lyric = lxlyric;
+  }
+  if (!lyricHasTimeTag && !lxlyricHasTimeTag && rlyricHasTimeTag) {
+    console.log("[lyric] lyric 和 lxlyric 都无时间标签，使用 rlyric");
+    lyric = rlyric;
+  }
+  const result = {
+    lyric,
+    tlyric,
+    rlyric,
+    lxlyric
+  };
+  console.log("[lyric] extractLyricsFromMusicData 输出:", {
+    lyricLength: result.lyric.length,
+    tlyricLength: result.tlyric.length,
+    lyricPreview: result.lyric.substring(0, 100)
+  });
+  return result;
+}
+exports.extractLyricsFromMusicData = extractLyricsFromMusicData;
+exports.getCurrentLyricIndex = getCurrentLyricIndex;
+exports.mergeLyrics = mergeLyrics;
+exports.parseLyric = parseLyric;
+exports.parseTranslation = parseTranslation;

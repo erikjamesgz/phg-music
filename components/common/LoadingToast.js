@@ -1,1 +1,46 @@
-"use strict";const t=require("../../common/vendor.js"),e={__name:"LoadingToast",props:{visible:{type:Boolean,default:!1},title:{type:[String,Number],default:"加载中"},subtitle:{type:[String,Number],default:""}},setup(e){const i=e,l=t.computed(()=>null===i.title||void 0===i.title?"加载中":String(i.title)),u=t.computed(()=>null===i.subtitle||void 0===i.subtitle||""===i.subtitle?"":String(i.subtitle));return(i,o)=>t.e({a:e.visible},e.visible?t.e({b:t.t(l.value),c:u.value},u.value?{d:t.t(u.value)}:{}):{})}},i=t._export_sfc(e,[["__scopeId","data-v-45f32dc6"]]);wx.createComponent(i);
+"use strict";
+const common_vendor = require("../../common/vendor.js");
+const _sfc_main = {
+  __name: "LoadingToast",
+  props: {
+    visible: {
+      type: Boolean,
+      default: false
+    },
+    title: {
+      type: [String, Number],
+      default: "加载中"
+    },
+    subtitle: {
+      type: [String, Number],
+      default: ""
+    }
+  },
+  setup(__props) {
+    const props = __props;
+    const displayTitle = common_vendor.computed(() => {
+      if (props.title === null || props.title === void 0) {
+        return "加载中";
+      }
+      return String(props.title);
+    });
+    const displaySubtitle = common_vendor.computed(() => {
+      if (props.subtitle === null || props.subtitle === void 0 || props.subtitle === "") {
+        return "";
+      }
+      return String(props.subtitle);
+    });
+    return (_ctx, _cache) => {
+      return common_vendor.e({
+        a: __props.visible
+      }, __props.visible ? common_vendor.e({
+        b: common_vendor.t(displayTitle.value),
+        c: displaySubtitle.value
+      }, displaySubtitle.value ? {
+        d: common_vendor.t(displaySubtitle.value)
+      } : {}) : {});
+    };
+  }
+};
+const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-45f32dc6"]]);
+wx.createComponent(Component);

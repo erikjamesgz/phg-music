@@ -1,1 +1,156 @@
-"use strict";const e=require("../../common/vendor.js"),t={props:{currentIndex:{type:Number,required:!0}},data:()=>({activeColor:"#00afff",platform:"",safeAreaInsetBottom:0,isDarkMode:!1,list:[{pagePath:"/pages/index/index",text:"首页",icon:"house"},{pagePath:"/pages/search/index",text:"搜索",icon:"magnifying-glass"},{pagePath:"/pages/playlist/index",text:"列表",icon:"list-ul"},{pagePath:"/pages/my/index",text:"我的",icon:"user"}]}),computed:{platformClass(){return"ios"===this.platform||"devtools"===this.platform?"is-ios":"is-android"}},mounted(){var t;const o=e.index.getSystemInfoSync();this.platform=o.platform||"android",this.safeAreaInsetBottom=(null==(t=o.safeAreaInsets)?void 0:t.bottom)||0,this.updateDarkMode(),console.log("[CustomTabBar] 系统信息:",o),console.log("[CustomTabBar] 平台:",this.platform),console.log("[CustomTabBar] safeAreaInsets:",o.safeAreaInsets),console.log("[CustomTabBar] safeAreaInsetBottom:",this.safeAreaInsetBottom),console.log("[CustomTabBar] 深色模式:",this.isDarkMode);const s=getCurrentPages(),a=s[s.length-1];if(a){const e=a.onShow;a.onShow=()=>{this.updateDarkMode(),e&&e.call(a)}}},methods:{switchTab(t){this.currentIndex!==t&&(this.$emit("before-switch",t),setTimeout(()=>{e.index.switchTab({url:this.list[t].pagePath})},200))},getIconName(e,t){return 0===t&&0===this.currentIndex?"house":e},updateDarkMode(){const t="false"!==e.index.getStorageSync("followSystem"),o="true"===e.index.getStorageSync("darkMode");if(t){const t=e.index.getSystemInfoSync();if(t.theme)this.isDarkMode="dark"===t.theme;else try{const t=e.index.createMediaQueryObserver();t&&t.observe({prefersColorScheme:"dark"},e=>{this.isDarkMode=e.matches})}catch(s){this.isDarkMode=!1}}else this.isDarkMode=o;console.log("[CustomTabBar] 更新深色模式状态:",this.isDarkMode,"跟随系统:",t)}}};if(!Array){e.resolveComponent("roc-icon-plus")()}Math;const o=e._export_sfc(t,[["render",function(t,o,s,a,r,n){return{a:e.f(r.list,(t,o,a)=>({a:"406198bf-0-"+a,b:e.p({name:n.getIconName(t.icon,o),size:s.currentIndex===o?22:20,color:s.currentIndex===o?r.activeColor:r.isDarkMode?"#9ca3af":"#8a8a8a"}),c:e.t(t.text),d:e.n({active:s.currentIndex===o}),e:o,f:s.currentIndex===o?1:"",g:e.o(e=>n.switchTab(o),o)})),b:e.n(n.platformClass),c:e.n({"dark-mode":r.isDarkMode})}}],["__scopeId","data-v-406198bf"]]);wx.createComponent(o);
+"use strict";
+const common_vendor = require("../../common/vendor.js");
+const _sfc_main = {
+  props: {
+    currentIndex: {
+      type: Number,
+      required: true
+    }
+  },
+  data() {
+    return {
+      activeColor: "#00afff",
+      platform: "",
+      safeAreaInsetBottom: 0,
+      isDarkMode: false,
+      list: [
+        {
+          pagePath: "/pages/main/index",
+          text: "首页",
+          icon: "house"
+        },
+        {
+          pagePath: "/pages/main/index",
+          text: "搜索",
+          icon: "magnifying-glass"
+        },
+        {
+          pagePath: "/pages/main/index",
+          text: "列表",
+          icon: "list-ul"
+        },
+        {
+          pagePath: "/pages/main/index",
+          text: "我的",
+          icon: "user"
+        }
+      ]
+    };
+  },
+  computed: {
+    platformClass() {
+      if (this.platform === "ios" || this.platform === "devtools") {
+        return "is-ios";
+      }
+      return "is-android";
+    }
+  },
+  mounted() {
+    var _a;
+    const systemInfo = common_vendor.index.getSystemInfoSync();
+    this.platform = systemInfo.platform || "android";
+    this.safeAreaInsetBottom = ((_a = systemInfo.safeAreaInsets) == null ? void 0 : _a.bottom) || 0;
+    this.updateDarkMode();
+    console.log("[CustomTabBar] 系统信息:", systemInfo);
+    console.log("[CustomTabBar] 平台:", this.platform);
+    console.log("[CustomTabBar] safeAreaInsets:", systemInfo.safeAreaInsets);
+    console.log("[CustomTabBar] safeAreaInsetBottom:", this.safeAreaInsetBottom);
+    console.log("[CustomTabBar] 深色模式:", this.isDarkMode);
+    const pages = getCurrentPages();
+    const currentPage = pages[pages.length - 1];
+    if (currentPage) {
+      const originalOnShow = currentPage.onShow;
+      currentPage.onShow = () => {
+        this.updateDarkMode();
+        if (originalOnShow)
+          originalOnShow.call(currentPage);
+      };
+    }
+  },
+  methods: {
+    switchTab(index) {
+      if (this.currentIndex === index)
+        return;
+      console.log("[CustomTabBar] switchTab to:", index);
+      this.$emit("switch", index);
+      common_vendor.index.$emit("main-switch-tab", { index });
+      const pages = getCurrentPages();
+      const currentPage = pages[pages.length - 1];
+      const isMainPage = (currentPage == null ? void 0 : currentPage.route) === "pages/main/index";
+      console.log("[CustomTabBar] 当前页面:", currentPage == null ? void 0 : currentPage.route, "是否main页:", isMainPage);
+      if (!isMainPage) {
+        setTimeout(() => {
+          common_vendor.index.redirectTo({ url: "/pages/main/index" });
+        }, 50);
+      }
+    },
+    getIconName(icon, index) {
+      if (index === 0 && this.currentIndex === 0) {
+        return "house";
+      }
+      return icon;
+    },
+    // 更新深色模式状态
+    updateDarkMode() {
+      const followSystem = common_vendor.index.getStorageSync("followSystem") !== "false";
+      const darkMode = common_vendor.index.getStorageSync("darkMode") === "true";
+      if (followSystem) {
+        const systemInfo = common_vendor.index.getSystemInfoSync();
+        if (systemInfo.theme) {
+          this.isDarkMode = systemInfo.theme === "dark";
+        } else {
+          try {
+            const mediaQuery = common_vendor.index.createMediaQueryObserver();
+            if (mediaQuery) {
+              mediaQuery.observe({
+                prefersColorScheme: "dark"
+              }, (res) => {
+                this.isDarkMode = res.matches;
+              });
+            }
+          } catch (e) {
+            this.isDarkMode = false;
+          }
+        }
+      } else {
+        this.isDarkMode = darkMode;
+      }
+      console.log("[CustomTabBar] 更新深色模式状态:", this.isDarkMode, "跟随系统:", followSystem);
+    }
+  }
+};
+if (!Array) {
+  const _easycom_roc_icon_plus2 = common_vendor.resolveComponent("roc-icon-plus");
+  _easycom_roc_icon_plus2();
+}
+const _easycom_roc_icon_plus = () => "../../uni_modules/roc-icon-plus/components/roc-icon-plus/roc-icon-plus.js";
+if (!Math) {
+  _easycom_roc_icon_plus();
+}
+function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
+  return {
+    a: common_vendor.f($data.list, (item, index, i0) => {
+      return {
+        a: "7171c65a-0-" + i0,
+        b: common_vendor.p({
+          name: $options.getIconName(item.icon, index),
+          size: $props.currentIndex === index ? 22 : 20,
+          color: $props.currentIndex === index ? $data.activeColor : $data.isDarkMode ? "#9ca3af" : "#8a8a8a"
+        }),
+        c: common_vendor.t(item.text),
+        d: common_vendor.n({
+          active: $props.currentIndex === index
+        }),
+        e: index,
+        f: $props.currentIndex === index ? 1 : "",
+        g: common_vendor.o(($event) => $options.switchTab(index), index)
+      };
+    }),
+    b: common_vendor.n($options.platformClass),
+    c: common_vendor.n({
+      "dark-mode": $data.isDarkMode
+    })
+  };
+}
+const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-7171c65a"]]);
+wx.createComponent(Component);

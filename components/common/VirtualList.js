@@ -1,1 +1,269 @@
-"use strict";const e=require("../../common/vendor.js");Math||t();const t=()=>"../../uni_modules/roc-icon-plus/components/roc-icon-plus/roc-icon-plus.js",l={__name:"VirtualList",props:{items:{type:Array,default:()=>[]},itemHeight:{type:Number,default:60},height:{type:String,default:"100%"},bufferSize:{type:Number,default:5},itemKey:{type:[String,Function],default:"id"},loading:{type:Boolean,default:!1},scrollWithAnimation:{type:Boolean,default:!1},lowerThreshold:{type:Number,default:50},currentPlayIndex:{type:Number,default:-1},isPlaying:{type:Boolean,default:!1},darkMode:{type:Boolean,default:!1}},emits:["scroll","scrolltolower","item-click","more-click"],setup(t,{expose:l,emit:o}){const a=t,i=o,r=e.getCurrentInstance(),u=e.ref(0),n=e.ref(0),s=e.ref(0),c=e.ref(0),m=e.ref(a.itemHeight),d=e.computed(()=>(c.value,u.value)),f=e.computed(()=>{const e=Math.floor(s.value/m.value)-a.bufferSize;return Math.max(0,e)}),p=e.computed(()=>{const e=Math.ceil(n.value/m.value),t=f.value+e+2*a.bufferSize;return Math.min(a.items.length,t)}),v=e.computed(()=>a.items.slice(f.value,p.value)),g=e.computed(()=>f.value*m.value),h=e.computed(()=>{const e=a.items.length-p.value;return Math.max(0,e*m.value)}),y=e.computed(()=>a.height),b=(e,t)=>"function"==typeof a.itemKey?a.itemKey(e,t):e[a.itemKey]||t,x=e=>{s.value=e.detail.scrollTop,i("scroll",e)},M=()=>{i("scrolltolower")},S=e=>a.currentPlayIndex===e,k=(e,t="name",l="、")=>{if(!e)return"未知歌手";if(Array.isArray(e)){const o=[];return e.forEach(e=>{let l=e[t];l&&o.push(l)}),o.length>0?o.join(l):"未知歌手"}return String(e||"未知歌手")},T=e=>{if(!e)return"00:00";if("string"==typeof e&&e.includes(":"))return e;let t,l=Number(e);if(isNaN(l))return"00:00";t=l>3600?Math.floor(l/1e3):Math.floor(l);const o=t%60;return`${Math.floor(t/60).toString().padStart(2,"0")}:${o.toString().padStart(2,"0")}`},V=e=>"SQ"===e.quality||e.sq||e.h||e.hr||e.types&&e.types.some(e=>"SQ"===e.type);return e.watch(()=>a.items.length,(e,t)=>{console.log("[VirtualList] 列表长度变化:",t,"->",e)}),l({scrollToIndex:(e,t=!0)=>{if(e<0||e>=a.items.length)return void console.warn("[VirtualList] scrollToIndex: 索引超出范围",e);console.log("[VirtualList] scrollToIndex:",e,"actualItemHeight:",m.value);const l=e*m.value;console.log("[VirtualList] 计算滚动位置:",l,"当前scrollTop:",s.value),c.value++,u.value=l,console.log("[VirtualList] 已设置 scrollTopValue:",l,"forceScrollFlag:",c.value)},scrollTo:(e,t=!0)=>{c.value++,u.value=e},getVisibleRange:()=>({start:f.value,end:p.value})}),e.onMounted(()=>{setTimeout(()=>{e.index.createSelectorQuery().in(r).select(".virtual-list").boundingClientRect(e=>{e&&(n.value=e.height,console.log("[VirtualList] 视口高度:",n.value))}).exec(),setTimeout(()=>{e.index.createSelectorQuery().in(r).select(".song-item").boundingClientRect(e=>{e&&e.height>0?(m.value=e.height,console.log("[VirtualList] 实际项目高度:",e.height,"px")):console.log("[VirtualList] 使用默认项目高度:",a.itemHeight)}).exec()},200)},100)}),(l,o)=>e.e({a:g.value+"px",b:e.f(v.value,(l,o,a)=>{var r,u,n,s;return e.e({a:e.t(f.value+o+1),b:e.t(l.name),c:V(l)},(V(l),{}),{d:e.t(k(l.ar||l.singer)),e:(null==(r=l.al)?void 0:r.name)||l.album||l.albumName},(null==(u=l.al)?void 0:u.name)||l.album||l.albumName?{f:e.t((null==(n=l.al)?void 0:n.name)||l.album||l.albumName)}:{},{g:S(f.value+o)&&t.isPlaying},S(f.value+o)&&t.isPlaying?{h:"f66f38f5-0-"+a,i:e.p({name:"play",size:"18"})}:{},{j:e.t(T(l.dt||l.interval||l.duration)),k:"f66f38f5-1-"+a,l:e.o(e=>((e,t)=>{i("more-click",{index:e,item:t})})(f.value+o,l),b(l,o)),m:b(l,o),n:(s=f.value+o,`virtual-item-${s}`),o:S(f.value+o)?1:"",p:e.o(e=>((e,t)=>{i("item-click",{index:e,item:t})})(f.value+o,l),b(l,o))})}),c:e.p({name:"ellipsis-vertical",size:"18"}),d:t.darkMode?1:"",e:h.value+"px",f:0===t.items.length&&!t.loading},0!==t.items.length||t.loading?{}:{g:e.p({name:"music",size:"48",color:t.darkMode?"#666":"#ccc"}),h:t.darkMode?"#666":"#999",i:t.darkMode?"#555":"#ccc"},{j:t.loading},(t.loading,{}),{k:y.value,l:e.o(x),m:d.value,n:t.scrollWithAnimation,o:t.lowerThreshold,p:e.o(M)})}},o=e._export_sfc(l,[["__scopeId","data-v-f66f38f5"]]);wx.createComponent(o);
+"use strict";
+const common_vendor = require("../../common/vendor.js");
+if (!Math) {
+  RocIconPlus();
+}
+const RocIconPlus = () => "../../uni_modules/roc-icon-plus/components/roc-icon-plus/roc-icon-plus.js";
+const _sfc_main = {
+  __name: "VirtualList",
+  props: {
+    items: {
+      type: Array,
+      default: () => []
+    },
+    itemHeight: {
+      type: Number,
+      default: 60
+    },
+    height: {
+      type: String,
+      default: "100%"
+    },
+    bufferSize: {
+      type: Number,
+      default: 5
+    },
+    itemKey: {
+      type: [String, Function],
+      default: "id"
+    },
+    loading: {
+      type: Boolean,
+      default: false
+    },
+    scrollWithAnimation: {
+      type: Boolean,
+      default: false
+    },
+    lowerThreshold: {
+      type: Number,
+      default: 50
+    },
+    currentPlayIndex: {
+      type: Number,
+      default: -1
+    },
+    isPlaying: {
+      type: Boolean,
+      default: false
+    },
+    darkMode: {
+      type: Boolean,
+      default: false
+    },
+    bottomSafeHeight: {
+      type: Number,
+      default: 0
+    }
+  },
+  emits: ["scroll", "scrolltolower", "item-click", "more-click"],
+  setup(__props, { expose: __expose, emit: __emit }) {
+    const props = __props;
+    const emit = __emit;
+    const instance = common_vendor.getCurrentInstance();
+    const scrollTopValue = common_vendor.ref(0);
+    const viewportHeight = common_vendor.ref(0);
+    const scrollTop = common_vendor.ref(0);
+    const forceScrollFlag = common_vendor.ref(0);
+    const actualItemHeight = common_vendor.ref(props.itemHeight);
+    const computedScrollTop = common_vendor.computed(() => {
+      forceScrollFlag.value;
+      return scrollTopValue.value;
+    });
+    const startIndex = common_vendor.computed(() => {
+      const index = Math.floor(scrollTop.value / actualItemHeight.value) - props.bufferSize;
+      return Math.max(0, index);
+    });
+    const endIndex = common_vendor.computed(() => {
+      const visibleCount = Math.ceil(viewportHeight.value / actualItemHeight.value);
+      const index = startIndex.value + visibleCount + props.bufferSize * 2;
+      return Math.min(props.items.length, index);
+    });
+    const visibleItems = common_vendor.computed(() => {
+      return props.items.slice(startIndex.value, endIndex.value);
+    });
+    const topPlaceholderHeight = common_vendor.computed(() => {
+      return startIndex.value * actualItemHeight.value;
+    });
+    const bottomPlaceholderHeight = common_vendor.computed(() => {
+      const remainingCount = props.items.length - endIndex.value;
+      const listBottomHeight = Math.max(0, remainingCount * actualItemHeight.value);
+      return listBottomHeight + props.bottomSafeHeight;
+    });
+    const listHeight = common_vendor.computed(() => props.height);
+    const getItemKey = (item, index) => {
+      if (typeof props.itemKey === "function") {
+        return props.itemKey(item, index);
+      }
+      return item[props.itemKey] || index;
+    };
+    const getItemId = (index) => {
+      return `virtual-item-${index}`;
+    };
+    const onScroll = (e) => {
+      scrollTop.value = e.detail.scrollTop;
+      emit("scroll", e);
+    };
+    const onScrollToLower = () => {
+      emit("scrolltolower");
+    };
+    const onItemClick = (index, item) => {
+      emit("item-click", { index, item });
+    };
+    const onMoreClick = (index, item) => {
+      emit("more-click", { index, item });
+    };
+    const scrollToIndex = (index, animated = true) => {
+      if (index < 0 || index >= props.items.length) {
+        console.warn("[VirtualList] scrollToIndex: 索引超出范围", index);
+        return;
+      }
+      console.log("[VirtualList] scrollToIndex:", index, "actualItemHeight:", actualItemHeight.value);
+      const targetTop = index * actualItemHeight.value;
+      console.log("[VirtualList] 计算滚动位置:", targetTop, "当前scrollTop:", scrollTop.value);
+      forceScrollFlag.value++;
+      scrollTopValue.value = targetTop;
+      console.log("[VirtualList] 已设置 scrollTopValue:", targetTop, "forceScrollFlag:", forceScrollFlag.value);
+    };
+    const scrollTo = (scrollTop2, animated = true) => {
+      forceScrollFlag.value++;
+      scrollTopValue.value = scrollTop2;
+    };
+    const getVisibleRange = () => {
+      return {
+        start: startIndex.value,
+        end: endIndex.value
+      };
+    };
+    const isCurrentPlaying = (index) => {
+      return props.currentPlayIndex === index;
+    };
+    const formatSinger = (singers, nameKey = "name", join = "、") => {
+      if (!singers)
+        return "未知歌手";
+      if (Array.isArray(singers)) {
+        const singer = [];
+        singers.forEach((item) => {
+          let name = item[nameKey];
+          if (!name)
+            return;
+          singer.push(name);
+        });
+        return singer.length > 0 ? singer.join(join) : "未知歌手";
+      }
+      return String(singers || "未知歌手");
+    };
+    const formatDuration = (duration) => {
+      if (!duration)
+        return "00:00";
+      if (typeof duration === "string" && duration.includes(":")) {
+        return duration;
+      }
+      let dt = Number(duration);
+      if (isNaN(dt))
+        return "00:00";
+      let seconds;
+      if (dt > 3600) {
+        seconds = Math.floor(dt / 1e3);
+      } else {
+        seconds = Math.floor(dt);
+      }
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = seconds % 60;
+      return `${minutes.toString().padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
+    };
+    const hasHighQuality = (song) => {
+      return song.quality === "SQ" || song.sq || song.h || song.hr || song.types && song.types.some((t) => t.type === "SQ");
+    };
+    common_vendor.watch(() => props.items.length, (newLen, oldLen) => {
+      console.log("[VirtualList] 列表长度变化:", oldLen, "->", newLen);
+    });
+    __expose({
+      scrollToIndex,
+      scrollTo,
+      getVisibleRange
+    });
+    common_vendor.onMounted(() => {
+      setTimeout(() => {
+        const query = common_vendor.index.createSelectorQuery().in(instance);
+        query.select(".virtual-list").boundingClientRect((rect) => {
+          if (rect) {
+            viewportHeight.value = rect.height;
+            console.log("[VirtualList] 视口高度:", viewportHeight.value);
+          }
+        }).exec();
+        setTimeout(() => {
+          const itemQuery = common_vendor.index.createSelectorQuery().in(instance);
+          itemQuery.select(".song-item").boundingClientRect((itemRect) => {
+            if (itemRect && itemRect.height > 0) {
+              actualItemHeight.value = itemRect.height;
+              console.log("[VirtualList] 实际项目高度:", itemRect.height, "px");
+            } else {
+              console.log("[VirtualList] 使用默认项目高度:", props.itemHeight);
+            }
+          }).exec();
+        }, 200);
+      }, 100);
+    });
+    return (_ctx, _cache) => {
+      return common_vendor.e({
+        a: topPlaceholderHeight.value + "px",
+        b: common_vendor.f(visibleItems.value, (item, i, i0) => {
+          var _a, _b, _c;
+          return common_vendor.e({
+            a: common_vendor.t(startIndex.value + i + 1),
+            b: common_vendor.t(item.name),
+            c: hasHighQuality(item)
+          }, hasHighQuality(item) ? {} : {}, {
+            d: common_vendor.t(formatSinger(item.ar || item.singer)),
+            e: ((_a = item.al) == null ? void 0 : _a.name) || item.album || item.albumName
+          }, ((_b = item.al) == null ? void 0 : _b.name) || item.album || item.albumName ? {
+            f: common_vendor.t(((_c = item.al) == null ? void 0 : _c.name) || item.album || item.albumName)
+          } : {}, {
+            g: isCurrentPlaying(startIndex.value + i) && __props.isPlaying
+          }, isCurrentPlaying(startIndex.value + i) && __props.isPlaying ? {
+            h: "815bdc95-0-" + i0,
+            i: common_vendor.p({
+              name: "play",
+              size: "18"
+            })
+          } : {}, {
+            j: common_vendor.t(formatDuration(item.dt || item.interval || item.duration)),
+            k: "815bdc95-1-" + i0,
+            l: common_vendor.o(($event) => onMoreClick(startIndex.value + i, item), getItemKey(item, i)),
+            m: getItemKey(item, i),
+            n: getItemId(startIndex.value + i),
+            o: isCurrentPlaying(startIndex.value + i) ? 1 : "",
+            p: common_vendor.o(($event) => onItemClick(startIndex.value + i, item), getItemKey(item, i))
+          });
+        }),
+        c: common_vendor.p({
+          name: "ellipsis-vertical",
+          size: "18"
+        }),
+        d: __props.darkMode ? 1 : "",
+        e: bottomPlaceholderHeight.value + "px",
+        f: __props.items.length === 0 && !__props.loading
+      }, __props.items.length === 0 && !__props.loading ? {
+        g: common_vendor.p({
+          name: "music",
+          size: "48",
+          color: __props.darkMode ? "#666" : "#ccc"
+        }),
+        h: __props.darkMode ? "#666" : "#999",
+        i: __props.darkMode ? "#555" : "#ccc"
+      } : {}, {
+        j: __props.loading
+      }, __props.loading ? {} : {}, {
+        k: listHeight.value,
+        l: common_vendor.o(onScroll),
+        m: computedScrollTop.value,
+        n: __props.scrollWithAnimation,
+        o: __props.lowerThreshold,
+        p: common_vendor.o(onScrollToLower)
+      });
+    };
+  }
+};
+const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-815bdc95"]]);
+wx.createComponent(Component);

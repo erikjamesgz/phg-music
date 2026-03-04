@@ -1,1 +1,33 @@
-"use strict";const e=require("../../common/vendor.js"),t={aesKey:"cFcnPcf6Kb85RC1y3V6M5A==",aesIv:"",appId:"y67sprxhhpws",decodeData(t){const r=e.CryptoJS.enc.Base64.parse(this.aesKey),p=e.CryptoJS.AES.decrypt(decodeURIComponent(t),r,{mode:e.CryptoJS.mode.ECB,padding:e.CryptoJS.pad.Pkcs7}).toString(e.CryptoJS.enc.Utf8);return JSON.parse(p)},createSign(t,r){const p=`${this.appId}${t}${r}`;return e.CryptoJS.MD5(p).toString().toUpperCase()},buildParam(t){const r=JSON.stringify(t),p=e.CryptoJS.enc.Base64.parse(this.aesKey),o=Date.now(),n=e.CryptoJS.AES.encrypt(r,p,{mode:e.CryptoJS.mode.ECB,padding:e.CryptoJS.pad.Pkcs7}).ciphertext.toString(e.CryptoJS.enc.Base64),s=this.createSign(n,o);return`data=${encodeURIComponent(n)}&time=${o}&appId=${this.appId}&sign=${s}`}};exports.wbdCrypto=t;
+"use strict";
+const common_vendor = require("../../common/vendor.js");
+const wbdCrypto = {
+  aesKey: "cFcnPcf6Kb85RC1y3V6M5A==",
+  aesIv: "",
+  appId: "y67sprxhhpws",
+  decodeData(base64Result) {
+    const key = common_vendor.CryptoJS.enc.Base64.parse(this.aesKey);
+    const decrypted = common_vendor.CryptoJS.AES.decrypt(decodeURIComponent(base64Result), key, {
+      mode: common_vendor.CryptoJS.mode.ECB,
+      padding: common_vendor.CryptoJS.pad.Pkcs7
+    });
+    const decryptedStr = decrypted.toString(common_vendor.CryptoJS.enc.Utf8);
+    return JSON.parse(decryptedStr);
+  },
+  createSign(data, time) {
+    const str = `${this.appId}${data}${time}`;
+    return common_vendor.CryptoJS.MD5(str).toString().toUpperCase();
+  },
+  buildParam(jsonData) {
+    const jsonStr = JSON.stringify(jsonData);
+    const key = common_vendor.CryptoJS.enc.Base64.parse(this.aesKey);
+    const time = Date.now();
+    const encrypted = common_vendor.CryptoJS.AES.encrypt(jsonStr, key, {
+      mode: common_vendor.CryptoJS.mode.ECB,
+      padding: common_vendor.CryptoJS.pad.Pkcs7
+    });
+    const encodeData = encrypted.ciphertext.toString(common_vendor.CryptoJS.enc.Base64);
+    const sign = this.createSign(encodeData, time);
+    return `data=${encodeURIComponent(encodeData)}&time=${time}&appId=${this.appId}&sign=${sign}`;
+  }
+};
+exports.wbdCrypto = wbdCrypto;

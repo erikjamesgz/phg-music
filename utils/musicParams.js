@@ -1,1 +1,200 @@
-"use strict";const a=a=>{if(console.log("[formatDuration] 输入:",a,"类型:",typeof a),!a)return console.log("[formatDuration] 返回默认值: 0:00"),"0:00";let e=0;if("string"==typeof a){if(a.includes(":"))return console.log("[formatDuration] 已是 mm:ss 格式:",a),a;e=parseInt(a)}else"number"==typeof a&&(e=Math.floor(a/1e3));const s=`${Math.floor(e/60)}:${(e%60).toString().padStart(2,"0")}`;return console.log("[formatDuration] 输出:",s),s};exports.buildMusicRequestParams=(e,s="320k")=>{if(console.log("[buildMusicRequestParams] 开始构建参数:",{hasSong:!!e,songId:null==e?void 0:e.id,songName:null==e?void 0:e.name,songSource:null==e?void 0:e.source,songDuration:null==e?void 0:e.duration,songDt:null==e?void 0:e.dt,songInterval:null==e?void 0:e.interval}),!e)return console.error("[buildMusicRequestParams] 歌曲信息无效"),null;const o=e.source||"tx",i=e.name||"",n=(a=>a.singer?a.singer:a.ar&&Array.isArray(a.ar)?a.ar.map(a=>a.name).join("/"):a.artists&&Array.isArray(a.artists)?a.artists.map(a=>a.name).join("/"):"")(e),r=(a=>a.album?a.album:a.albumName?a.albumName:a.al&&a.al.name?a.al.name:a.album&&"object"==typeof a.album&&a.album.name?a.album.name:"")(e),t=e.dt||e.duration||e.interval;console.log("[buildMusicRequestParams] durationValue:",t);const u=a(t);console.log("[buildMusicRequestParams] formatted interval:",u);let l=null;switch(o){case"tx":l={source:"tx",musicInfo:{id:e.songmid||e.id,name:i,singer:n,source:"tx",interval:u,meta:{songId:e.songmid||e.id,albumName:r,hash:e.songmid||e.id}},quality:s};break;case"wy":l={source:"wy",musicInfo:{id:e.id,name:i,singer:n,source:"wy",interval:u,meta:{songId:e.id,albumName:r,hash:e.id}},quality:s};break;case"kg":l={source:"kg",musicInfo:{id:e.id,name:i,singer:n,source:"kg",interval:u,meta:{songId:e.id,albumName:r,hash:e.hash||e.id}},quality:s};break;case"kw":l={source:"kw",musicInfo:{id:e.id,name:i,singer:n,source:"kw",interval:u,meta:{songId:e.id,albumName:r,hash:e.id}},quality:s};break;case"mg":const a=e.songmid||e.songId||e.id,t=e.copyrightId||e.id;l={source:"mg",songmid:a,id:t,musicInfo:{songmid:a,copyrightId:t,name:i,singer:n,source:"mg",interval:u,album:r,meta:{songId:a,albumName:r,copyrightId:t}},quality:s};break;default:l={source:o,musicInfo:{id:e.id,name:i,singer:n,source:o,interval:u,meta:{songId:e.id,albumName:r,hash:e.id}},quality:s}}return console.log("[buildMusicRequestParams] 构建请求参数:",{source:o,songId:e.id,songmid:e.songmid,hash:e.hash,quality:s,duration:e.duration,dt:e.dt,interval:e.interval,formattedInterval:u}),console.log("[buildMusicRequestParams] 返回的 requestData:",JSON.stringify(l)),l},exports.formatDuration=a;
+"use strict";
+const formatDuration = (duration) => {
+  console.log("[formatDuration] 输入:", duration, "类型:", typeof duration);
+  if (!duration) {
+    console.log("[formatDuration] 返回默认值: 0:00");
+    return "0:00";
+  }
+  let seconds = 0;
+  if (typeof duration === "string") {
+    if (duration.includes(":")) {
+      console.log("[formatDuration] 已是 mm:ss 格式:", duration);
+      return duration;
+    }
+    seconds = parseInt(duration);
+  } else if (typeof duration === "number") {
+    seconds = Math.floor(duration / 1e3);
+  }
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  const result = `${mins}:${secs.toString().padStart(2, "0")}`;
+  console.log("[formatDuration] 输出:", result);
+  return result;
+};
+const getSingerName = (song) => {
+  if (song.singer)
+    return song.singer;
+  if (song.ar && Array.isArray(song.ar)) {
+    return song.ar.map((a) => a.name).join("/");
+  }
+  if (song.artists && Array.isArray(song.artists)) {
+    return song.artists.map((a) => a.name).join("/");
+  }
+  return "";
+};
+const getAlbumName = (song) => {
+  if (song.album)
+    return song.album;
+  if (song.albumName)
+    return song.albumName;
+  if (song.al && song.al.name)
+    return song.al.name;
+  if (song.album && typeof song.album === "object" && song.album.name) {
+    return song.album.name;
+  }
+  return "";
+};
+const buildMusicRequestParams = (song, quality = "320k") => {
+  console.log("[buildMusicRequestParams] 开始构建参数:", {
+    hasSong: !!song,
+    songId: song == null ? void 0 : song.id,
+    songName: song == null ? void 0 : song.name,
+    songSource: song == null ? void 0 : song.source,
+    songDuration: song == null ? void 0 : song.duration,
+    songDt: song == null ? void 0 : song.dt,
+    songInterval: song == null ? void 0 : song.interval
+  });
+  if (!song) {
+    console.error("[buildMusicRequestParams] 歌曲信息无效");
+    return null;
+  }
+  const source = song.source || "tx";
+  const name = song.name || "";
+  const singer = getSingerName(song);
+  const album = getAlbumName(song);
+  const durationValue = song.dt || song.duration || song.interval;
+  console.log("[buildMusicRequestParams] durationValue:", durationValue);
+  const interval = formatDuration(durationValue);
+  console.log("[buildMusicRequestParams] formatted interval:", interval);
+  let requestData = null;
+  switch (source) {
+    case "tx":
+      requestData = {
+        source: "tx",
+        musicInfo: {
+          id: song.songmid || song.id,
+          name,
+          singer,
+          source: "tx",
+          interval,
+          meta: {
+            songId: song.songmid || song.id,
+            albumName: album,
+            hash: song.songmid || song.id
+          }
+        },
+        quality
+      };
+      break;
+    case "wy":
+      requestData = {
+        source: "wy",
+        musicInfo: {
+          id: song.id,
+          name,
+          singer,
+          source: "wy",
+          interval,
+          meta: {
+            songId: song.id,
+            albumName: album,
+            hash: song.id
+          }
+        },
+        quality
+      };
+      break;
+    case "kg":
+      requestData = {
+        source: "kg",
+        musicInfo: {
+          id: song.id,
+          name,
+          singer,
+          source: "kg",
+          interval,
+          meta: {
+            songId: song.id,
+            albumName: album,
+            hash: song.hash || song.id
+          }
+        },
+        quality
+      };
+      break;
+    case "kw":
+      requestData = {
+        source: "kw",
+        musicInfo: {
+          id: song.id,
+          name,
+          singer,
+          source: "kw",
+          interval,
+          meta: {
+            songId: song.id,
+            albumName: album,
+            hash: song.id
+          }
+        },
+        quality
+      };
+      break;
+    case "mg":
+      const mgSongmid = song.songmid || song.songId || song.id;
+      const mgCopyrightId = song.copyrightId || song.id;
+      requestData = {
+        source: "mg",
+        songmid: mgSongmid,
+        id: mgCopyrightId,
+        musicInfo: {
+          songmid: mgSongmid,
+          copyrightId: mgCopyrightId,
+          name,
+          singer,
+          source: "mg",
+          interval,
+          album,
+          meta: {
+            songId: mgSongmid,
+            albumName: album,
+            copyrightId: mgCopyrightId
+          }
+        },
+        quality
+      };
+      break;
+    default:
+      requestData = {
+        source,
+        musicInfo: {
+          id: song.id,
+          name,
+          singer,
+          source,
+          interval,
+          meta: {
+            songId: song.id,
+            albumName: album,
+            hash: song.id
+          }
+        },
+        quality
+      };
+  }
+  console.log("[buildMusicRequestParams] 构建请求参数:", {
+    source,
+    songId: song.id,
+    songmid: song.songmid,
+    hash: song.hash,
+    quality,
+    duration: song.duration,
+    dt: song.dt,
+    interval: song.interval,
+    formattedInterval: interval
+  });
+  console.log("[buildMusicRequestParams] 返回的 requestData:", JSON.stringify(requestData));
+  return requestData;
+};
+exports.buildMusicRequestParams = buildMusicRequestParams;
+exports.formatDuration = formatDuration;

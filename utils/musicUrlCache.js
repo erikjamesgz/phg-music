@@ -1,1 +1,72 @@
-"use strict";const c=require("../common/vendor.js"),e={isLoading:!1,info:null};function n(c,e,n="kg"){return`@music_url__${c}_${e}_${n}`}async function o(e,o="128k",r,s="kg"){try{const i=n(e,o,s);c.index.setStorageSync(i,r),console.log("[MusicUrlCache] 保存缓存:",i)}catch(i){console.error("[MusicUrlCache] 保存缓存失败:",i)}}async function r(e,o="128k",r="kg"){try{const s=n(e,o,r);return!!c.index.getStorageSync(s)}catch(s){return console.error("[MusicUrlCache] 检查缓存失败:",s),!1}}exports.getCachedMusicUrl=async function(e,o="128k",r="kg"){try{const s=n(e,o,r),i=c.index.getStorageSync(s);return i?(console.log("[MusicUrlCache] 命中缓存:",s),i):null}catch(s){console.error("[MusicUrlCache] 读取缓存失败:",s)}},exports.isMusicUrlCached=r,exports.preloadNextMusic=async function(c,n,s="128k"){if(!c||!c.id)return;if(e.isLoading)return;if(await r(c.id,s))console.log("[MusicUrlCache] 下一首已有缓存，无需预加载:",c.name);else{e.isLoading=!0,e.info=c,console.log("[MusicUrlCache] 开始预加载下一首:",c.name);try{const e=await n(c,s);e&&e.url&&(await o(c.id,s,e.url),console.log("[MusicUrlCache] 预加载成功:",c.name))}catch(i){console.error("[MusicUrlCache] 预加载失败:",i.message)}finally{e.isLoading=!1,e.info=null}}},exports.setCachedMusicUrl=o;
+"use strict";
+const common_vendor = require("../common/vendor.js");
+const CACHE_KEY_PREFIX = "@music_url__";
+const preloadState = {
+  isLoading: false,
+  info: null
+};
+function getCacheKey(songId, quality, source = "kg") {
+  return `${CACHE_KEY_PREFIX}${songId}_${quality}_${source}`;
+}
+async function getCachedMusicUrl(songId, quality = "128k", source = "kg") {
+  try {
+    const key = getCacheKey(songId, quality, source);
+    const cached = common_vendor.index.getStorageSync(key);
+    if (cached) {
+      console.log("[MusicUrlCache] 命中缓存:", key);
+      return cached;
+    }
+    return null;
+  } catch (e) {
+    console.error("[MusicUrlCache] 读取缓存失败:", e);
+  }
+}
+async function setCachedMusicUrl(songId, quality = "128k", url, source = "kg") {
+  try {
+    const key = getCacheKey(songId, quality, source);
+    common_vendor.index.setStorageSync(key, url);
+    console.log("[MusicUrlCache] 保存缓存:", key);
+  } catch (e) {
+    console.error("[MusicUrlCache] 保存缓存失败:", e);
+  }
+}
+async function isMusicUrlCached(songId, quality = "128k", source = "kg") {
+  try {
+    const key = getCacheKey(songId, quality, source);
+    const cached = common_vendor.index.getStorageSync(key);
+    return !!cached;
+  } catch (e) {
+    console.error("[MusicUrlCache] 检查缓存失败:", e);
+    return false;
+  }
+}
+async function preloadNextMusic(nextSong, getMusicUrlFn, quality = "128k") {
+  if (!nextSong || !nextSong.id)
+    return;
+  if (preloadState.isLoading)
+    return;
+  const isCached = await isMusicUrlCached(nextSong.id, quality);
+  if (isCached) {
+    console.log("[MusicUrlCache] 下一首已有缓存，无需预加载:", nextSong.name);
+    return;
+  }
+  preloadState.isLoading = true;
+  preloadState.info = nextSong;
+  console.log("[MusicUrlCache] 开始预加载下一首:", nextSong.name);
+  try {
+    const result = await getMusicUrlFn(nextSong, quality);
+    if (result && result.url) {
+      await setCachedMusicUrl(nextSong.id, quality, result.url);
+      console.log("[MusicUrlCache] 预加载成功:", nextSong.name);
+    }
+  } catch (error) {
+    console.error("[MusicUrlCache] 预加载失败:", error.message);
+  } finally {
+    preloadState.isLoading = false;
+    preloadState.info = null;
+  }
+}
+exports.getCachedMusicUrl = getCachedMusicUrl;
+exports.isMusicUrlCached = isMusicUrlCached;
+exports.preloadNextMusic = preloadNextMusic;
+exports.setCachedMusicUrl = setCachedMusicUrl;
