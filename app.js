@@ -27,7 +27,12 @@ const _sfc_main = {
       // 定时停止播放相关
       sleepTimerRemaining: 0,
       sleepTimerEndTime: null,
-      sleepTimerInterval: null
+      sleepTimerInterval: null,
+      // 非 iOS 设备快速 onPlay 检测相关
+      lastOnPlayTime: 0,
+      onPlayQuickCallCount: 0,
+      isIOS: false,
+      quickPlayCheckTimer: null
     };
   },
   onLaunch: async function() {
@@ -106,6 +111,14 @@ const _sfc_main = {
     initBackgroundAudioManager() {
       console.log("[App] 初始化背景音频管理器");
       const audioManager = common_vendor.index.getBackgroundAudioManager();
+      try {
+        const systemInfo = common_vendor.index.getSystemInfoSync();
+        this.isIOS = systemInfo.platform === "ios";
+        console.log("[App] 设备平台:", systemInfo.platform, "是否 iOS:", this.isIOS);
+      } catch (e) {
+        console.error("[App] 获取系统信息失败:", e);
+        this.isIOS = false;
+      }
       if (audioManager) {
         audioManager.onPlay(() => {
           console.log("[BackgroundAudio] onPlay");
@@ -121,6 +134,9 @@ const _sfc_main = {
           if (state2)
             state2.isUsingCachedUrl = false;
           this.playStartTime = Date.now();
+          if (!this.isIOS) {
+            this.checkQuickOnPlay();
+          }
         });
         audioManager.onPause(() => {
           console.log("[BackgroundAudio] onPause");
@@ -202,6 +218,38 @@ const _sfc_main = {
         store_modules_user.userStore.increaseListenTime(playDuration);
         console.log("[App] 播放时长统计: +" + playDuration.toFixed(2) + "分钟, 当前总时长:", store_modules_user.userStore.getState().stats.listenTime.toFixed(2), "分钟");
       }
+    },
+    // 非 iOS 设备：检测快速连续 onPlay 调用（模拟通知栏切歌）
+    // 如果 onPlay 在短时间内（3秒内）被快速调用两次，则判断为用户在通知栏点击了切歌
+    checkQuickOnPlay() {
+      const now = Date.now();
+      const timeSinceLastPlay = now - this.lastOnPlayTime;
+      console.log("[checkQuickOnPlay] 距离上次 onPlay:", timeSinceLastPlay, "ms, 计数:", this.onPlayQuickCallCount);
+      if (timeSinceLastPlay < 3e3 && this.lastOnPlayTime > 0) {
+        this.onPlayQuickCallCount++;
+        console.log("[checkQuickOnPlay] 检测到快速 onPlay，计数增加到:", this.onPlayQuickCallCount);
+        if (this.onPlayQuickCallCount >= 2) {
+          console.log("[checkQuickOnPlay] 检测到通知栏切歌操作，自动切换下一首");
+          this.onPlayQuickCallCount = 0;
+          if (this.quickPlayCheckTimer) {
+            clearTimeout(this.quickPlayCheckTimer);
+            this.quickPlayCheckTimer = null;
+          }
+          store_modules_player.playerStore.playNext();
+          return;
+        }
+      } else {
+        this.onPlayQuickCallCount = 1;
+      }
+      this.lastOnPlayTime = now;
+      if (this.quickPlayCheckTimer) {
+        clearTimeout(this.quickPlayCheckTimer);
+      }
+      this.quickPlayCheckTimer = setTimeout(() => {
+        console.log("[checkQuickOnPlay] 超时重置计数");
+        this.onPlayQuickCallCount = 0;
+        this.quickPlayCheckTimer = null;
+      }, 3e3);
     },
     // 启动定时停止播放
     startSleepTimer(totalSeconds) {

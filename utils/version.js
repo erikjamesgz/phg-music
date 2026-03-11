@@ -2,9 +2,9 @@
 const common_vendor = require("../common/vendor.js");
 const utils_system = require("./system.js");
 const VERSION_URLS = [
-  `https://raw.githubusercontent.com/erikjamesgz/phg-music/main/doc/version/version.json`,
   `https://cdn.jsdelivr.net/gh/erikjamesgz/phg-music/doc/version/version.json`,
-  `https://fastly.jsdelivr.net/gh/erikjamesgz/phg-music/doc/version/version.json`
+  `https://fastly.jsdelivr.net/gh/erikjamesgz/phg-music/doc/version/version.json`,
+  `https://raw.githubusercontent.com/erikjamesgz/phg-music/main/doc/version/version.json`
 ];
 const VERSION_KEY = "ignore_version";
 const LAST_CHECK_KEY = "last_check_time";
@@ -26,13 +26,14 @@ const fetchVersionInfo = (url) => {
       url,
       method: "GET",
       timeout: 1e4,
-      dataType: "json",
+      dataType: "text",
       success: (res) => {
         console.log("[Version] 请求成功, url:", url, "statusCode:", res.statusCode, "data:", res.data, "dataType:", typeof res.data);
         if (res.statusCode === 200 && res.data) {
           let data = res.data;
           if (typeof data === "string") {
             try {
+              data = data.replace(/`/g, "").replace(/,\s*}/g, "}").trim();
               data = JSON.parse(data);
             } catch (e) {
               console.log("[Version] JSON解析失败:", e);
@@ -40,8 +41,13 @@ const fetchVersionInfo = (url) => {
               return;
             }
           }
-          console.log("[Version] 解析后的版本信息:", data);
-          resolve(data);
+          if (data && data.versionCode) {
+            console.log("[Version] 解析后的版本信息:", data);
+            resolve(data);
+          } else {
+            console.log("[Version] 版本信息无效:", data);
+            resolve(null);
+          }
         } else {
           console.log("[Version] 状态码或数据为空, statusCode:", res.statusCode);
           resolve(null);

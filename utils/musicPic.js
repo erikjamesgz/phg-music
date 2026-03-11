@@ -197,15 +197,18 @@ function getSongPicUrl(songInfo, source) {
   var _a, _b, _c;
   if (!songInfo)
     return null;
-  const picUrl = ((_a = songInfo.meta) == null ? void 0 : _a.picUrl) || ((_b = songInfo.al) == null ? void 0 : _b.picUrl) || ((_c = songInfo.album) == null ? void 0 : _c.picUrl) || songInfo.img || songInfo.pic;
+  const sourceId = source || songInfo.sourceId || songInfo.source;
+  const songId = songInfo.id || songInfo.songmid;
+  const picUrl = ((_a = songInfo.meta) == null ? void 0 : _a.picUrl) || ((_b = songInfo.al) == null ? void 0 : _b.picUrl) || ((_c = songInfo.album) == null ? void 0 : _c.picUrl) || songInfo.picUrl || songInfo.img || songInfo.pic;
   if (picUrl) {
+    if (songId && sourceId) {
+      utils_cache.setCachedPicUrl(songId, sourceId, picUrl);
+    }
     return picUrl;
   }
-  const sourceId = source || songInfo.sourceId || songInfo.source;
   if (!sourceId) {
     return null;
   }
-  const songId = songInfo.id || songInfo.songmid;
   const cachedUrl = utils_cache.getCachedPicUrl(songId, sourceId);
   if (cachedUrl) {
     return cachedUrl;

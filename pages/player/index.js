@@ -10,11 +10,12 @@ const utils_kgLyricDecoder = require("../../utils/kgLyricDecoder.js");
 const utils_system = require("../../utils/system.js");
 const utils_imageProxy = require("../../utils/imageProxy.js");
 if (!Math) {
-  (RocIconPlus + DanmakuView + MusicComment)();
+  (RocIconPlus + DanmakuView + MusicComment + MusicToggleModal)();
 }
 const RocIconPlus = () => "../../uni_modules/roc-icon-plus/components/roc-icon-plus/roc-icon-plus.js";
 const DanmakuView = () => "../../components/danmaku/DanmakuView.js";
 const MusicComment = () => "../../components/comment/MusicComment.js";
+const MusicToggleModal = () => "../../components/player/MusicToggleModal.js";
 const _sfc_main = {
   __name: "index",
   setup(__props) {
@@ -72,6 +73,8 @@ const _sfc_main = {
         return false;
       return store_modules_list.listStore.isInLoveList(currentSong.value.id);
     });
+    const hasSwitchedSource = common_vendor.computed(() => store_modules_player.playerStore.hasSwitchedSource);
+    const showSourceSwitchHint = common_vendor.computed(() => store_modules_player.playerStore.getState().showSourceSwitchHint);
     const showFavoriteHint = common_vendor.ref(false);
     const currentFavoriteHintText = common_vendor.ref("喜欢这首歌？点击收藏");
     let favoriteHintTimer = null;
@@ -187,6 +190,8 @@ const _sfc_main = {
     };
     const statusText = common_vendor.computed(() => playerStatusText.value);
     const showCommentFlag = common_vendor.ref(false);
+    const showMusicToggleModal = common_vendor.ref(false);
+    const toggleOriginalSong = common_vendor.ref(null);
     const darkMode = common_vendor.ref(false);
     const initDarkMode = () => {
       darkMode.value = common_vendor.index.getStorageSync("darkMode") === "true";
@@ -492,6 +497,7 @@ const _sfc_main = {
     });
     common_vendor.onUnmounted(() => {
       console.log("[player] onUnmounted 调用 - 组件卸载");
+      clearTimeout(sourceSwitchHintTimer);
     });
     common_vendor.onBackPress(() => {
       console.log("[player] onBackPress 触发 - 系统返回按钮被按下，销毁页面");
@@ -1074,11 +1080,57 @@ const _sfc_main = {
         }
       });
     };
-    const downloadSong = () => {
-      common_vendor.index.showToast({
-        title: "下载功能开发中",
-        icon: "none"
+    const showMusicToggle = () => {
+      if (!currentSong.value) {
+        common_vendor.index.showToast({ title: "没有正在播放的歌曲", icon: "none" });
+        return;
+      }
+      toggleOriginalSong.value = originalSong.value || currentSong.value;
+      showMusicToggleModal.value = true;
+    };
+    const closeMusicToggleModal = () => {
+      showMusicToggleModal.value = false;
+      toggleOriginalSong.value = null;
+    };
+    const handleToggleConfirm = (data) => {
+      var _a, _b;
+      const { originalSong: originalSong2, newSong } = data;
+      console.log("[Player] 确认换源:", {
+        from: originalSong2.name,
+        to: newSong.name
       });
+      const musicInfo = {
+        ...newSong,
+        id: newSong.id,
+        name: newSong.name,
+        singer: newSong.singer || ((_a = newSong.ar) == null ? void 0 : _a.map((a) => a.name).join(", ")) || "未知歌手",
+        albumName: newSong.albumName || ((_b = newSong.al) == null ? void 0 : _b.name) || "",
+        source: newSong.source,
+        sourceId: newSong.sourceId
+      };
+      store_modules_player.playerStore.playSong(musicInfo);
+      closeMusicToggleModal();
+      common_vendor.index.showToast({ title: "已切换音源", icon: "success" });
+    };
+    const handleTogglePreview = async (song) => {
+      var _a, _b;
+      console.log("[Player] 预览换源:", song.name);
+      try {
+        const musicInfo = {
+          ...song,
+          id: song.id,
+          name: song.name,
+          singer: song.singer || ((_a = song.ar) == null ? void 0 : _a.map((a) => a.name).join(", ")) || "未知歌手",
+          albumName: song.albumName || ((_b = song.al) == null ? void 0 : _b.name) || "",
+          source: song.source,
+          sourceId: song.sourceId
+        };
+        await store_modules_player.playerStore.playSong(musicInfo);
+        common_vendor.index.showToast({ title: "已预览", icon: "none" });
+      } catch (error) {
+        console.error("[Player] 预览失败:", error);
+        common_vendor.index.showToast({ title: "预览失败", icon: "none" });
+      }
     };
     const showFavoriteTooltip = () => {
       if (isCurrentSongFavorite.value)
@@ -1465,28 +1517,31 @@ const _sfc_main = {
         aA: common_vendor.o(createNewList),
         aB: common_vendor.p({
           type: "fas",
-          name: "download",
+          name: "clone",
           size: "18",
           color: darkMode.value ? "#ffffff" : "#6b7280"
         }),
-        aC: common_vendor.o(downloadSong),
-        aD: showAddToModalFlag.value
+        aC: hasSwitchedSource.value && showSourceSwitchHint.value
+      }, hasSwitchedSource.value && showSourceSwitchHint.value ? {} : {}, {
+        aD: hasSwitchedSource.value && showSourceSwitchHint.value ? 1 : "",
+        aE: common_vendor.o(showMusicToggle),
+        aF: showAddToModalFlag.value
       }, showAddToModalFlag.value ? {
-        aE: common_vendor.p({
+        aG: common_vendor.p({
           type: "fas",
           name: "xmark",
           size: "20",
           color: "#999"
         }),
-        aF: common_vendor.o(closeAddToModal),
-        aG: common_vendor.p({
+        aH: common_vendor.o(closeAddToModal),
+        aI: common_vendor.p({
           type: "fas",
           name: "plus",
           size: "18",
           color: "#00d7cd"
         }),
-        aH: common_vendor.o(createNewList),
-        aI: common_vendor.f(availableLists.value, (list, k0, i0) => {
+        aJ: common_vendor.o(createNewList),
+        aK: common_vendor.f(availableLists.value, (list, k0, i0) => {
           return {
             a: "54811c87-17-" + i0,
             b: common_vendor.p({
@@ -1504,50 +1559,59 @@ const _sfc_main = {
             i: common_vendor.o(($event) => addToList(list.id), list.id)
           };
         }),
-        aJ: common_vendor.o(() => {
+        aL: common_vendor.o(() => {
         }),
-        aK: common_vendor.o(closeAddToModal)
+        aM: common_vendor.o(closeAddToModal)
       } : {}, {
-        aL: showSleepTimerPopupFlag.value
+        aN: showSleepTimerPopupFlag.value
       }, showSleepTimerPopupFlag.value ? common_vendor.e({
-        aM: common_vendor.p({
+        aO: common_vendor.p({
           type: "fas",
           name: "xmark",
           size: "16",
           color: "#6b7280"
         }),
-        aN: common_vendor.o(closeSleepTimerPopup),
-        aO: sleepTimerRemaining.value > 0
+        aP: common_vendor.o(closeSleepTimerPopup),
+        aQ: sleepTimerRemaining.value > 0
       }, sleepTimerRemaining.value > 0 ? {
-        aP: common_vendor.t(formatSleepTimerRemaining.value),
-        aQ: common_vendor.o(cancelSleepTimer)
+        aR: common_vendor.t(formatSleepTimerRemaining.value),
+        aS: common_vendor.o(cancelSleepTimer)
       } : {}, {
-        aR: common_vendor.f(hourOptions.value, (hour, index, i0) => {
+        aT: common_vendor.f(hourOptions.value, (hour, index, i0) => {
           return {
             a: common_vendor.t(hour),
             b: index
           };
         }),
-        aS: common_vendor.f(minuteOptions.value, (minute, index, i0) => {
+        aU: common_vendor.f(minuteOptions.value, (minute, index, i0) => {
           return {
             a: common_vendor.t(minute),
             b: index
           };
         }),
-        aT: sleepTimerPickerValue.value,
-        aU: common_vendor.o(onSleepTimerPickerChange),
-        aV: common_vendor.o(closeSleepTimerPopup),
-        aW: common_vendor.o(confirmSleepTimerSelection),
-        aX: common_vendor.o(() => {
+        aV: sleepTimerPickerValue.value,
+        aW: common_vendor.o(onSleepTimerPickerChange),
+        aX: common_vendor.o(closeSleepTimerPopup),
+        aY: common_vendor.o(confirmSleepTimerSelection),
+        aZ: common_vendor.o(() => {
         }),
-        aY: common_vendor.o(closeSleepTimerPopup)
+        ba: common_vendor.o(closeSleepTimerPopup)
       }) : {}, {
-        aZ: common_vendor.o(closeComment),
-        ba: common_vendor.p({
+        bb: common_vendor.o(closeComment),
+        bc: common_vendor.p({
           show: showCommentFlag.value,
           ["music-info"]: originalSong.value
         }),
-        bb: darkMode.value ? 1 : ""
+        bd: common_vendor.o(closeMusicToggleModal),
+        be: common_vendor.o(handleToggleConfirm),
+        bf: common_vendor.o(handleTogglePreview),
+        bg: common_vendor.p({
+          visible: showMusicToggleModal.value,
+          ["original-song"]: toggleOriginalSong.value,
+          ["list-id"]: null,
+          ["dark-mode"]: darkMode.value
+        }),
+        bh: darkMode.value ? 1 : ""
       });
     };
   }

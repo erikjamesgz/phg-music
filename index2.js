@@ -40,15 +40,9 @@ const _sfc_main = {
       paddingTop: `${statusBarHeight.value}px`
     }));
     const sidebarStyle = common_vendor.computed(() => {
-      var _a;
-      const systemInfo = common_vendor.index.getSystemInfoSync();
-      const rpxToPx = systemInfo.windowWidth / 750;
-      const tabBarHeight = 140 * rpxToPx;
-      const safeAreaBottom = ((_a = systemInfo.safeAreaInsets) == null ? void 0 : _a.bottom) || 0;
-      const bottomHeight = tabBarHeight + safeAreaBottom;
       return {
         paddingTop: `${statusBarHeight.value}px`,
-        paddingBottom: `${bottomHeight}px`
+        paddingBottom: `${totalBottomHeight.value}px`
       };
     });
     const trialListCount = common_vendor.computed(() => store_modules_list.listStore.state.defaultList.list.length);
@@ -156,13 +150,23 @@ const _sfc_main = {
       darkMode.value = data.isDark;
       utils_system.setStatusBarTextColor(data.isDark ? "light" : "black");
     };
+    const handleImportedPlaylistsChanged = () => {
+      console.log("[Playlist] 收到已导入歌单变化事件，刷新列表");
+      const importedList = common_vendor.index.getStorageSync("imported_playlists") || [];
+      importedPlaylists.value = importedList;
+      console.log("[Playlist] 已刷新已导入歌单:", importedList.length, "个");
+    };
     common_vendor.onMounted(() => {
       common_vendor.index.$on("themeChanged", handleThemeChanged);
+      common_vendor.index.$on("imported-playlists-changed", handleImportedPlaylistsChanged);
       console.log("[Playlist] 已注册主题变化监听");
+      console.log("[Playlist] 已注册已导入歌单变化监听");
     });
     common_vendor.onUnmounted(() => {
       common_vendor.index.$off("themeChanged", handleThemeChanged);
+      common_vendor.index.$off("imported-playlists-changed", handleImportedPlaylistsChanged);
       console.log("[Playlist] 已移除主题变化监听");
+      console.log("[Playlist] 已移除已导入歌单变化监听");
     });
     const currentPlaylistId = common_vendor.ref("trial");
     const currentPlaylist = common_vendor.reactive({
@@ -1007,12 +1011,14 @@ const _sfc_main = {
         }
       } catch (error) {
         console.error("[autoUpdatePlaylist] 自动更新失败:", error);
-        const playlistSongs = playlistData.songs || [];
-        songs.value = [...playlistSongs];
-        currentPlaylist.name = playlistData.name;
-        currentPlaylist.coverImgUrl = playlistData.coverImgUrl;
-        currentPlaylist.trackCount = playlistSongs.length;
-        return playlistSongs;
+        if (currentPlaylistId.value === playlistData.id) {
+          const playlistSongs = playlistData.songs || [];
+          songs.value = [...playlistSongs];
+          currentPlaylist.name = playlistData.name;
+          currentPlaylist.coverImgUrl = playlistData.coverImgUrl;
+          currentPlaylist.trackCount = playlistSongs.length;
+        }
+        return playlistData.songs || [];
       } finally {
         showAutoUpdateToast.value = false;
       }
@@ -1293,11 +1299,12 @@ const _sfc_main = {
               autoUpdatePlaylist(importedPlaylist, false).then((updatedSongs) => {
                 console.log("[Playlist] 自动更新完成，更新歌曲列表");
                 isPlaylistLoading.value = false;
-                if (updatedSongs && updatedSongs.length > 0) {
+                if (currentPlaylistId.value === importedPlaylist.id && updatedSongs && updatedSongs.length > 0) {
                   setSongList(updatedSongs);
                   showLoadingToast.value = false;
                 } else {
                   showLoadingToast.value = false;
+                  console.log("[Playlist] 自动更新完成，但当前显示的是其他歌单，不更新页面");
                 }
                 batchAutoUpdatePlaylists();
               });
@@ -1564,7 +1571,7 @@ const _sfc_main = {
             c: common_vendor.t(playlist.name),
             d: common_vendor.t(playlist.trackCount || 0),
             e: common_vendor.t(playlist.platform),
-            f: "6b85e9a1-3-" + i0,
+            f: "0879bfb8-3-" + i0,
             g: common_vendor.o(($event) => showPlaylistContextMenu(playlist, index, "imported"), playlist.id),
             h: playlist.id,
             i: currentPlaylistId.value === playlist.id ? 1 : "",
@@ -1584,7 +1591,7 @@ const _sfc_main = {
             b: common_vendor.o(($event) => handlePlaylistImageError($event, playlist), playlist.id),
             c: common_vendor.t(playlist.name),
             d: common_vendor.t(playlist.trackCount || 0),
-            e: "6b85e9a1-4-" + i0,
+            e: "0879bfb8-4-" + i0,
             f: common_vendor.o(($event) => showPlaylistContextMenu(playlist, index, "custom"), playlist.id),
             g: playlist.id,
             h: currentPlaylistId.value === playlist.id ? 1 : "",
@@ -1597,23 +1604,28 @@ const _sfc_main = {
         })
       } : {}, {
         v: common_vendor.o(createNewPlaylist),
-        w: common_vendor.o(importPlaylist),
-        x: showSidebar.value ? 1 : "",
-        y: common_vendor.s(sidebarStyle.value),
-        z: common_vendor.p({
+        w: common_vendor.p({
+          name: "link",
+          size: "6",
+          color: "#fff"
+        }),
+        x: common_vendor.o(importPlaylist),
+        y: showSidebar.value ? 1 : "",
+        z: common_vendor.s(sidebarStyle.value),
+        A: common_vendor.p({
           name: "location-crosshairs",
           size: "18",
           color: "#fff"
         }),
-        A: common_vendor.o(locateCurrentSong),
-        B: common_vendor.sr(virtualListRef, "6b85e9a1-6", {
+        B: common_vendor.o(locateCurrentSong),
+        C: common_vendor.sr(virtualListRef, "0879bfb8-7", {
           "k": "virtualListRef"
         }),
-        C: common_vendor.o(onScrollToLower),
-        D: common_vendor.o(onScrollHandler),
-        E: common_vendor.o(onVirtualItemClick),
-        F: common_vendor.o(onVirtualMoreClick),
-        G: common_vendor.p({
+        D: common_vendor.o(onScrollToLower),
+        E: common_vendor.o(onScrollHandler),
+        F: common_vendor.o(onVirtualItemClick),
+        G: common_vendor.o(onVirtualMoreClick),
+        H: common_vendor.p({
           items: songs.value,
           ["item-height"]: 60,
           height: virtualListHeight.value,
@@ -1624,118 +1636,121 @@ const _sfc_main = {
           ["dark-mode"]: darkMode.value,
           ["bottom-safe-height"]: common_vendor.unref(totalBottomHeight)
         }),
-        H: showImportModal.value
+        I: showImportModal.value
       }, showImportModal.value ? {
-        I: common_vendor.t(importModalTitle.value),
-        J: common_vendor.p({
+        J: common_vendor.t(importModalTitle.value),
+        K: common_vendor.p({
           name: "xmark",
           size: "20",
           color: "#999"
         }),
-        K: common_vendor.o(closeImportModal),
-        L: importLink.value,
-        M: common_vendor.o(($event) => importLink.value = $event.detail.value),
-        N: common_vendor.o(closeImportModal),
-        O: common_vendor.o(confirmImport),
-        P: common_vendor.o(() => {
+        L: common_vendor.o(closeImportModal),
+        M: importLink.value,
+        N: common_vendor.o(($event) => importLink.value = $event.detail.value),
+        O: common_vendor.o(closeImportModal),
+        P: common_vendor.o(confirmImport),
+        Q: common_vendor.o(() => {
         }),
-        Q: common_vendor.o(closeImportModal)
+        R: common_vendor.o(closeImportModal)
       } : {}, {
-        R: showSongMenuFlag.value
+        S: showSongMenuFlag.value
       }, showSongMenuFlag.value ? common_vendor.e({
-        S: selectedSong.value
+        T: selectedSong.value
       }, selectedSong.value ? {
-        T: common_vendor.t(selectedSong.value.name),
-        U: common_vendor.t(formatSingerName(selectedSong.value.ar || selectedSong.value.singer))
+        U: common_vendor.t(selectedSong.value.name),
+        V: common_vendor.t(formatSingerName(selectedSong.value.ar || selectedSong.value.singer))
       } : {}, {
-        V: common_vendor.p({
+        W: common_vendor.p({
           type: "fas",
-          name: "rotate",
+          name: "clone",
           size: "20",
           color: "#3b82f6"
         }),
-        W: common_vendor.o(toggleMusicSource),
-        X: common_vendor.p({
+        X: common_vendor.o(toggleMusicSource),
+        Y: common_vendor.p({
           type: "fas",
           name: "trash",
           size: "20",
           color: "#ef4444"
         }),
-        Y: common_vendor.t(currentPlaylistId.value.value === "favorite" || currentPlaylistId.value.value === common_vendor.unref(store_modules_list.LIST_IDS).LOVE ? "取消收藏并移除" : "从列表中移除"),
-        Z: common_vendor.o(removeSongFromList),
-        aa: common_vendor.o(() => {
+        Z: common_vendor.t(currentPlaylistId.value.value === "favorite" || currentPlaylistId.value.value === common_vendor.unref(store_modules_list.LIST_IDS).LOVE ? "取消收藏并移除" : "从列表中移除"),
+        aa: common_vendor.o(removeSongFromList),
+        ab: common_vendor.o(() => {
         }),
-        ab: common_vendor.o(closeSongMenu)
+        ac: common_vendor.unref(totalBottomHeight) + "px",
+        ad: common_vendor.o(closeSongMenu)
       }) : {}, {
-        ac: showPlaylistMenu.value
+        ae: showPlaylistMenu.value
       }, showPlaylistMenu.value ? common_vendor.e({
-        ad: menuPlaylistInfo.value
+        af: menuPlaylistInfo.value
       }, menuPlaylistInfo.value ? {
-        ae: common_vendor.t(menuPlaylistInfo.value.name),
-        af: common_vendor.t(menuPlaylistType.value === "imported" ? `从${menuPlaylistInfo.value.platform || ""}导入` : "自定义歌单")
+        ag: common_vendor.t(menuPlaylistInfo.value.name),
+        ah: common_vendor.t(menuPlaylistType.value === "imported" ? `从${menuPlaylistInfo.value.platform || ""}导入` : "自定义歌单")
       } : {}, {
-        ag: common_vendor.p({
+        ai: common_vendor.p({
           type: "fas",
           name: "pen",
           size: "20",
           color: "#3b82f6"
         }),
-        ah: common_vendor.o(renamePlaylist),
-        ai: menuPlaylistType.value === "imported" && ((_a = menuPlaylistInfo.value) == null ? void 0 : _a.canAutoUpdate) && ((_b = menuPlaylistInfo.value) == null ? void 0 : _b.isFromImport)
+        aj: common_vendor.o(renamePlaylist),
+        ak: menuPlaylistType.value === "imported" && ((_a = menuPlaylistInfo.value) == null ? void 0 : _a.canAutoUpdate) && ((_b = menuPlaylistInfo.value) == null ? void 0 : _b.isFromImport)
       }, menuPlaylistType.value === "imported" && ((_c = menuPlaylistInfo.value) == null ? void 0 : _c.canAutoUpdate) && ((_d = menuPlaylistInfo.value) == null ? void 0 : _d.isFromImport) ? {
-        aj: common_vendor.p({
+        al: common_vendor.p({
           type: "fas",
           name: ((_e = menuPlaylistInfo.value) == null ? void 0 : _e.autoUpdate) ? "check-circle" : "clock-rotate-left",
           size: "20",
           color: ((_f = menuPlaylistInfo.value) == null ? void 0 : _f.autoUpdate) ? "#10b981" : "#999"
         }),
-        ak: common_vendor.t(((_g = menuPlaylistInfo.value) == null ? void 0 : _g.autoUpdate) ? "已开启自动更新" : "开启自动更新"),
-        al: ((_h = menuPlaylistInfo.value) == null ? void 0 : _h.autoUpdate) ? "#10b981" : "#999",
-        am: common_vendor.o(toggleAutoUpdate)
+        am: common_vendor.t(((_g = menuPlaylistInfo.value) == null ? void 0 : _g.autoUpdate) ? "已开启自动更新" : "开启自动更新"),
+        an: ((_h = menuPlaylistInfo.value) == null ? void 0 : _h.autoUpdate) ? "#10b981" : "#999",
+        ao: common_vendor.o(toggleAutoUpdate)
       } : {}, {
-        an: menuPlaylistType.value === "imported" && ((_i = menuPlaylistInfo.value) == null ? void 0 : _i.canAutoUpdate) && ((_j = menuPlaylistInfo.value) == null ? void 0 : _j.isFromImport)
+        ap: menuPlaylistType.value === "imported" && ((_i = menuPlaylistInfo.value) == null ? void 0 : _i.canAutoUpdate) && ((_j = menuPlaylistInfo.value) == null ? void 0 : _j.isFromImport)
       }, menuPlaylistType.value === "imported" && ((_k = menuPlaylistInfo.value) == null ? void 0 : _k.canAutoUpdate) && ((_l = menuPlaylistInfo.value) == null ? void 0 : _l.isFromImport) ? {
-        ao: common_vendor.p({
+        aq: common_vendor.p({
           type: "fas",
           name: "rotate",
           size: "20",
           color: "#10b981"
         }),
-        ap: common_vendor.o(syncPlaylist)
+        ar: common_vendor.o(syncPlaylist)
       } : {}, {
-        aq: common_vendor.p({
+        as: common_vendor.p({
           type: "fas",
           name: "trash",
           size: "20",
           color: "#ef4444"
         }),
-        ar: common_vendor.o(removePlaylist),
-        as: common_vendor.o(() => {
+        at: common_vendor.o(removePlaylist),
+        av: common_vendor.o(() => {
         }),
-        at: common_vendor.o(closePlaylistMenu)
+        aw: common_vendor.unref(totalBottomHeight) + "px",
+        ax: common_vendor.o(closePlaylistMenu)
       }) : {}, {
-        av: common_vendor.o(closeMusicToggleModal),
-        aw: common_vendor.o(handleToggleConfirm),
-        ax: common_vendor.o(handleTogglePreview),
-        ay: common_vendor.p({
+        ay: common_vendor.o(closeMusicToggleModal),
+        az: common_vendor.o(handleToggleConfirm),
+        aA: common_vendor.o(handleTogglePreview),
+        aB: common_vendor.p({
           visible: showMusicToggleModal.value,
           ["original-song"]: toggleOriginalSong.value,
           ["list-id"]: currentPlaylistId.value,
-          ["dark-mode"]: darkMode.value
+          ["dark-mode"]: darkMode.value,
+          ["bottom-safe-height"]: common_vendor.unref(totalBottomHeight)
         }),
-        az: common_vendor.p({
+        aC: common_vendor.p({
           visible: showAutoUpdateToast.value,
           ["playlist-name"]: autoUpdatePlaylistName.value
         }),
-        aA: common_vendor.p({
+        aD: common_vendor.p({
           visible: showLoadingToast.value,
           title: loadingToastTitle.value,
           subtitle: loadingToastSubtitle.value
         }),
-        aB: darkMode.value ? 1 : ""
+        aE: darkMode.value ? 1 : ""
       });
     };
   }
 };
-const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-6b85e9a1"]]);
+const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-0879bfb8"]]);
 exports.MiniProgramPage = MiniProgramPage;

@@ -471,6 +471,13 @@
     max-height: 272rpx;
 }
 }
+/* 华为 pura x 内屏适配 - 440*707 */
+@media screen and (min-width: 430px) and (max-width: 460px) and (min-height: 700px) and (max-height: 720px) {
+.turntable {
+    max-width: 395rpx;
+    max-height: 395rpx;
+}
+}
 .turntable.is-playing {
   animation-play-state: running;
 }
@@ -1794,6 +1801,43 @@ to {
 /* 定时播放按钮激活状态 */
 .extra-btn.is-active {
   background: rgba(0, 215, 205, 0.1);
+}
+
+/* 换源提示 */
+.extra-btn.has-switched-source {
+  position: relative;
+  background: rgba(255, 107, 107, 0.1);
+  border: 2rpx solid rgba(255, 107, 107, 0.3);
+}
+.source-switch-hint {
+  position: absolute;
+  top: -28rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%);
+  color: #ffffff;
+  font-size: 18rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 12rpx;
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: 0 2rpx 8rpx rgba(255, 107, 107, 0.3);
+  animation: hintPulse 2s ease-in-out infinite;
+}
+@keyframes hintPulse {
+0%, 100% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+}
+50% {
+    opacity: 0.8;
+    transform: translateX(-50%) scale(0.95);
+}
+}
+/* 暗黑模式换源提示 */
+.player-page.dark-mode .extra-btn.has-switched-source {
+  background: rgba(255, 107, 107, 0.15);
+  border-color: rgba(255, 107, 107, 0.4);
 }
 
 /* 定时播放徽章 */

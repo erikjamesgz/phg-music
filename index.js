@@ -3,6 +3,7 @@ const common_vendor = require("./common/vendor.js");
 const store_modules_list = require("./store/modules/list.js");
 const store_modules_player = require("./store/modules/player.js");
 const store_modules_system = require("./store/modules/system.js");
+const utils_api_songlist = require("./utils/api/songlist.js");
 const utils_api_songlistDirect = require("./utils/api/songlist-direct.js");
 const utils_api_music = require("./utils/api/music.js");
 const utils_musicUrlCache = require("./utils/musicUrlCache.js");
@@ -699,7 +700,7 @@ const _sfc_main = {
       }
     };
     const playBanner = async (banner) => {
-      var _a;
+      var _a, _b;
       console.log("[Banner] 播放按钮点击:", banner);
       if (banner.source === "kw" && banner.targetId) {
         common_vendor.index.showLoading({
@@ -774,6 +775,13 @@ const _sfc_main = {
           };
           store_modules_list.listStore.setPlayMusicInfo(store_modules_list.LIST_IDS.TEMP, musicInfo, false);
           store_modules_player.playerStore.playSong(musicInfo);
+          store_modules_player.playerStore.addToListHistory({
+            id: playlistId,
+            name: banner.typeTitle || "歌单推荐",
+            source: "kw",
+            coverUrl: banner.imageUrl || "",
+            trackCount: ((_b = playlistDetail.list) == null ? void 0 : _b.length) || 0
+          });
           common_vendor.index.showToast({
             title: `正在播放: ${banner.typeTitle}`,
             icon: "none",
@@ -796,11 +804,130 @@ const _sfc_main = {
         });
       }
     };
-    const collectBanner = (banner) => {
+    const simplifySongs = (songs) => {
+      if (!songs || !Array.isArray(songs))
+        return [];
+      return songs.map((song) => {
+        var _a, _b;
+        const simplified = {
+          id: song.id,
+          name: song.name,
+          singer: song.singer || (song.ar ? song.ar.map((a) => a.name).join("/") : ""),
+          ar: song.ar || (song.singer ? song.singer.split("、").map((name) => ({ name })) : []),
+          album: song.album || song.albumName || (song.al ? song.al.name : ""),
+          duration: song.duration || song.dt || song.interval,
+          dt: song.dt || song.duration || song.interval,
+          interval: song.interval || song.dt || song.duration,
+          source: song.source
+        };
+        if (song.songmid)
+          simplified.songmid = song.songmid;
+        if (song.hash)
+          simplified.hash = song.hash;
+        if (song.copyrightId)
+          simplified.copyrightId = song.copyrightId;
+        if (song.img || song.albumPic || ((_a = song.al) == null ? void 0 : _a.picUrl)) {
+          simplified.img = song.img || song.albumPic || ((_b = song.al) == null ? void 0 : _b.picUrl);
+        }
+        return simplified;
+      });
+    };
+    const getPlatformName = (source) => {
+      const platformMap = {
+        "kw": "酷我音乐",
+        "tx": "QQ音乐",
+        "kg": "酷狗音乐",
+        "wy": "网易云音乐",
+        "mg": "咪咕音乐"
+      };
+      return platformMap[source] || "未知平台";
+    };
+    const collectBanner = async (banner) => {
       console.log("[Banner] 收藏按钮点击:", banner);
-      common_vendor.index.showToast({
-        title: "收藏功能开发中",
-        icon: "none"
+      if (!banner.targetId) {
+        common_vendor.index.showToast({
+          title: "歌单信息不完整",
+          icon: "none"
+        });
+        return;
+      }
+      const sourceListId = banner.targetId;
+      const source = banner.source || "kw";
+      let importedList = common_vendor.index.getStorageSync("imported_playlists") || [];
+      const existsIndex = importedList.findIndex((p) => p.sourceListId === sourceListId);
+      if (existsIndex !== -1) {
+        common_vendor.index.showToast({
+          title: "歌单已收藏",
+          icon: "none"
+        });
+        return;
+      }
+      common_vendor.index.showModal({
+        title: "收藏歌单",
+        content: `是否将「${banner.typeTitle}」收藏到我的歌单？`,
+        confirmText: "收藏",
+        cancelText: "取消",
+        success: async (res) => {
+          var _a, _b, _c;
+          if (res.confirm) {
+            common_vendor.index.showLoading({ title: "获取歌单中..." });
+            try {
+              console.log("[Banner] 开始获取歌单详情, source:", source, "id:", sourceListId);
+              let result;
+              if (source === "kw" && sourceListId.includes("digest-")) {
+                result = await utils_api_songlistDirect.getListDetailDirect("kw", sourceListId, 1);
+              } else if (source === "mg") {
+                result = await utils_api_songlistDirect.getListDetailDirect("mg", sourceListId, 1);
+              } else {
+                result = await utils_api_songlist.getListDetail(source, sourceListId, 1);
+              }
+              console.log("[Banner] 获取歌单详情结果:", result);
+              if (!result || !result.list || result.list.length === 0) {
+                common_vendor.index.showToast({
+                  title: "获取歌单失败",
+                  icon: "none"
+                });
+                common_vendor.index.hideLoading();
+                return;
+              }
+              const simplifiedSongs = simplifySongs(result.list);
+              console.log("[Banner] 精简后歌曲数量:", simplifiedSongs.length, "首");
+              const importedPlaylist = {
+                id: sourceListId,
+                name: banner.typeTitle || result.name || "未知歌单",
+                coverImgUrl: banner.imageUrl || ((_a = result.info) == null ? void 0 : _a.coverImgUrl),
+                trackCount: result.list.length,
+                source,
+                sourceListId,
+                link: sourceListId,
+                platform: getPlatformName(source),
+                songs: simplifiedSongs,
+                importedAt: Date.now(),
+                playCount: banner.playCount || ((_b = result.info) == null ? void 0 : _b.playCount) || 0,
+                description: banner.subtitle || ((_c = result.info) == null ? void 0 : _c.description) || "",
+                isFromImport: false,
+                canAutoUpdate: false,
+                autoUpdate: false
+              };
+              importedList.unshift(importedPlaylist);
+              common_vendor.index.setStorageSync("imported_playlists", importedList);
+              common_vendor.index.$emit("imported-playlists-changed");
+              console.log("[Banner] 已发送 imported-playlists-changed 事件");
+              common_vendor.index.showToast({
+                title: `收藏成功（${result.list.length}首）`,
+                icon: "success"
+              });
+            } catch (error) {
+              console.error("[Banner] 收藏失败:", error);
+              common_vendor.index.showToast({
+                title: "收藏失败: " + (error.message || "未知错误"),
+                icon: "none"
+              });
+            } finally {
+              common_vendor.index.hideLoading();
+            }
+          }
+        }
       });
     };
     const navigateTo = (url) => {
@@ -855,42 +982,42 @@ const _sfc_main = {
       });
     };
     const goToDailyRecommend = async () => {
-      var _a, _b, _c;
+      var _a;
       common_vendor.index.showLoading({
         title: "获取推荐中...",
         mask: true
       });
       try {
         const res = await common_vendor.index.request({
-          url: "https://app.c.nf.migu.cn/MIGUM2.0/v1.0/content/querycontentbyId.do",
+          url: "http://wapi.kuwo.cn/api/pc/classify/playlist/getRcmPlayList",
           method: "GET",
           data: {
-            columnId: "15245552",
-            count: 20
+            loginUid: 0,
+            loginSid: 0,
+            appUid: 76039576,
+            pn: 1,
+            rn: 30,
+            order: "hot"
           },
           header: {
             "Referer": "https://servicewechat.com/wx2d02f54a4e4c4027/devtools/page-frame.html"
           }
         });
-        if (res.statusCode !== 200 || ((_a = res.data) == null ? void 0 : _a.code) !== "000000") {
+        if (res.statusCode !== 200 || res.data.code !== 200) {
           throw new Error("获取推荐失败");
         }
-        const contents = (_c = (_b = res.data) == null ? void 0 : _b.columnInfo) == null ? void 0 : _c.contents;
-        if (!contents || !Array.isArray(contents)) {
+        const list = (_a = res.data.data) == null ? void 0 : _a.data;
+        if (!list || !Array.isArray(list) || list.length === 0) {
           throw new Error("无推荐数据");
         }
-        const songs = contents.map((item) => {
-          var _a2, _b2;
-          const info = item.objectInfo || item;
-          return {
-            id: info.songId || info.id,
-            name: decodeName(info.songName || info.name),
-            singer: decodeName(info.singerName || info.singer),
-            album: decodeName(info.albumName || info.album),
-            img: ((_b2 = (_a2 = info.albumImgs) == null ? void 0 : _a2[0]) == null ? void 0 : _b2.img) || info.landscapImg || "",
-            source: "mg"
-          };
-        });
+        const randomIndex = Math.floor(Math.random() * list.length);
+        const selectedPlaylist = list[randomIndex];
+        console.log("[DailyRecommend] 随机选择歌单:", selectedPlaylist.name, "ID:", selectedPlaylist.id);
+        const playlistDetail = await utils_api_songlistDirect.getListDetailDirect("kw", `digest-${selectedPlaylist.digest}__${selectedPlaylist.id}`, 1);
+        if (!playlistDetail.list || playlistDetail.list.length === 0) {
+          throw new Error("歌单为空");
+        }
+        const songs = playlistDetail.list;
         store_modules_list.listStore.clearTempList();
         const playlistId = `daily_${Date.now()}`;
         store_modules_list.listStore.setTempList(
@@ -898,20 +1025,20 @@ const _sfc_main = {
           songs,
           {
             id: playlistId,
-            source: "mg",
-            name: "每日推荐"
+            source: "kw",
+            name: selectedPlaylist.name || "每日推荐"
           }
         );
         store_modules_list.listStore.setPlayerListId(store_modules_list.LIST_IDS.TEMP);
         const firstSong = songs[0];
         const quality = store_modules_system.systemStore.getState().audioQuality || "128k";
-        const songSource = firstSong.source || "mg";
+        const songSource = firstSong.source || "kw";
         let playUrl = await utils_musicUrlCache.getCachedMusicUrl(firstSong.id, quality, songSource);
         let lyricData = null;
         if (!playUrl) {
           const requestData = utils_musicParams.buildMusicRequestParams({
             ...firstSong,
-            source: "mg"
+            source: "kw"
           }, quality);
           if (!requestData) {
             throw new Error("构建请求参数失败");
@@ -957,8 +1084,15 @@ const _sfc_main = {
         };
         store_modules_list.listStore.setPlayMusicInfo(store_modules_list.LIST_IDS.TEMP, musicInfo, false);
         store_modules_player.playerStore.playSong(musicInfo);
+        store_modules_player.playerStore.addToListHistory({
+          id: `digest-${selectedPlaylist.digest}__${selectedPlaylist.id}`,
+          name: selectedPlaylist.name || "每日推荐",
+          source: "kw",
+          coverUrl: utils_imageProxy.proxyImageUrl(selectedPlaylist.img) || "",
+          trackCount: songs.length || 0
+        });
         common_vendor.index.showToast({
-          title: `正在播放: 每日推荐`,
+          title: `正在播放: ${selectedPlaylist.name || "每日推荐"}`,
           icon: "none",
           duration: 2e3
         });

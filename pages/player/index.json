@@ -5,6 +5,7 @@
   "usingComponents": {
     "roc-icon-plus": "../../uni_modules/roc-icon-plus/components/roc-icon-plus/roc-icon-plus",
     "danmaku-view": "../../components/danmaku/DanmakuView",
-    "music-comment": "../../components/comment/MusicComment"
+    "music-comment": "../../components/comment/MusicComment",
+    "music-toggle-modal": "../../components/player/MusicToggleModal"
   }
 }

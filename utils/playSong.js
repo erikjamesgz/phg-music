@@ -28,13 +28,40 @@ const playSongCommon = async (song, options = {}) => {
     console.log("[playSongCommon] 使用音质:", quality);
     const previousSongId = (_a = store_modules_player.playerStore.state.currentSong) == null ? void 0 : _a.id;
     console.log("[playSongCommon] 之前播放的歌曲ID:", previousSongId);
+    let albumNameForList = "";
+    if (typeof song.album === "string") {
+      albumNameForList = song.album;
+    } else if (song.album && typeof song.album === "object") {
+      albumNameForList = song.album.name || "";
+    }
+    let singerStr = "";
+    let singerArr = [];
+    if (song.singer && typeof song.singer === "string") {
+      singerStr = song.singer;
+      singerArr = song.singer.split("/").map((name) => ({ name: name.trim() }));
+    } else if (song.ar && Array.isArray(song.ar)) {
+      singerArr = song.ar;
+      singerStr = song.ar.map((a) => a.name).join("/");
+    } else if (song.artists && Array.isArray(song.artists)) {
+      singerArr = song.artists;
+      singerStr = song.artists.map((a) => a.name).join("/");
+    }
+    let alObjForList = null;
+    if (song.al && typeof song.al === "object") {
+      alObjForList = song.al;
+    } else if (song.album && typeof song.album === "object" && song.album.picUrl) {
+      alObjForList = { picUrl: song.album.picUrl };
+    } else if (song.picUrl || song.img) {
+      alObjForList = { picUrl: song.picUrl || song.img };
+    }
     if (addToDefaultList && listId === store_modules_list.LIST_IDS.DEFAULT) {
       const songToAdd = {
         id: song.id,
         name: song.name,
-        singer: song.singer || (song.ar ? song.ar.map((a) => a.name).join("/") : ""),
-        ar: song.ar || (song.singer ? song.singer.split("/").map((name) => ({ name })) : []),
-        album: song.album || song.albumName || ((_b = song.al) == null ? void 0 : _b.name) || "",
+        singer: singerStr,
+        ar: singerArr,
+        album: albumNameForList || song.albumName || ((_b = song.al) == null ? void 0 : _b.name) || "",
+        al: alObjForList,
         duration: song.dt || song.interval || song.duration,
         source,
         songmid: song.songmid,
@@ -52,12 +79,27 @@ const playSongCommon = async (song, options = {}) => {
       }
     }
     store_modules_list.listStore.setPlayerListId(listId);
+    let albumName = "";
+    if (typeof song.album === "string") {
+      albumName = song.album;
+    } else if (song.album && typeof song.album === "object") {
+      albumName = song.album.name || "";
+    }
+    let alObj = null;
+    if (song.al && typeof song.al === "object") {
+      alObj = song.al;
+    } else if (song.album && typeof song.album === "object" && song.album.picUrl) {
+      alObj = { picUrl: song.album.picUrl };
+    } else if (song.picUrl || song.img) {
+      alObj = { picUrl: song.picUrl || song.img };
+    }
     const initialMusicInfo = {
       id: song.id,
       name: song.name,
-      singer: song.singer || (song.ar ? song.ar.map((a) => a.name).join("/") : ""),
-      ar: song.ar || (song.singer ? song.singer.split("/").map((name) => ({ name })) : []),
-      album: song.album || song.albumName || ((_d = song.al) == null ? void 0 : _d.name) || "",
+      singer: singerStr,
+      ar: singerArr,
+      album: albumName || song.albumName || ((_d = song.al) == null ? void 0 : _d.name) || "",
+      al: alObj,
       duration: song.dt || song.interval || song.duration,
       source,
       songmid: song.songmid,

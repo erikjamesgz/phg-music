@@ -23,12 +23,66 @@ const _sfc_main = {
     darkMode: {
       type: Boolean,
       default: false
+    },
+    bottomSafeHeight: {
+      type: Number,
+      default: 0
     }
   },
   emits: ["close", "confirm", "preview"],
   setup(__props, { emit: __emit }) {
     const props = __props;
     const emit = __emit;
+    const screenWidth = common_vendor.ref(375);
+    const screenHeight = common_vendor.ref(667);
+    const scaleRatio = common_vendor.ref(1);
+    const modalStyle = common_vendor.computed(() => {
+      if (scaleRatio.value === 1)
+        return "";
+      let maxHeight;
+      if (scaleRatio.value <= 0.4) {
+        maxHeight = 140;
+      } else if (scaleRatio.value <= 0.5) {
+        maxHeight = 130;
+      } else if (scaleRatio.value <= 0.7) {
+        maxHeight = 120;
+      } else if (scaleRatio.value <= 0.85) {
+        maxHeight = 105;
+      } else {
+        maxHeight = 100;
+      }
+      return `zoom: ${scaleRatio.value}; max-height: ${maxHeight}vh;`;
+    });
+    const compareSectionStyle = common_vendor.computed(() => {
+      const basePadding = Math.max(20, props.bottomSafeHeight);
+      const paddingBottom = scaleRatio.value < 1 ? Math.ceil(basePadding / scaleRatio.value) : basePadding;
+      return `padding-bottom: ${paddingBottom}px;`;
+    });
+    const checkScreenSize = () => {
+      try {
+        const systemInfo = common_vendor.index.getSystemInfoSync();
+        screenWidth.value = systemInfo.screenWidth;
+        screenHeight.value = systemInfo.screenHeight;
+        const screenRatio = systemInfo.screenWidth / systemInfo.screenHeight;
+        if (systemInfo.screenWidth >= 1024) {
+          scaleRatio.value = 0.4;
+        } else if (systemInfo.screenWidth >= 768) {
+          scaleRatio.value = 0.5;
+        } else if (systemInfo.screenWidth >= 500) {
+          scaleRatio.value = 0.7;
+        } else if (systemInfo.screenWidth >= 430 && systemInfo.screenWidth <= 460 && systemInfo.screenHeight >= 700 && systemInfo.screenHeight <= 720) {
+          scaleRatio.value = 0.85;
+        } else {
+          scaleRatio.value = 1;
+        }
+        console.log("[MusicToggleModal] 屏幕尺寸:", systemInfo.screenWidth, "x", systemInfo.screenHeight, "宽高比:", screenRatio.toFixed(3), "弹窗宽度比例:", scaleRatio.value);
+      } catch (e) {
+        console.error("[MusicToggleModal] 获取屏幕尺寸失败:", e);
+      }
+    };
+    common_vendor.onMounted(() => {
+      checkScreenSize();
+    });
     const sourceList = common_vendor.ref([
       { id: "kw", name: "酷我" },
       { id: "kg", name: "酷狗" },
@@ -210,20 +264,8 @@ const _sfc_main = {
     };
     const previewSong = (song) => {
       console.log("[MusicToggleModal] 预览歌曲:", song.name);
+      selectedSong.value = song;
       emit("preview", song);
-    };
-    const showSongDetail = (song) => {
-      var _a;
-      console.log("[MusicToggleModal] 显示歌曲详情:", song);
-      common_vendor.index.showModal({
-        title: "歌曲详情",
-        content: `歌名: ${song.name}
-歌手: ${formatSinger(song.singer || song.artists)}
-专辑: ${song.albumName || ((_a = song.album) == null ? void 0 : _a.name) || "未知"}
-音源: ${getSourceName(song.source)}
-时长: ${song.interval || formatDuration(song.duration)}`,
-        showCancel: false
-      });
     };
     const confirmToggle = () => {
       if (!selectedSong.value || selectedSong.value.id === props.originalSong.id) {
@@ -323,54 +365,49 @@ const _sfc_main = {
           } : {}, {
             e: common_vendor.t(getSourceName(song.source)),
             f: common_vendor.t(song.interval || formatDuration(song.duration)),
-            g: "4b5696e1-1-" + i0,
+            g: "b9225df2-1-" + i0,
             h: common_vendor.o(($event) => previewSong(song), song.id || index),
-            i: "4b5696e1-2-" + i0,
-            j: common_vendor.o(($event) => showSongDetail(song), song.id || index),
-            k: song.id || index,
-            l: selectedSong.value && selectedSong.value.id === song.id ? 1 : "",
-            m: common_vendor.o(($event) => selectSong(song), song.id || index)
+            i: song.id || index,
+            j: selectedSong.value && selectedSong.value.id === song.id ? 1 : "",
+            k: common_vendor.o(($event) => selectSong(song), song.id || index)
           });
         }),
         k: common_vendor.p({
           type: "fas",
-          name: "play",
-          size: "16",
-          color: "#666"
-        }),
-        l: common_vendor.p({
-          type: "fas",
-          name: "circle-info",
+          name: "headphones",
           size: "16",
           color: "#666"
         })
       } : !loading.value && !error.value && searchResults.value.length === 0 ? {} : {}, {
         g: error.value,
         i: !loading.value && searchResults.value.length > 0,
-        m: !loading.value && !error.value && searchResults.value.length === 0,
-        n: __props.originalSong
+        l: !loading.value && !error.value && searchResults.value.length === 0,
+        m: __props.originalSong
       }, __props.originalSong ? common_vendor.e({
-        o: common_vendor.t(__props.originalSong.name),
-        p: common_vendor.t(getSourceName(__props.originalSong.source)),
-        q: common_vendor.t(__props.originalSong.interval || formatDuration(__props.originalSong.duration)),
-        r: common_vendor.t(formatSinger(__props.originalSong.singer || __props.originalSong.artists)),
-        s: selectedSong.value
+        n: common_vendor.t(__props.originalSong.name),
+        o: common_vendor.t(getSourceName(__props.originalSong.source)),
+        p: common_vendor.t(__props.originalSong.interval || formatDuration(__props.originalSong.duration)),
+        q: common_vendor.t(formatSinger(__props.originalSong.singer || __props.originalSong.artists)),
+        r: selectedSong.value
       }, selectedSong.value ? {
-        t: common_vendor.t(selectedSong.value.name),
-        v: common_vendor.t(getSourceName(selectedSong.value.source)),
-        w: common_vendor.t(selectedSong.value.interval || formatDuration(selectedSong.value.duration)),
-        x: common_vendor.t(formatSinger(selectedSong.value.singer || selectedSong.value.artists))
+        s: common_vendor.t(selectedSong.value.name),
+        t: common_vendor.t(getSourceName(selectedSong.value.source)),
+        v: common_vendor.t(selectedSong.value.interval || formatDuration(selectedSong.value.duration)),
+        w: common_vendor.t(formatSinger(selectedSong.value.singer || selectedSong.value.artists))
       } : {}, {
-        y: !selectedSong.value || selectedSong.value.id === __props.originalSong.id ? 1 : "",
-        z: common_vendor.o(confirmToggle)
+        x: !selectedSong.value || selectedSong.value.id === __props.originalSong.id ? 1 : "",
+        y: common_vendor.o(confirmToggle),
+        z: common_vendor.s(compareSectionStyle.value)
       }) : {}, {
         A: __props.darkMode ? 1 : "",
-        B: common_vendor.o(() => {
+        B: scaleRatio.value < 1 ? 1 : "",
+        C: common_vendor.s(modalStyle.value),
+        D: common_vendor.o(() => {
         }),
-        C: common_vendor.o(closeModal)
+        E: common_vendor.o(closeModal)
       }) : {});
     };
   }
 };
-const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-4b5696e1"]]);
+const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-b9225df2"]]);
 wx.createComponent(Component);

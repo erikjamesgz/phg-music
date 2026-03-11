@@ -9,6 +9,7 @@ const utils_imageProxy = require("./utils/imageProxy.js");
 const utils_playSong = require("./utils/playSong.js");
 const composables_usePageLifecycle = require("./composables/usePageLifecycle.js");
 const composables_useBottomHeight = require("./composables/useBottomHeight.js");
+const utils_musicPic = require("./utils/musicPic.js");
 if (!Math) {
   RocIconPlus();
 }
@@ -153,6 +154,15 @@ const _sfc_main = {
       }
       return playHistory.slice(0, 5);
     });
+    const recentPlaylistHistoryCount = common_vendor.computed(() => {
+      const listHistory = store_modules_player.playerStore.getState().playListHistory || [];
+      return listHistory.length;
+    });
+    const recentPlaylistHistory = common_vendor.computed(() => {
+      const listHistory = store_modules_player.playerStore.getState().playListHistory || [];
+      console.log("[recentPlaylistHistory] 歌单历史数据数量:", listHistory.length);
+      return listHistory.slice(0, 5);
+    });
     const deletedSongsCount = common_vendor.computed(() => {
       const deletedList = safeParse(common_vendor.index.getStorageSync("deleted_songs"), []);
       return deletedList.length;
@@ -231,17 +241,93 @@ const _sfc_main = {
       }
       return "未知歌手";
     };
-    const getSongCover = (song) => {
-      var _a, _b;
+    const formatAlbumName = (song) => {
+      var _a;
       if (!song)
+        return "未知专辑";
+      if (song.al && typeof song.al === "object" && song.al.name) {
+        return song.al.name;
+      }
+      if (typeof song.album === "string") {
+        return song.album;
+      } else if (song.album && typeof song.album === "object" && song.album.name) {
+        return song.album.name;
+      }
+      if (song.albumName)
+        return song.albumName;
+      if ((_a = song.al) == null ? void 0 : _a.name)
+        return song.al.name;
+      return "未知专辑";
+    };
+    const songCoverUrlCache = /* @__PURE__ */ new Map();
+    const getSongCover = (song) => {
+      var _a, _b, _c, _d;
+      if (!song) {
+        console.log("[getSongCover] 歌曲为空");
         return "/static/logo.png";
-      const coverUrl = ((_a = song.al) == null ? void 0 : _a.picUrl) || ((_b = song.album) == null ? void 0 : _b.picUrl) || song.picUrl || song.img || song.pic || song.cover || song.coverUrl;
+      }
+      const songId = song.id;
+      if (songId && songCoverUrlCache.has(songId)) {
+        return songCoverUrlCache.get(songId);
+      }
+      console.log("[getSongCover] 歌曲信息:", {
+        id: song.id,
+        name: song.name,
+        source: song.source,
+        picUrl: song.picUrl,
+        "al.picUrl": (_a = song.al) == null ? void 0 : _a.picUrl,
+        "album.picUrl": (_b = song.album) == null ? void 0 : _b.picUrl,
+        img: song.img
+      });
+      const source = song.source || song.sourceId;
+      const cachedUrl = utils_musicPic.getSongPicUrl(song, source);
+      if (cachedUrl) {
+        console.log("[getSongCover] 从缓存获取到图片:", cachedUrl);
+        if (songId) {
+          songCoverUrlCache.set(songId, cachedUrl);
+        }
+        return cachedUrl;
+      }
+      const coverUrl = song.picUrl || ((_c = song.al) == null ? void 0 : _c.picUrl) || ((_d = song.album) == null ? void 0 : _d.picUrl) || song.img || song.pic || song.cover || song.coverUrl;
       if (!coverUrl) {
-        console.log("[getSongCover] 未找到图片字段，歌曲数据:", JSON.stringify(song).substring(0, 200));
+        console.log("[getSongCover] 未找到图片字段，歌曲数据:", JSON.stringify(song).substring(0, 300));
+      } else {
+        console.log("[getSongCover] 找到图片字段:", coverUrl);
+        if (songId) {
+          songCoverUrlCache.set(songId, coverUrl);
+        }
       }
       if (!coverUrl)
         return "/static/logo.png";
-      return utils_imageProxy.proxyImageUrl(coverUrl);
+      return coverUrl;
+    };
+    const handleRecentSongImageError = (event, song) => {
+      var _a;
+      if (!song || !song.id)
+        return;
+      const songId = song.id;
+      let currentUrl = songCoverUrlCache.get(songId);
+      if (!currentUrl) {
+        const source = song.source || song.sourceId;
+        currentUrl = utils_musicPic.getSongPicUrl(song, source) || song.picUrl || ((_a = song.al) == null ? void 0 : _a.picUrl) || song.img;
+        if (!currentUrl) {
+          console.log("[handleRecentSongImageError] 无法获取图片 URL");
+          return;
+        }
+      }
+      let currentProxyIndex = 0;
+      if (currentUrl.includes("wsrv.nl"))
+        currentProxyIndex = 1;
+      else if (currentUrl.includes("weserv.nl"))
+        currentProxyIndex = 2;
+      else if (currentUrl.includes("jina.ai"))
+        currentProxyIndex = 3;
+      console.log("[handleRecentSongImageError] 图片加载失败，当前代理索引:", currentProxyIndex, "URL:", currentUrl);
+      const nextUrl = utils_imageProxy.handleImageError(event, currentUrl, currentProxyIndex);
+      if (nextUrl) {
+        songCoverUrlCache.set(songId, nextUrl);
+        console.log("[handleRecentSongImageError] 切换到下一个代理:", nextUrl);
+      }
     };
     const goToSettings = () => {
       common_vendor.index.navigateTo({
@@ -295,6 +381,49 @@ const _sfc_main = {
       common_vendor.index.setStorageSync("deleted_play_list", deletedList);
       common_vendor.index.navigateTo({
         url: "/pages/sharelist/index?mode=deleted&fromMyMusic=true"
+      });
+    };
+    const openRecentPlaylist = (playlist) => {
+      if (!playlist)
+        return;
+      console.log("[My] 打开最近播放歌单:", playlist);
+      const source = playlist.source || "";
+      const id = playlist.id || "";
+      let link = playlist.link || "";
+      if (!link) {
+        let cleanId = id;
+        if (id.includes("kw_digest-")) {
+          cleanId = id.replace("kw_", "");
+        } else if (source === "tx" && id.includes("_")) {
+          cleanId = id.split("_")[1] || id;
+        }
+        switch (source) {
+          case "kw":
+            if (cleanId.includes("digest-")) {
+              link = cleanId;
+            } else {
+              link = `https://www.kuwo.cn/playlist_detail/${cleanId}`;
+            }
+            break;
+          case "kg":
+            link = `https://www.kugou.com/yy/special/single/${cleanId}.html`;
+            break;
+          case "tx":
+            link = `https://y.qq.com/n/ryqq/playlist/${cleanId}`;
+            break;
+          case "wy":
+            link = `https://music.163.com/playlist?id=${cleanId}`;
+            break;
+          case "mg":
+            link = `https://music.migu.cn/v3/music/playlist/${cleanId}`;
+            break;
+          default:
+            link = cleanId;
+        }
+      }
+      console.log("[My] 最终跳转 link:", link);
+      common_vendor.index.navigateTo({
+        url: `/pages/sharelist/index?source=${source}&link=${encodeURIComponent(link)}&id=${encodeURIComponent(id)}&picUrl=${encodeURIComponent(playlist.coverUrl || "")}&name=${encodeURIComponent(playlist.name || "")}&fromName=my`
       });
     };
     const openPlaylist = (playlist) => {
@@ -503,14 +632,13 @@ const _sfc_main = {
         }),
         v: common_vendor.t(recentSongsCount.value),
         w: common_vendor.f(recentSongs.value, (song, index, i0) => {
-          var _a2;
           return {
             a: getSongCover(song),
-            b: common_vendor.o(($event) => handleMyImageError($event, song, "picUrl"), song.id),
-            c: "a62eb338-4-" + i0,
+            b: common_vendor.o(($event) => handleRecentSongImageError($event, song), song.id),
+            c: "7d8e07e3-4-" + i0,
             d: common_vendor.t(song.name),
             e: common_vendor.t(formatArtists(song)),
-            f: common_vendor.t(((_a2 = song.al) == null ? void 0 : _a2.name) || song.album || song.albumName || "未知专辑"),
+            f: common_vendor.t(formatAlbumName(song)),
             g: song.id,
             h: common_vendor.o(($event) => playSong(song), song.id)
           };
@@ -526,11 +654,24 @@ const _sfc_main = {
           color: "#8a8a8a"
         }),
         z: common_vendor.o(viewAllRecentPlayed),
-        A: common_vendor.t(deletedSongsCount.value),
-        B: common_vendor.f(deletedSongs.value, (song, index, i0) => {
+        A: recentPlaylistHistory.value.length > 0
+      }, recentPlaylistHistory.value.length > 0 ? {
+        B: common_vendor.t(recentPlaylistHistoryCount.value),
+        C: common_vendor.f(recentPlaylistHistory.value, (playlist, index, i0) => {
+          return {
+            a: playlist.coverUrl ? common_vendor.unref(utils_imageProxy.proxyImageUrl)(playlist.coverUrl) : "/static/logo.png",
+            b: common_vendor.t(playlist.name),
+            c: common_vendor.t(playlist.trackCount || 0),
+            d: playlist.id + "_" + playlist.source,
+            e: common_vendor.o(($event) => openRecentPlaylist(playlist), playlist.id + "_" + playlist.source)
+          };
+        })
+      } : {}, {
+        D: common_vendor.t(deletedSongsCount.value),
+        E: common_vendor.f(deletedSongs.value, (song, index, i0) => {
           return {
             a: getSongCover(song),
-            b: "a62eb338-6-" + i0,
+            b: "7d8e07e3-6-" + i0,
             c: common_vendor.t(song.name),
             d: common_vendor.t(song.type || "歌曲"),
             e: common_vendor.t(formatArtists(song)),
@@ -538,40 +679,40 @@ const _sfc_main = {
             g: common_vendor.o(($event) => playSong(song), song.id)
           };
         }),
-        C: common_vendor.p({
+        F: common_vendor.p({
           name: "play",
           size: "16",
           color: "#ffffff"
         }),
-        D: common_vendor.p({
+        G: common_vendor.p({
           name: "chevron-right",
           size: "12",
           color: "#8a8a8a"
         }),
-        E: common_vendor.o(viewAllDeleted),
-        F: common_vendor.s(safeBottomStyle.value),
-        G: common_vendor.s(scrollContainerStyle.value),
-        H: showImportModal.value
+        H: common_vendor.o(viewAllDeleted),
+        I: common_vendor.s(safeBottomStyle.value),
+        J: common_vendor.s(scrollContainerStyle.value),
+        K: showImportModal.value
       }, showImportModal.value ? {
-        I: common_vendor.t(importModalTitle.value),
-        J: common_vendor.p({
+        L: common_vendor.t(importModalTitle.value),
+        M: common_vendor.p({
           name: "xmark",
           size: "20",
           color: "#999"
         }),
-        K: common_vendor.o(closeImportModal),
-        L: importLink.value,
-        M: common_vendor.o(($event) => importLink.value = $event.detail.value),
         N: common_vendor.o(closeImportModal),
-        O: common_vendor.o(confirmImport),
-        P: common_vendor.o(() => {
+        O: importLink.value,
+        P: common_vendor.o(($event) => importLink.value = $event.detail.value),
+        Q: common_vendor.o(closeImportModal),
+        R: common_vendor.o(confirmImport),
+        S: common_vendor.o(() => {
         }),
-        Q: common_vendor.o(closeImportModal)
+        T: common_vendor.o(closeImportModal)
       } : {}, {
-        R: darkMode.value ? 1 : ""
+        U: darkMode.value ? 1 : ""
       });
     };
   }
 };
-const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-a62eb338"]]);
+const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-7d8e07e3"]]);
 exports.MiniProgramPage = MiniProgramPage;

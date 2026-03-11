@@ -1,7 +1,7 @@
 {
-  "version": "1.0.03",
-  "versionCode": 1003,
-  "desc": "1. 添加评论弹幕功能\n2. 优化首页\n3. 添加新版本提示功能\n4.修复若干问题",
+  "version": "1.0.04",
+  "versionCode": 1004,
+  "desc": "1. 新增最近播放歌单功能\n2. 新增换源功能在播放页中\n3. 修复ios设备锁屏后无法切换歌曲问题\n4.修复历史播放数据显示异常问题\n5.修复历史播放数据显示乱码问题\n6.修复若干小问题",
   "downloadUrl": "",
   "releaseUrl": "",
   "projectUrl": "https://github.com/erikjamesgz/phg-music"

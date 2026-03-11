@@ -41,6 +41,8 @@ const state = common_vendor.reactive({
   playlist: [],
   // 播放历史
   playHistory: [],
+  // 最近播放歌单历史（记录用户播放过的歌单）
+  playListHistory: [],
   // 播放模式 - 默认列表循环，与洛雪音乐移动版一致
   playMode: store_modules_list.PLAY_MODE.listLoop,
   // 播放状态
@@ -97,7 +99,9 @@ const state = common_vendor.reactive({
   // 是否正在获取播放URL
   isGettingUrl: false,
   // 待播放的歌曲（用于处理快速切换）
-  pendingSong: null
+  pendingSong: null,
+  // 是否显示换源提示（全局状态）
+  showSourceSwitchHint: false
 });
 function formatTime(time) {
   time = Math.floor(time);
@@ -162,6 +166,26 @@ const playerStore = {
   // 是否有下一首
   get hasNext() {
     return state.playlist.length > 1;
+  },
+  // 判断是否发生了换源（当前歌曲与原始歌曲不同）
+  get hasSwitchedSource() {
+    if (!state.currentSong || !state.originalSong)
+      return false;
+    return state.currentSong.id !== state.originalSong.id || state.currentSong.source !== state.originalSong.source;
+  },
+  // 显示换源提示
+  showSourceSwitchHintMessage() {
+    state.showSourceSwitchHint = true;
+    console.log("[playerStore] 显示换源提示");
+    setTimeout(() => {
+      state.showSourceSwitchHint = false;
+      console.log("[playerStore] 自动隐藏换源提示");
+    }, 1e4);
+  },
+  // 隐藏换源提示
+  hideSourceSwitchHintMessage() {
+    state.showSourceSwitchHint = false;
+    console.log("[playerStore] 隐藏换源提示");
   },
   // 初始化音频上下文
   initAudioContext() {
@@ -467,6 +491,7 @@ const playerStore = {
           }
           state.currentSong = updatedSong;
           console.log("[playSong] 已更新歌曲换源信息");
+          this.showSourceSwitchHintMessage();
           const originalSongId = String(song.id).replace(/^(tx|wy|kg|kw|mg)_/, "") || song.id;
           const switchInfo2 = {
             originalSource: result.fallback.originalSource,
@@ -589,29 +614,93 @@ const playerStore = {
     return PLAY_MODE_ICONS[state.playMode] || PLAY_MODE_ICONS[store_modules_list.PLAY_MODE.listLoop];
   },
   // 播放下一首
-  playNext() {
-    if (state.playlist.length <= 1)
+  async playNext() {
+    var _a, _b, _c;
+    console.log("[playNext] ========== 播放下一首 ==========");
+    console.log("[playNext] 播放列表长度:", state.playlist.length);
+    console.log("[playNext] 当前歌曲:", (_a = state.currentSong) == null ? void 0 : _a.name, "ID:", (_b = state.currentSong) == null ? void 0 : _b.id);
+    const togglePlayMethod = state.playMode === store_modules_list.PLAY_MODE.random ? "random" : state.playMode === store_modules_list.PLAY_MODE.singleLoop ? "singleLoop" : "listLoop";
+    if (state.playlist.length === 0) {
+      console.log("[playNext] state.playlist 为空，尝试从 listStore 获取下一首");
+      const nextSongInfo = store_modules_list.listStore.getNextSong(togglePlayMethod, false);
+      if (nextSongInfo && nextSongInfo.musicInfo) {
+        console.log("[playNext] 从 listStore 获取到下一首:", nextSongInfo.musicInfo.name);
+        store_modules_list.listStore.setPlayMusicInfo(nextSongInfo.listId, nextSongInfo.musicInfo, nextSongInfo.isTempPlay);
+        await this.playSong(nextSongInfo.musicInfo);
+        return;
+      } else {
+        console.log("[playNext] listStore 也无法获取下一首，无法切换");
+        return;
+      }
+    }
+    if (state.playlist.length === 1) {
+      console.log("[playNext] 只有一首歌，重播当前歌曲");
+      this.playSong(state.playlist[0]);
       return;
+    }
     let nextIndex = 0;
-    const currentIndex = state.playlist.findIndex((song) => song.id === state.currentSong.id);
+    const currentIndex = state.playlist.findIndex((song) => {
+      var _a2;
+      return song.id === ((_a2 = state.currentSong) == null ? void 0 : _a2.id);
+    });
+    console.log("[playNext] 当前索引:", currentIndex);
     if (state.playMode === store_modules_list.PLAY_MODE.random) {
       nextIndex = Math.floor(Math.random() * state.playlist.length);
+      console.log("[playNext] 随机模式，下一首索引:", nextIndex);
     } else {
-      nextIndex = (currentIndex + 1) % state.playlist.length;
+      if (currentIndex === -1) {
+        nextIndex = 0;
+      } else {
+        nextIndex = (currentIndex + 1) % state.playlist.length;
+      }
+      console.log("[playNext] 顺序模式，下一首索引:", nextIndex);
     }
+    console.log("[playNext] 即将播放:", (_c = state.playlist[nextIndex]) == null ? void 0 : _c.name);
     this.playSong(state.playlist[nextIndex]);
   },
   // 播放上一首
-  playPrev() {
-    if (state.playlist.length <= 1)
+  async playPrev() {
+    var _a, _b, _c;
+    console.log("[playPrev] ========== 播放上一首 ==========");
+    console.log("[playPrev] 播放列表长度:", state.playlist.length);
+    console.log("[playPrev] 当前歌曲:", (_a = state.currentSong) == null ? void 0 : _a.name, "ID:", (_b = state.currentSong) == null ? void 0 : _b.id);
+    const togglePlayMethod = state.playMode === store_modules_list.PLAY_MODE.random ? "random" : "listLoop";
+    if (state.playlist.length === 0) {
+      console.log("[playPrev] state.playlist 为空，尝试从 listStore 获取上一首");
+      const prevSongInfo = store_modules_list.listStore.getPrevSong(togglePlayMethod);
+      if (prevSongInfo && prevSongInfo.musicInfo) {
+        console.log("[playPrev] 从 listStore 获取到上一首:", prevSongInfo.musicInfo.name);
+        store_modules_list.listStore.setPlayMusicInfo(prevSongInfo.listId, prevSongInfo.musicInfo, prevSongInfo.isTempPlay);
+        await this.playSong(prevSongInfo.musicInfo);
+        return;
+      } else {
+        console.log("[playPrev] listStore 也无法获取上一首，无法切换");
+        return;
+      }
+    }
+    if (state.playlist.length === 1) {
+      console.log("[playPrev] 只有一首歌，重播当前歌曲");
+      this.playSong(state.playlist[0]);
       return;
+    }
     let prevIndex = 0;
-    const currentIndex = state.playlist.findIndex((song) => song.id === state.currentSong.id);
+    const currentIndex = state.playlist.findIndex((song) => {
+      var _a2;
+      return song.id === ((_a2 = state.currentSong) == null ? void 0 : _a2.id);
+    });
+    console.log("[playPrev] 当前索引:", currentIndex);
     if (state.playMode === store_modules_list.PLAY_MODE.random) {
       prevIndex = Math.floor(Math.random() * state.playlist.length);
+      console.log("[playPrev] 随机模式，上一首索引:", prevIndex);
     } else {
-      prevIndex = (currentIndex - 1 + state.playlist.length) % state.playlist.length;
+      if (currentIndex === -1) {
+        prevIndex = 0;
+      } else {
+        prevIndex = (currentIndex - 1 + state.playlist.length) % state.playlist.length;
+      }
+      console.log("[playPrev] 顺序模式，上一首索引:", prevIndex);
     }
+    console.log("[playPrev] 即将播放:", (_c = state.playlist[prevIndex]) == null ? void 0 : _c.name);
     this.playSong(state.playlist[prevIndex]);
   },
   // 处理播放结束 - 支持 5 种播放模式
@@ -804,15 +893,71 @@ const playerStore = {
   // 添加到播放历史
   addToHistory(song) {
     console.log("[playerStore] 添加到播放历史:", song.name);
-    const exists = state.playHistory.some((item) => item.id === song.id);
-    if (!exists) {
-      state.playHistory.unshift(song);
-      if (state.playHistory.length > 200) {
-        state.playHistory.pop();
-      }
-      common_vendor.index.setStorageSync("playHistory", state.playHistory);
-      console.log("[playerStore] 播放历史已更新，当前数量:", state.playHistory.length);
+    let albumName = "";
+    if (typeof song.album === "string") {
+      albumName = song.album;
+    } else if (song.album && typeof song.album === "object") {
+      albumName = song.album.name || "";
     }
+    const cleanSong = {
+      id: song.id,
+      name: song.name,
+      singer: song.singer || "",
+      ar: song.ar || [],
+      album: albumName,
+      al: song.al || null,
+      duration: song.duration || 0,
+      source: song.source || "",
+      img: song.img || "",
+      picUrl: song.picUrl || "",
+      songmid: song.songmid || "",
+      hash: song.hash || "",
+      copyrightId: song.copyrightId || ""
+    };
+    const existsIndex = state.playHistory.findIndex((item) => item.id === song.id);
+    if (existsIndex !== -1) {
+      state.playHistory.splice(existsIndex, 1);
+    }
+    state.playHistory.unshift(cleanSong);
+    if (state.playHistory.length > 200) {
+      state.playHistory.pop();
+    }
+    common_vendor.index.setStorageSync("playHistory", state.playHistory);
+    console.log("[playerStore] 播放历史已更新，当前数量:", state.playHistory.length);
+  },
+  // 添加到最近播放歌单历史
+  addToListHistory(playlistInfo) {
+    console.log("[playerStore] 添加到最近播放歌单:", playlistInfo);
+    if (!playlistInfo || !playlistInfo.id || !playlistInfo.source) {
+      console.log("[playerStore] 歌单信息不完整，跳过记录");
+      return;
+    }
+    if (playlistInfo.source === "local" || playlistInfo.source === "user" || playlistInfo.id.startsWith("userlist_")) {
+      console.log("[playerStore] 本地歌单，不记录到最近播放歌单");
+      return;
+    }
+    const listInfo = {
+      id: playlistInfo.id,
+      name: playlistInfo.name || "未知歌单",
+      source: playlistInfo.source,
+      coverUrl: playlistInfo.coverUrl || playlistInfo.img || "",
+      playCount: playlistInfo.playCount || 0,
+      trackCount: playlistInfo.trackCount || 0,
+      addPlayTime: Date.now(),
+      link: playlistInfo.link || ""
+    };
+    const existsIndex = state.playListHistory.findIndex(
+      (item) => item.id === listInfo.id && item.source === listInfo.source
+    );
+    if (existsIndex !== -1) {
+      state.playListHistory.splice(existsIndex, 1);
+    }
+    state.playListHistory.unshift(listInfo);
+    if (state.playListHistory.length > 100) {
+      state.playListHistory.pop();
+    }
+    common_vendor.index.setStorageSync("playListHistory", state.playListHistory);
+    console.log("[playerStore] 最近播放歌单已更新，当前数量:", state.playListHistory.length);
   },
   // 刷新播放URL（参考洛雪音乐桌面版实现）
   // 当播放出错或超时时，尝试重新获取播放链接
@@ -916,6 +1061,7 @@ const playerStore = {
         }
         state.currentSong = updatedSong;
         console.log("[refreshMusicUrl] 已更新歌曲换源信息");
+        this.showSourceSwitchHintMessage();
         const originalSongId = String(song.id).replace(/^(tx|wy|kg|kw|mg)_/, "") || song.id;
         const switchInfo = {
           originalSource: result.fallback.originalSource,
@@ -1151,6 +1297,10 @@ const playerStore = {
     }
     if (playHistory)
       state.playHistory = playHistory;
+    const playListHistory = common_vendor.index.getStorageSync("playListHistory");
+    if (playListHistory)
+      state.playListHistory = playListHistory;
+    console.log("[playerStore] restoreState - 最近播放歌单数量:", state.playListHistory.length);
     if (audioQuality)
       state.audioQuality = audioQuality;
     if (cacheSize)

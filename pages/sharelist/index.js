@@ -41,6 +41,7 @@ const _sfc_main = {
     const playlistTrackCount = common_vendor.ref(0);
     const playlistPlayCount = common_vendor.ref("");
     const songs = common_vendor.ref([]);
+    const playlistHistoryList = common_vendor.ref([]);
     const isLoading = common_vendor.ref(false);
     const hasMore = common_vendor.ref(true);
     const page = common_vendor.ref(1);
@@ -220,7 +221,7 @@ const _sfc_main = {
       await playSongWithIndex(0, true);
     };
     const playSongWithIndex = async (index, addToDefaultList = true) => {
-      var _a, _b, _c;
+      var _a, _b, _c, _d, _e, _f, _g, _h;
       const song = songs.value[index];
       if (!song)
         return;
@@ -333,6 +334,37 @@ const _sfc_main = {
         store_modules_player.playerStore.updatePendingSong(null);
         console.log("[Sharelist] 调用 playerStore.playSong");
         store_modules_player.playerStore.playSong(musicInfo);
+        if (!isLocalPlaylist.value) {
+          const playlistLink = pageLink.value || "";
+          let playlistId2 = "";
+          if (playlistLink) {
+            const link = playlistLink;
+            if (link.includes("y.qq.com/n/ryqq/playlist/")) {
+              playlistId2 = ((_d = link.split("playlist/")[1]) == null ? void 0 : _d.split("?")[0]) || link;
+            } else if (link.includes("kuwo.cn/playlist_detail/")) {
+              playlistId2 = ((_e = link.split("playlist_detail/")[1]) == null ? void 0 : _e.split("?")[0]) || link;
+            } else if (link.includes("digest-")) {
+              playlistId2 = link;
+            } else if (link.includes("kugou.com/yy/special/single/")) {
+              playlistId2 = ((_f = link.split("single/")[1]) == null ? void 0 : _f.split(".")[0]) || link;
+            } else if (link.includes("music.163.com/playlist?id=")) {
+              playlistId2 = ((_g = link.split("id=")[1]) == null ? void 0 : _g.split("&")[0]) || link;
+            } else if (link.includes("music.migu.cn/v3/music/playlist/")) {
+              playlistId2 = ((_h = link.split("playlist/")[1]) == null ? void 0 : _h.split("?")[0]) || link;
+            } else {
+              playlistId2 = link;
+            }
+          }
+          console.log("[Sharelist] 记录歌单历史 - link:", playlistLink, "id:", playlistId2);
+          store_modules_player.playerStore.addToListHistory({
+            id: playlistId2 || listSource.value + "_" + Date.now(),
+            name: playlistName.value || "未知歌单",
+            source: listSource.value || "unknown",
+            coverUrl: playlistCover.value || "",
+            trackCount: playlistTrackCount.value || 0,
+            link: playlistLink
+          });
+        }
         console.log("[Sharelist] 播放完成");
       } catch (error) {
         console.error("[Sharelist] 播放失败:", error);
@@ -392,6 +424,45 @@ const _sfc_main = {
     const retryLoad = () => {
       loadPreviewList();
     };
+    const loadRecentPlaylistBySource = async (playlist) => {
+      var _a, _b;
+      if (!playlist) {
+        isLoading.value = false;
+        loadError.value = "歌单信息不完整";
+        return;
+      }
+      console.log("[Sharelist] 加载最近播放歌单, source:", playlist.source, "id:", playlist.id);
+      const source = playlist.source;
+      const id = playlist.id;
+      isLoading.value = true;
+      loadError.value = "";
+      try {
+        let result;
+        if (source === "kw" && id.includes("digest-")) {
+          result = await utils_api_songlistDirect.getListDetailDirect("kw", id, 1);
+        } else if (source === "mg") {
+          result = await utils_api_songlistDirect.getListDetailDirect("mg", id, 1);
+        } else {
+          result = await utils_api_songlist.getListDetail(source, id, 1);
+        }
+        console.log("[Sharelist] 获取歌单详情结果:", result);
+        if (result && result.list && result.list.length > 0) {
+          songs.value = result.list;
+          playlistTrackCount.value = result.list.length;
+          playlistPlayCount.value = ((_a = result.info) == null ? void 0 : _a.play_count) || ((_b = result.info) == null ? void 0 : _b.playCount) || "";
+          listSource.value = source;
+          isLocalPlaylist.value = false;
+          currentListId.value = id;
+        } else {
+          loadError.value = "歌单内容为空";
+        }
+      } catch (e) {
+        console.error("[Sharelist] 加载歌单失败:", e);
+        loadError.value = "加载失败: " + (e.message || "未知错误");
+      } finally {
+        isLoading.value = false;
+      }
+    };
     const simplifySongs = (songs2) => {
       if (!songs2 || !Array.isArray(songs2))
         return [];
@@ -446,6 +517,8 @@ const _sfc_main = {
                 importedList[existsIndex].trackCount = fullSongList.length;
                 importedList[existsIndex].coverImgUrl = playlistCover.value;
                 common_vendor.index.setStorageSync("imported_playlists", importedList);
+                common_vendor.index.$emit("imported-playlists-changed");
+                console.log("[Sharelist] 已发送 imported-playlists-changed 事件（更新）");
                 common_vendor.index.showToast({ title: "更新成功", icon: "success" });
               } catch (error) {
                 console.error("[Sharelist] 更新失败:", error);
@@ -506,6 +579,8 @@ const _sfc_main = {
                 title: `导入成功（${fullSongList.length}首）`,
                 icon: "success"
               });
+              common_vendor.index.$emit("imported-playlists-changed");
+              console.log("[Sharelist] 已发送 imported-playlists-changed 事件");
               console.log("[Sharelist] handleCollect - fromPage.value:", fromPage.value);
               if (fromPage.value === "import") {
                 setTimeout(() => {
@@ -907,6 +982,51 @@ const _sfc_main = {
             loadError.value = "暂无删除记录";
           }
         }, 100);
+      } else if (options.mode === "recentPlaylistHistory" && options.fromMyMusic === "true") {
+        console.log("[Sharelist] 进入最近播放歌单历史模式");
+        isPreviewMode.value = false;
+        showActionBar.value = false;
+        isLoading.value = true;
+        setTimeout(() => {
+          let playlistHistory = [];
+          try {
+            const rawData = common_vendor.index.getStorageSync("recent_playlist_history");
+            if (rawData) {
+              if (typeof rawData === "string") {
+                playlistHistory = JSON.parse(rawData);
+              } else if (Array.isArray(rawData)) {
+                playlistHistory = rawData;
+              } else if (rawData.data && Array.isArray(rawData.data)) {
+                playlistHistory = rawData.data;
+              }
+            }
+          } catch (e) {
+            console.error("[Sharelist] 解析歌单历史失败:", e);
+          }
+          console.log("[Sharelist] 歌单历史数量:", playlistHistory.length);
+          if (playlistHistory.length > 0) {
+            songs.value = [];
+            playlistName.value = "最近播放歌单";
+            playlistCover.value = playlistHistory[0].coverUrl || "/static/logo.png";
+            playlistTrackCount.value = playlistHistory.length;
+            hasMore.value = false;
+            playlistHistoryList.value = playlistHistory;
+            if (options.playlistId) {
+              const targetPlaylist = playlistHistory.find((p) => p.id === options.playlistId);
+              if (targetPlaylist) {
+                playlistCover.value = targetPlaylist.coverUrl || "/static/logo.png";
+                playlistName.value = targetPlaylist.name || "最近播放歌单";
+                currentListId.value = targetPlaylist.id;
+                loadRecentPlaylistBySource(targetPlaylist);
+                return;
+              }
+            }
+            isLoading.value = false;
+          } else {
+            isLoading.value = false;
+            loadError.value = "暂无歌单播放记录";
+          }
+        }, 100);
       } else {
         console.log("[Sharelist] 缺少必要参数，无法加载");
         loadError.value = "缺少必要参数：link或source";
@@ -1005,13 +1125,13 @@ const _sfc_main = {
           } : {}, {
             g: currentSongIndex.value === index && isPlaying.value
           }, currentSongIndex.value === index && isPlaying.value ? {
-            h: "864f0795-5-" + i0,
+            h: "38b2cfab-5-" + i0,
             i: common_vendor.p({
               name: "play",
               size: "18"
             })
           } : currentSongIndex.value === index && !isPlaying.value ? {
-            k: "864f0795-6-" + i0,
+            k: "38b2cfab-6-" + i0,
             l: common_vendor.p({
               name: "pause",
               size: "18"
@@ -1051,5 +1171,5 @@ const _sfc_main = {
     };
   }
 };
-const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-864f0795"]]);
+const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-38b2cfab"]]);
 wx.createPage(MiniProgramPage);
