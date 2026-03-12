@@ -83,7 +83,9 @@ const buildMusicRequestParams = (song, quality = "320k") => {
             hash: song.songmid || song.id
           }
         },
-        quality
+        quality,
+        originalSongId: song.id
+        // 保存原始歌曲ID用于歌词缓存
       };
       break;
     case "wy":
@@ -101,7 +103,9 @@ const buildMusicRequestParams = (song, quality = "320k") => {
             hash: song.id
           }
         },
-        quality
+        quality,
+        originalSongId: song.id
+        // 保存原始歌曲ID用于歌词缓存
       };
       break;
     case "kg":
@@ -119,7 +123,9 @@ const buildMusicRequestParams = (song, quality = "320k") => {
             hash: song.hash || song.id
           }
         },
-        quality
+        quality,
+        originalSongId: song.id
+        // 保存原始歌曲ID用于歌词缓存
       };
       break;
     case "kw":
@@ -137,7 +143,9 @@ const buildMusicRequestParams = (song, quality = "320k") => {
             hash: song.id
           }
         },
-        quality
+        quality,
+        originalSongId: song.id
+        // 保存原始歌曲ID用于歌词缓存
       };
       break;
     case "mg":

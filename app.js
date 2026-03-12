@@ -225,6 +225,13 @@ const _sfc_main = {
       const now = Date.now();
       const timeSinceLastPlay = now - this.lastOnPlayTime;
       console.log("[checkQuickOnPlay] 距离上次 onPlay:", timeSinceLastPlay, "ms, 计数:", this.onPlayQuickCallCount);
+      const playerState = store_modules_player.playerStore.getState();
+      if (playerState && playerState.isUserSeeking) {
+        console.log("[checkQuickOnPlay] 用户正在快进，忽略此次 onPlay");
+        this.lastOnPlayTime = now;
+        this.onPlayQuickCallCount = 0;
+        return;
+      }
       if (timeSinceLastPlay < 3e3 && this.lastOnPlayTime > 0) {
         this.onPlayQuickCallCount++;
         console.log("[checkQuickOnPlay] 检测到快速 onPlay，计数增加到:", this.onPlayQuickCallCount);

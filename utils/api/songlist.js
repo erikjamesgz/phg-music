@@ -85,16 +85,5 @@ function formatPlayCount(count) {
   }
   return count.toString();
 }
-function formatDuration(duration) {
-  if (!duration)
-    return "0:00";
-  if (typeof duration === "string" && duration.includes(":")) {
-    return duration;
-  }
-  const minutes = Math.floor(duration / 6e4);
-  const seconds = Math.floor(duration % 6e4 / 1e3);
-  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
-}
-exports.formatDuration = formatDuration;
 exports.formatPlayCount = formatPlayCount;
 exports.getListDetail = getListDetail;

@@ -54,6 +54,14 @@ const _sfc_main = {
     bottomSafeHeight: {
       type: Number,
       default: 0
+    },
+    showMoreButton: {
+      type: Boolean,
+      default: true
+    },
+    showTopRadius: {
+      type: Boolean,
+      default: false
     }
   },
   emits: ["scroll", "scrolltolower", "item-click", "more-click"],
@@ -222,25 +230,28 @@ const _sfc_main = {
           } : {}, {
             g: isCurrentPlaying(startIndex.value + i) && __props.isPlaying
           }, isCurrentPlaying(startIndex.value + i) && __props.isPlaying ? {
-            h: "815bdc95-0-" + i0,
+            h: "9a1771e2-0-" + i0,
             i: common_vendor.p({
               name: "play",
               size: "18"
             })
           } : {}, {
-            j: common_vendor.t(formatDuration(item.dt || item.interval || item.duration)),
-            k: "815bdc95-1-" + i0,
-            l: common_vendor.o(($event) => onMoreClick(startIndex.value + i, item), getItemKey(item, i)),
-            m: getItemKey(item, i),
-            n: getItemId(startIndex.value + i),
-            o: isCurrentPlaying(startIndex.value + i) ? 1 : "",
-            p: common_vendor.o(($event) => onItemClick(startIndex.value + i, item), getItemKey(item, i))
+            j: common_vendor.t(formatDuration(item.dt || item.interval || item.duration))
+          }, __props.showMoreButton ? {
+            k: "9a1771e2-1-" + i0,
+            l: common_vendor.p({
+              name: "ellipsis-vertical",
+              size: "18"
+            }),
+            m: common_vendor.o(($event) => onMoreClick(startIndex.value + i, item), getItemKey(item, i))
+          } : {}, {
+            n: getItemKey(item, i),
+            o: getItemId(startIndex.value + i),
+            p: isCurrentPlaying(startIndex.value + i) ? 1 : "",
+            q: common_vendor.o(($event) => onItemClick(startIndex.value + i, item), getItemKey(item, i))
           });
         }),
-        c: common_vendor.p({
-          name: "ellipsis-vertical",
-          size: "18"
-        }),
+        c: __props.showMoreButton,
         d: __props.darkMode ? 1 : "",
         e: bottomPlaceholderHeight.value + "px",
         f: __props.items.length === 0 && !__props.loading
@@ -255,15 +266,17 @@ const _sfc_main = {
       } : {}, {
         j: __props.loading
       }, __props.loading ? {} : {}, {
-        k: listHeight.value,
-        l: common_vendor.o(onScroll),
-        m: computedScrollTop.value,
-        n: __props.scrollWithAnimation,
-        o: __props.lowerThreshold,
-        p: common_vendor.o(onScrollToLower)
+        k: __props.showTopRadius ? 1 : "",
+        l: __props.darkMode ? 1 : "",
+        m: listHeight.value,
+        n: common_vendor.o(onScroll),
+        o: computedScrollTop.value,
+        p: __props.scrollWithAnimation,
+        q: __props.lowerThreshold,
+        r: common_vendor.o(onScrollToLower)
       });
     };
   }
 };
-const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-815bdc95"]]);
+const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-9a1771e2"]]);
 wx.createComponent(Component);

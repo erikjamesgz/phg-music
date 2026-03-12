@@ -17,7 +17,7 @@ const _sfc_main = {
   __name: "MiniPlayer",
   setup(__props) {
     common_vendor.useCssVars((_ctx) => ({
-      "3759486d": miniPlayerBottom.value
+      "6db3aebe": miniPlayerBottom.value
     }));
     let instance = null;
     try {
@@ -749,6 +749,7 @@ const _sfc_main = {
     };
     const onProgressTouchStart = (e) => {
       isDragging.value = true;
+      store_modules_player.playerStore.setUserSeeking(true);
       updateDragPercent(e);
     };
     const onProgressTouchMove = (e) => {
@@ -940,5 +941,5 @@ const _sfc_main = {
     };
   }
 };
-const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-2e8ed239"]]);
+const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-6d13b8ba"]]);
 wx.createComponent(Component);

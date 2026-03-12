@@ -23,7 +23,7 @@
 /* 垂直间距 */
 /* 透明度 */
 /* 文章场景相关 */
-@keyframes marquee-2e8ed239 {
+@keyframes marquee-6d13b8ba {
 0% {
     transform: translateX(0);
 }
@@ -31,11 +31,11 @@
     transform: translateX(-50%);
 }
 }
-.mini-player-wrapper.data-v-2e8ed239 {
+.mini-player-wrapper.data-v-6d13b8ba {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: var(--3759486d);
+  bottom: var(--6db3aebe);
   /* 动态计算底部位置 */
   display: flex;
   flex-direction: column;
@@ -47,13 +47,13 @@
   pointer-events: auto;
   /* 确保可以点击 */
 }
-.mini-player-mp.data-v-2e8ed239 {
+.mini-player-mp.data-v-6d13b8ba {
   position: static !important;
   /* 覆盖原有的relative定位 */
   width: 85% !important;
   margin: 0 auto !important;
 }
-.mini-player.data-v-2e8ed239 {
+.mini-player.data-v-6d13b8ba {
   pointer-events: auto;
   /* 确保可以点击 */
   width: 85%;
@@ -69,27 +69,27 @@
   box-shadow: 0 8rpx 40rpx rgba(0, 0, 0, 0.05);
   overflow: hidden;
 }
-.mini-player__content.data-v-2e8ed239 {
+.mini-player__content.data-v-6d13b8ba {
   padding: 16rpx 24rpx;
   display: flex;
   flex-direction: column;
   height: 100%;
   box-sizing: border-box;
 }
-.mini-player__main.data-v-2e8ed239 {
+.mini-player__main.data-v-6d13b8ba {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex: 1;
 }
-.mini-player__left.data-v-2e8ed239 {
+.mini-player__left.data-v-6d13b8ba {
   display: flex;
   align-items: center;
   flex: 1;
   overflow: hidden;
   margin-right: 20rpx;
 }
-.mini-player__cover-container.data-v-2e8ed239 {
+.mini-player__cover-container.data-v-6d13b8ba {
   position: relative;
   width: 80rpx;
   height: 80rpx;
@@ -99,22 +99,22 @@
   flex-shrink: 0;
   box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.1);
 }
-.mini-player__cover.data-v-2e8ed239 {
+.mini-player__cover.data-v-6d13b8ba {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-.mini-player__info.data-v-2e8ed239 {
+.mini-player__info.data-v-6d13b8ba {
   flex: 1;
   overflow: hidden;
 }
-.mini-player__info-row.data-v-2e8ed239 {
+.mini-player__info-row.data-v-6d13b8ba {
   display: flex;
   align-items: center;
   overflow: hidden;
   width: 100%;
 }
-.mini-player__marquee.data-v-2e8ed239 {
+.mini-player__marquee.data-v-6d13b8ba {
   flex: 1;
   overflow: hidden;
   position: relative;
@@ -123,41 +123,41 @@
   display: flex;
   align-items: center;
 }
-.mini-player__marquee-content.data-v-2e8ed239 {
+.mini-player__marquee-content.data-v-6d13b8ba {
   display: flex;
   align-items: center;
   white-space: nowrap;
   flex-shrink: 0;
 }
-.mini-player__marquee-content.scroll.data-v-2e8ed239 {
-  animation: marquee-2e8ed239 10s linear infinite;
+.mini-player__marquee-content.scroll.data-v-6d13b8ba {
+  animation: marquee-6d13b8ba 10s linear infinite;
 }
-.mini-player__title.data-v-2e8ed239 {
+.mini-player__title.data-v-6d13b8ba {
   font-size: 26rpx;
   color: #333333;
   font-weight: 500;
   flex-shrink: 0;
 }
-.mini-player__separator.data-v-2e8ed239 {
+.mini-player__separator.data-v-6d13b8ba {
   color: #999999;
   margin: 0 6rpx;
   flex-shrink: 0;
 }
-.mini-player__artist.data-v-2e8ed239 {
+.mini-player__artist.data-v-6d13b8ba {
   font-size: 24rpx;
   color: #999999;
   flex-shrink: 0;
 }
-.mini-player__sq-tag.data-v-2e8ed239 {
+.mini-player__sq-tag.data-v-6d13b8ba {
   flex-shrink: 0;
   margin-right: 8rpx;
 }
-.mini-player__status-row.data-v-2e8ed239 {
+.mini-player__status-row.data-v-6d13b8ba {
   margin-top: 4rpx;
   overflow: hidden;
   width: 100%;
 }
-.mini-player__status-marquee.data-v-2e8ed239 {
+.mini-player__status-marquee.data-v-6d13b8ba {
   flex: 1;
   overflow: hidden;
   position: relative;
@@ -166,35 +166,35 @@
   display: flex;
   align-items: center;
 }
-.mini-player__status-content.data-v-2e8ed239 {
+.mini-player__status-content.data-v-6d13b8ba {
   display: flex;
   align-items: center;
   white-space: nowrap;
   flex-shrink: 0;
 }
-.mini-player__status-content.scroll.data-v-2e8ed239 {
-  animation: marquee-2e8ed239 8s linear infinite;
+.mini-player__status-content.scroll.data-v-6d13b8ba {
+  animation: marquee-6d13b8ba 8s linear infinite;
 }
-.mini-player__status-text.data-v-2e8ed239 {
+.mini-player__status-text.data-v-6d13b8ba {
   font-size: 22rpx;
   color: #00c4b8;
   font-weight: 500;
   flex-shrink: 0;
 }
-.mini-player__status-gap.data-v-2e8ed239 {
+.mini-player__status-gap.data-v-6d13b8ba {
   flex-shrink: 0;
 }
-.mini-player__artist-container.data-v-2e8ed239 {
+.mini-player__artist-container.data-v-6d13b8ba {
   display: flex;
   align-items: center;
   margin-top: 4rpx;
 }
-.mini-player__artist-row.data-v-2e8ed239 {
+.mini-player__artist-row.data-v-6d13b8ba {
   display: flex;
   align-items: center;
   margin-top: 4rpx;
 }
-.mini-player__sq-tag.data-v-2e8ed239 {
+.mini-player__sq-tag.data-v-6d13b8ba {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -209,11 +209,11 @@
   font-weight: bold;
   flex-shrink: 0;
 }
-.mini-player__controls.data-v-2e8ed239 {
+.mini-player__controls.data-v-6d13b8ba {
   display: flex;
   align-items: center;
 }
-.mini-player__play-btn.data-v-2e8ed239 {
+.mini-player__play-btn.data-v-6d13b8ba {
   width: 60rpx;
   height: 60rpx;
   border-radius: 50%;
@@ -224,14 +224,14 @@
   margin-right: 20rpx;
   box-shadow: 0 6rpx 12rpx rgba(0, 175, 255, 0.3);
 }
-.mini-player__next-btn.data-v-2e8ed239 {
+.mini-player__next-btn.data-v-6d13b8ba {
   width: 60rpx;
   height: 60rpx;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.mini-player__progress.data-v-2e8ed239 {
+.mini-player__progress.data-v-6d13b8ba {
   height: 8rpx;
   background-color: rgba(0, 0, 0, 0.1);
   border-radius: 4rpx;
@@ -243,12 +243,12 @@
   overflow: visible;
   /* 确保在微信小程序中进度点可见 */
 }
-.mini-player__progress-bar.data-v-2e8ed239 {
+.mini-player__progress-bar.data-v-6d13b8ba {
   height: 100%;
   background: linear-gradient(90deg, #00d7cd 0%, #00afff 100%);
   border-radius: 4rpx;
 }
-.mini-player__progress-dot.data-v-2e8ed239 {
+.mini-player__progress-dot.data-v-6d13b8ba {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
@@ -268,38 +268,38 @@
 }
 
 /* 暗黑模式样式 - 基于 class */
-.mini-player.dark-mode.data-v-2e8ed239 {
+.mini-player.dark-mode.data-v-6d13b8ba {
   background-color: rgba(31, 41, 55, 0.95);
   border: 1rpx solid rgba(255, 255, 255, 0.05);
   box-shadow: 0 8rpx 40rpx rgba(0, 0, 0, 0.2);
 }
-.mini-player.dark-mode .mini-player__title.data-v-2e8ed239 {
+.mini-player.dark-mode .mini-player__title.data-v-6d13b8ba {
   color: #ffffff;
 }
-.mini-player.dark-mode .mini-player__sq-tag.data-v-2e8ed239 {
+.mini-player.dark-mode .mini-player__sq-tag.data-v-6d13b8ba {
   background-color: rgba(0, 215, 205, 0.2);
   color: #33dfd8;
 }
-.mini-player.dark-mode .mini-player__artist.data-v-2e8ed239 {
+.mini-player.dark-mode .mini-player__artist.data-v-6d13b8ba {
   color: #9ca3af;
 }
-.mini-player.dark-mode .mini-player__status-row.data-v-2e8ed239 {
+.mini-player.dark-mode .mini-player__status-row.data-v-6d13b8ba {
   margin-top: 2px;
 }
-.mini-player.dark-mode .mini-player__status-text.data-v-2e8ed239 {
+.mini-player.dark-mode .mini-player__status-text.data-v-6d13b8ba {
   font-size: 12px;
   color: #00d0c4;
   font-weight: 500;
 }
-.mini-player.dark-mode .mini-player__artist-row.data-v-2e8ed239 {
+.mini-player.dark-mode .mini-player__artist-row.data-v-6d13b8ba {
   margin-top: 2px;
 }
-.mini-player.dark-mode .mini-player__progress.data-v-2e8ed239 {
+.mini-player.dark-mode .mini-player__progress.data-v-6d13b8ba {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
 /* 评论弹幕样式 - 绝对定位在MiniPlayer上方，不重叠 */
-.mini-player-danmaku-area.data-v-2e8ed239 {
+.mini-player-danmaku-area.data-v-6d13b8ba {
   position: absolute;
   left: 0;
   width: 100%;
@@ -314,11 +314,11 @@
 
 /* iPhone 12 Pro Max 到 iPhone 15 Pro Max 等中等屏幕尺寸的适配 */
 @media screen and (min-width: 390px) and (max-width: 430px) {
-.mini-player-danmaku-area.data-v-2e8ed239 {
+.mini-player-danmaku-area.data-v-6d13b8ba {
     margin-bottom: 12px;
 }
 }
-.mini-player__danmaku-item.data-v-2e8ed239 {
+.mini-player__danmaku-item.data-v-6d13b8ba {
   position: absolute;
   display: inline-flex;
   align-items: center;
@@ -326,20 +326,20 @@
   background-color: rgba(0, 0, 0, 0.2);
   border-radius: 8px;
   white-space: nowrap;
-  animation: mini-danmaku-move-2e8ed239 15s linear forwards;
+  animation: mini-danmaku-move-6d13b8ba 15s linear forwards;
   pointer-events: none;
   /* 确保单行显示，高度固定 */
   height: 24px;
   line-height: 20px;
   box-sizing: border-box;
 }
-.mini-player__danmaku-item.dark-mode.data-v-2e8ed239 {
+.mini-player__danmaku-item.dark-mode.data-v-6d13b8ba {
   background-color: rgba(255, 255, 255, 0.08);
 }
-.mini-player__danmaku-item.paused.data-v-2e8ed239 {
+.mini-player__danmaku-item.paused.data-v-6d13b8ba {
   animation-play-state: paused;
 }
-@keyframes mini-danmaku-move-2e8ed239 {
+@keyframes mini-danmaku-move-6d13b8ba {
 0% {
     transform: translateX(100vw);
 }
@@ -347,20 +347,20 @@
     transform: translateX(-100%);
 }
 }
-.danmaku-user.data-v-2e8ed239 {
+.danmaku-user.data-v-6d13b8ba {
   color: #d4920a;
   font-size: 20rpx;
   font-weight: 500;
   margin-right: 4px;
   flex-shrink: 0;
 }
-.dark-mode .danmaku-user.data-v-2e8ed239 {
+.dark-mode .danmaku-user.data-v-6d13b8ba {
   color: #ffca28;
 }
-.danmaku-text.data-v-2e8ed239 {
+.danmaku-text.data-v-6d13b8ba {
   color: #ffffff;
   font-size: 20rpx;
 }
-.dark-mode .danmaku-text.data-v-2e8ed239 {
+.dark-mode .danmaku-text.data-v-6d13b8ba {
   color: #ffffff;
 }

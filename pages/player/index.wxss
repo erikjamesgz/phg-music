@@ -1008,7 +1008,7 @@ to {
 }
 .lyrics-scroll-wrapper {
   width: 100%;
-  height: 500rpx;
+  height: var(--5e0eb218);
   overflow: hidden;
 }
 .lyrics-scroll-view {
@@ -1016,7 +1016,7 @@ to {
   height: 100%;
 }
 .lyrics-header-space {
-  height: 80%;
+  height: 100rpx;
   width: 100%;
   flex-shrink: 0;
 }
@@ -1043,29 +1043,29 @@ to {
 }
 .lyric-line-content .lyric-text {
   font-size: 28rpx;
-  color: #6b7280;
+  color: #9ca3af;
   line-height: 1.5;
   transition: all 0.2s ease;
 }
 .lyric-line-content .lyric-translation {
   font-size: 22rpx;
-  color: #9ca3af;
+  color: #b0b5ba;
   line-height: 1.4;
   margin-top: 4rpx;
   transition: all 0.2s ease;
 }
 .lyric-line-content.lyric-line--active {
   opacity: 1;
-  transform: scale(1.02);
+  transform: scale(1.05);
 }
 .lyric-line-content.lyric-line--active .lyric-text {
-  font-weight: 600;
-  color: #00d7cd;
-  font-size: 32rpx;
+  font-weight: 700;
+  color: #00b4a8;
+  font-size: 34rpx;
 }
 .lyric-line-content.lyric-line--active .lyric-translation {
-  color: #00d7cd;
-  opacity: 0.9;
+  color: #00b4a8;
+  opacity: 0.95;
 }
 .lyrics-empty {
   display: flex;

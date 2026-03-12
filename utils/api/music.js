@@ -139,8 +139,9 @@ function getMusicUrl(params, quality = "320k") {
             };
             if (lyricInfo.lyric || lyricInfo.tlyric || lyricInfo.rlyric || lyricInfo.lxlyric) {
               const lyricSource = ((_d = data.fallback) == null ? void 0 : _d.newSource) || source2;
-              await utils_lyricCache.setCachedLyric(songId2, lyricSource, lyricInfo);
-              console.log("[getMusicUrl] 歌词已缓存:", songId2, lyricSource);
+              const lyricSongId = requestParams.originalSongId || songId2;
+              await utils_lyricCache.setCachedLyric(lyricSongId, lyricSource, lyricInfo);
+              console.log("[getMusicUrl] 歌词已缓存:", lyricSongId, lyricSource);
             }
           } else {
             console.log("[getMusicUrl] API没有返回歌词:", songId2, source2);

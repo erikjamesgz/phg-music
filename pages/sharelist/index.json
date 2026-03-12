@@ -4,6 +4,7 @@
   "launchMode": "singleTask",
   "usingComponents": {
     "roc-icon-plus": "../../uni_modules/roc-icon-plus/components/roc-icon-plus/roc-icon-plus",
-    "mini-player": "../../components/player/MiniPlayer"
+    "mini-player": "../../components/player/MiniPlayer",
+    "virtual-list": "../../components/common/VirtualList"
   }
 }

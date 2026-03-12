@@ -6,16 +6,17 @@ const utils_api_songlistDirect = require("../../utils/api/songlist-direct.js");
 const store_modules_list = require("../../store/modules/list.js");
 const store_modules_player = require("../../store/modules/player.js");
 const utils_imageProxy = require("../../utils/imageProxy.js");
+const composables_useBottomHeight = require("../../composables/useBottomHeight.js");
 if (!Array) {
   const _component_custom_tabbar = common_vendor.resolveComponent("custom-tabbar");
   _component_custom_tabbar();
 }
 if (!Math) {
-  (RocIconPlus + MiniPlayer)();
+  (RocIconPlus + VirtualList + MiniPlayer)();
 }
 const RocIconPlus = () => "../../uni_modules/roc-icon-plus/components/roc-icon-plus/roc-icon-plus.js";
 const MiniPlayer = () => "../../components/player/MiniPlayer.js";
-const PAGE_SIZE = 50;
+const VirtualList = () => "../../components/common/VirtualList.js";
 const _sfc_main = {
   __name: "index",
   setup(__props) {
@@ -43,10 +44,7 @@ const _sfc_main = {
     const songs = common_vendor.ref([]);
     const playlistHistoryList = common_vendor.ref([]);
     const isLoading = common_vendor.ref(false);
-    const hasMore = common_vendor.ref(true);
-    const page = common_vendor.ref(1);
-    const allSongs = common_vendor.ref([]);
-    const currentPage = common_vendor.ref(1);
+    const hasMore = common_vendor.ref(false);
     const currentSongIndex = common_vendor.computed(() => {
       var _a;
       triggerRefresh.value;
@@ -125,7 +123,10 @@ const _sfc_main = {
       console.log("[Sharelist] MiniPlayer 高度变化:", height, "是否显示:", isShowing);
       miniPlayerBottomHeight.value = isShowing ? height : 0;
     };
-    const scrollTop = common_vendor.ref(0);
+    common_vendor.ref(0);
+    const virtualListRef = common_vendor.ref(null);
+    const { bottomPaddingStyle, totalBottomHeight } = composables_useBottomHeight.useBottomHeight();
+    const isPlayerPlaying = common_vendor.computed(() => store_modules_player.playerStore.state.isPlaying);
     const formatPlayCount = (count) => {
       if (!count)
         return "0";
@@ -138,32 +139,6 @@ const _sfc_main = {
         currentListId.value = `${listSource.value}_${Date.now()}`;
       }
       return currentListId.value;
-    };
-    const formatDuration = (duration) => {
-      return utils_api_songlist.formatDuration(duration);
-    };
-    const formatSingerName = (singers, nameKey = "name", join = "、") => {
-      if (!singers)
-        return "未知歌手";
-      if (Array.isArray(singers)) {
-        const singer = [];
-        singers.forEach((item) => {
-          let name = item[nameKey];
-          if (!name)
-            return;
-          singer.push(name);
-        });
-        return singer.length > 0 ? singer.join(join) : "未知歌手";
-      }
-      return String(singers || "未知歌手");
-    };
-    const hasHighQuality = (song) => {
-      if (song.types) {
-        return song.types.some((t) => t.type === "flac" || t.type === "flac24bit" || t.type === "SQ");
-      }
-      if (song.quality === "SQ")
-        return true;
-      return false;
     };
     const getPlatformName = (source) => {
       const platformMap = {
@@ -385,42 +360,44 @@ const _sfc_main = {
       }
       playSongWithIndex(index);
     };
-    const loadMoreSongs = () => {
-      console.log("[Sharelist] loadMoreSongs 被触发");
-      console.log("[Sharelist] hasMore:", hasMore.value, "isLoading:", isLoading.value, "isPreviewMode:", isPreviewMode.value, "allSongs.length:", allSongs.value.length);
-      if (!hasMore.value) {
-        console.log("[Sharelist] 没有更多数据，跳过加载");
-        return;
-      }
-      if (isLoading.value) {
-        console.log("[Sharelist] 正在加载中，跳过");
-        return;
-      }
-      if (!isPreviewMode.value) {
-        console.log("[Sharelist] 非预览模式，跳过分页加载");
-        return;
-      }
-      console.log("[Sharelist] 开始加载更多歌曲...");
-      const nextPage = currentPage.value + 1;
-      const start = (nextPage - 1) * PAGE_SIZE;
-      const end = nextPage * PAGE_SIZE;
-      console.log("[Sharelist] 加载第", nextPage, "页, 范围:", start, "-", end);
-      const newSongs = allSongs.value.slice(start, end);
-      if (newSongs.length > 0) {
-        songs.value = [...songs.value, ...newSongs];
-        currentPage.value = nextPage;
-        console.log("[Sharelist] 已加载", newSongs.length, "首, 当前共", songs.value.length, "首");
-        hasMore.value = songs.value.length < allSongs.value.length;
-        console.log("[Sharelist] 是否还有更多:", hasMore.value);
-      } else {
-        hasMore.value = false;
-        console.log("[Sharelist] 没有更多歌曲了");
-      }
+    const onVirtualItemClick = ({ index, item }) => {
+      console.log("[VirtualList] 点击歌曲:", index, item.name);
+      playSong(index);
     };
-    common_vendor.onReachBottom(() => {
-      console.log("[Sharelist] onReachBottom 触发");
-      loadMoreSongs();
-    });
+    const onScrollHandler = (e) => {
+    };
+    const locateCurrentSong = async () => {
+      var _a, _b;
+      console.log("[locateCurrentSong] ========== 开始定位当前歌曲 ==========");
+      const playIndex = store_modules_list.listStore.state.playInfo.playIndex;
+      const playerListId = store_modules_list.listStore.state.playInfo.playerListId;
+      const tempListMeta = store_modules_list.listStore.state.tempList.meta;
+      console.log("[locateCurrentSong] 播放索引:", playIndex, "列表ID:", playerListId);
+      console.log("[locateCurrentSong] 当前列表歌曲数:", songs.value.length);
+      const isPlayingCurrentList = playerListId === store_modules_list.LIST_IDS.TEMP && ((tempListMeta == null ? void 0 : tempListMeta.id) === currentListId.value || ((_a = tempListMeta == null ? void 0 : tempListMeta.id) == null ? void 0 : _a.startsWith("local_")));
+      const isPlayingDirectly = playerListId === currentListId.value;
+      if (!isPlayingCurrentList && !isPlayingDirectly) {
+        console.warn("[locateCurrentSong] 当前没有播放本列表的歌曲");
+        common_vendor.index.showToast({ title: "当前没有播放本列表的歌曲", icon: "none" });
+        return;
+      }
+      if (playIndex < 0 || playIndex >= songs.value.length) {
+        console.warn("[locateCurrentSong] 播放索引无效:", playIndex);
+        common_vendor.index.showToast({ title: "无法定位当前歌曲", icon: "none" });
+        return;
+      }
+      console.log("[locateCurrentSong] 目标歌曲索引:", playIndex, "名称:", (_b = songs.value[playIndex]) == null ? void 0 : _b.name);
+      if (virtualListRef.value) {
+        console.log("[locateCurrentSong] 使用虚拟列表 scrollToIndex:", playIndex);
+        virtualListRef.value.scrollToIndex(playIndex, true);
+      }
+      common_vendor.index.showToast({
+        title: `已定位到第${playIndex + 1}首`,
+        icon: "none",
+        duration: 1500
+      });
+      console.log("[locateCurrentSong] ========== 定位完成 ==========");
+    };
     const retryLoad = () => {
       loadPreviewList();
     };
@@ -511,7 +488,7 @@ const _sfc_main = {
               common_vendor.index.showLoading({ title: "更新中..." });
               try {
                 console.log("[Sharelist] 使用已加载的歌曲数据更新...");
-                const fullSongList = allSongs.value || [];
+                const fullSongList = songs.value || [];
                 const simplifiedSongs = simplifySongs(fullSongList);
                 importedList[existsIndex].songs = simplifiedSongs;
                 importedList[existsIndex].trackCount = fullSongList.length;
@@ -541,7 +518,7 @@ const _sfc_main = {
             common_vendor.index.showLoading({ title: "获取数据中..." });
             try {
               console.log("[Sharelist] 使用已加载的歌曲数据...");
-              const fullSongList = allSongs.value || [];
+              const fullSongList = songs.value || [];
               console.log("[Sharelist] 已加载歌曲数量:", fullSongList.length, "首");
               if (fullSongList.length === 0) {
                 common_vendor.index.showToast({
@@ -625,7 +602,7 @@ const _sfc_main = {
       });
     };
     const loadPreviewList = async () => {
-      var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l;
+      var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k;
       console.log("[Sharelist] loadPreviewList 开始执行");
       if (isLoading.value) {
         console.log("[Sharelist] 正在加载中，跳过");
@@ -636,8 +613,8 @@ const _sfc_main = {
       try {
         let result;
         const pages = getCurrentPages();
-        const currentPage2 = pages[pages.length - 1];
-        const options = ((_a = currentPage2.$page) == null ? void 0 : _a.options) || currentPage2.options || {};
+        const currentPage = pages[pages.length - 1];
+        const options = ((_a = currentPage.$page) == null ? void 0 : _a.options) || currentPage.options || {};
         let targetPlaylistId = options.id;
         if (!targetPlaylistId && pageLink.value) {
           let link = decodeURIComponent(pageLink.value);
@@ -684,7 +661,7 @@ const _sfc_main = {
         if (shouldUseBackend) {
           console.log("[Sharelist] QQ音乐使用后端接口:", pageSource.value);
           console.log("[Sharelist] 调用 getListDetail:", pageSource.value, pageLink.value);
-          result = await utils_api_songlist.getListDetail(pageSource.value, pageLink.value, page.value);
+          result = await utils_api_songlist.getListDetail(pageSource.value, pageLink.value, 1);
         } else {
           console.log("[Sharelist] 使用前端直接API:", pageSource.value);
           console.log("[Sharelist] 调用 getListDetailDirect:", pageSource.value, targetPlaylistId);
@@ -713,19 +690,13 @@ const _sfc_main = {
           trackCount: playlistTrackCount.value
         });
         console.log("[Sharelist] 开始更新歌曲列表...");
-        allSongs.value = result.list || [];
-        console.log("[Sharelist] 总歌曲数量:", (_k = allSongs.value) == null ? void 0 : _k.length);
+        songs.value = result.list || [];
+        console.log("[Sharelist] 总歌曲数量:", (_k = songs.value) == null ? void 0 : _k.length);
         console.log("[Sharelist] result.total:", result.total);
         console.log("[Sharelist] result.limit:", result.limit);
-        currentPage2.value = 1;
-        const start = 0;
-        const end = Math.min(PAGE_SIZE, allSongs.value.length);
-        songs.value = allSongs.value.slice(start, end);
-        console.log("[Sharelist] 当前显示:", (_l = songs.value) == null ? void 0 : _l.length, "首");
-        console.log("[Sharelist] 第1页范围:", start, "-", end);
-        hasMore.value = allSongs.value.length > songs.value.length;
-        console.log("[Sharelist] 是否还有更多:", hasMore.value);
-        if (allSongs.value.length === 0) {
+        hasMore.value = false;
+        console.log("[Sharelist] 已禁用分页加载，显示所有歌曲");
+        if (songs.value.length === 0) {
           console.log("[Sharelist] 歌单为空，可能原因：");
           console.log("[Sharelist] 1. 歌单ID无效或歌单不存在");
           console.log("[Sharelist] 2. 歌单是私有的");
@@ -756,8 +727,8 @@ const _sfc_main = {
       initDarkMode();
       common_vendor.index.$on("miniPlayerHeightChange", handleMiniPlayerHeightChange);
       const pages = getCurrentPages();
-      const currentPage2 = pages[pages.length - 1];
-      const options = ((_a = currentPage2.$page) == null ? void 0 : _a.options) || currentPage2.options || {};
+      const currentPage = pages[pages.length - 1];
+      const options = ((_a = currentPage.$page) == null ? void 0 : _a.options) || currentPage.options || {};
       console.log("[Sharelist] 页面参数:", JSON.stringify(options));
       console.log("[Sharelist] link:", options.link);
       console.log("[Sharelist] source:", options.source);
@@ -793,7 +764,6 @@ const _sfc_main = {
               playlistTrackCount.value = targetList.list.length;
               playlistPlayCount.value = "";
               songs.value = songsWithAr;
-              allSongs.value = songsWithAr;
               hasMore.value = false;
               isLoading.value = false;
               isPreviewMode.value = false;
@@ -837,7 +807,6 @@ const _sfc_main = {
               playlistTrackCount.value = targetPlaylist.songs.length;
               playlistPlayCount.value = targetPlaylist.playCount ? formatPlayCount(targetPlaylist.playCount) : "";
               songs.value = songsWithAr;
-              allSongs.value = songsWithAr;
               hasMore.value = false;
               isLoading.value = false;
               isPreviewMode.value = false;
@@ -891,7 +860,6 @@ const _sfc_main = {
           console.log("[Sharelist] 查找到的歌单:", targetList ? targetList.name : "未找到");
           if (targetList && targetList.list && targetList.list.length > 0) {
             songs.value = targetList.list;
-            allSongs.value = targetList.list;
             const decodedName = options.playlistName ? decodeURIComponent(options.playlistName) : "";
             playlistName.value = decodedName || targetList.name || "未知歌单";
             playlistCover.value = targetList.coverImgUrl || "/static/logo.png";
@@ -914,7 +882,6 @@ const _sfc_main = {
           console.log("[Sharelist] 喜欢列表数量:", loveList.length);
           if (loveList.length > 0) {
             songs.value = loveList;
-            allSongs.value = loveList;
             playlistName.value = "我喜欢的音乐";
             playlistCover.value = "/static/logo.png";
             playlistTrackCount.value = loveList.length;
@@ -1097,69 +1064,53 @@ const _sfc_main = {
         }),
         B: common_vendor.o(playAll)
       }) : {}, {
-        C: isLoading.value && songs.value.length === 0
+        C: common_vendor.p({
+          name: "location-crosshairs",
+          size: "18",
+          color: "#fff"
+        }),
+        D: common_vendor.o(locateCurrentSong),
+        E: isLoading.value && songs.value.length === 0
       }, isLoading.value && songs.value.length === 0 ? {} : {}, {
-        D: loadError.value && !isLoading.value
+        F: loadError.value && !isLoading.value
       }, loadError.value && !isLoading.value ? {
-        E: common_vendor.p({
+        G: common_vendor.p({
           name: "exclamation-circle",
           size: "48",
           color: "#999"
         }),
-        F: common_vendor.t(loadError.value),
-        G: common_vendor.o(retryLoad)
+        H: common_vendor.t(loadError.value),
+        I: common_vendor.o(retryLoad)
       } : {}, {
-        H: songs.value.length > 0
-      }, songs.value.length > 0 ? common_vendor.e({
-        I: common_vendor.f(songs.value, (song, index, i0) => {
-          var _a, _b, _c;
-          return common_vendor.e({
-            a: common_vendor.t(index + 1),
-            b: common_vendor.t(song.name),
-            c: hasHighQuality(song)
-          }, hasHighQuality(song) ? {} : {}, {
-            d: common_vendor.t(formatSingerName(song.ar || song.singer)),
-            e: ((_a = song.al) == null ? void 0 : _a.name) || song.album || song.albumName
-          }, ((_b = song.al) == null ? void 0 : _b.name) || song.album || song.albumName ? {
-            f: common_vendor.t(((_c = song.al) == null ? void 0 : _c.name) || song.album || song.albumName)
-          } : {}, {
-            g: currentSongIndex.value === index && isPlaying.value
-          }, currentSongIndex.value === index && isPlaying.value ? {
-            h: "38b2cfab-5-" + i0,
-            i: common_vendor.p({
-              name: "play",
-              size: "18"
-            })
-          } : currentSongIndex.value === index && !isPlaying.value ? {
-            k: "38b2cfab-6-" + i0,
-            l: common_vendor.p({
-              name: "pause",
-              size: "18"
-            })
-          } : {}, {
-            j: currentSongIndex.value === index && !isPlaying.value,
-            m: common_vendor.t(formatDuration(song.dt || song.interval || song.duration)),
-            n: song.id || index,
-            o: currentSongIndex.value === index ? 1 : "",
-            p: common_vendor.o(($event) => playSong(index), song.id || index)
-          });
+        J: songs.value.length > 0
+      }, songs.value.length > 0 ? {
+        K: common_vendor.sr(virtualListRef, "b5e5e412-6", {
+          "k": "virtualListRef"
         }),
-        J: isLoading.value && songs.value.length > 0
-      }, isLoading.value && songs.value.length > 0 ? {} : {}, {
-        K: !hasMore.value && songs.value.length > 0 && !isLoading.value
-      }, !hasMore.value && songs.value.length > 0 && !isLoading.value ? {} : {}, {
-        L: miniPlayerBottomHeight.value + "px"
-      }) : {}, {
-        M: !isLoading.value && !loadError.value && songs.value.length === 0
-      }, !isLoading.value && !loadError.value && songs.value.length === 0 ? {
+        L: common_vendor.o(onScrollHandler),
+        M: common_vendor.o(onVirtualItemClick),
         N: common_vendor.p({
+          items: songs.value,
+          ["item-height"]: 60,
+          height: "100%",
+          ["buffer-size"]: 10,
+          loading: isLoading.value,
+          ["current-play-index"]: currentSongIndex.value,
+          ["is-playing"]: isPlayerPlaying.value,
+          ["dark-mode"]: darkMode.value,
+          ["bottom-safe-height"]: common_vendor.unref(totalBottomHeight),
+          ["show-more-button"]: false,
+          ["show-top-radius"]: true
+        })
+      } : {}, {
+        O: !isLoading.value && !loadError.value && songs.value.length === 0
+      }, !isLoading.value && !loadError.value && songs.value.length === 0 ? {
+        P: common_vendor.p({
           name: "ban",
           size: "64",
           color: "#ccc"
         })
       } : {}, {
-        O: scrollTop.value,
-        P: common_vendor.o(loadMoreSongs),
         Q: !isPreviewMode.value
       }, !isPreviewMode.value ? {
         R: common_vendor.p({
@@ -1171,5 +1122,5 @@ const _sfc_main = {
     };
   }
 };
-const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-38b2cfab"]]);
+const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-b5e5e412"]]);
 wx.createPage(MiniProgramPage);
