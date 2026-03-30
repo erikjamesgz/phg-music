@@ -1,8 +1,25 @@
 {
-  "version": "1.0.05",
-  "versionCode": 1005,
-  "desc": "1. 修复歌词显示异常问题\n2. 提高歌单预览页面的加载速度\n3. 修复英文歌曲中文翻译显示异常问题\n4.修复若干小问题",
-  "downloadUrl": "",
+  "version": "1.0.07",
+  "versionCode": 1007,
+  "desc": "1. 升级测试，请忽略",
   "releaseUrl": "",
-  "projectUrl": "https://github.com/erikjamesgz/phg-music"
+  "projectUrl": "https://github.com/erikjamesgz/phg-music",
+  "platforms": {
+    "android": {
+      "downloadUrl": "https://github.com/erikjamesgz/phg-music/releases/download/phg-music-v1.0.07-release/phg-music-v1.0.07-release-20260330.apk"
+    },
+    "ios": {
+      "downloadUrl": ""
+    },
+    "windows": {
+      "downloadUrl": ""
+    },
+    "linux": {
+      "downloadUrl": ""
+    },
+    "macos": {
+      "downloadUrl": ""
+    }
+  }
 }
+
