@@ -20,15 +20,10 @@ const _sfc_main = {
   __name: "index",
   setup(__props) {
     common_vendor.useCssVars((_ctx) => ({
-      "06472861": lyricsContainerHeight.value + "rpx"
+      "d99b7768": lyricsContainerHeight.value + "rpx"
     }));
     const instance = common_vendor.getCurrentInstance();
     const statusBarHeight = common_vendor.ref(utils_system.getStatusBarHeight());
-    const statusBarStyle = common_vendor.computed(() => ({
-      height: `${statusBarHeight.value}px`,
-      width: "100%",
-      backgroundColor: "transparent"
-    }));
     const navbarStyle = common_vendor.computed(() => ({
       paddingTop: `${statusBarHeight.value}px`
     }));
@@ -57,6 +52,7 @@ const _sfc_main = {
     });
     const playing = common_vendor.computed(() => store_modules_player.playerStore.state.playing);
     const playMode = common_vendor.computed(() => store_modules_player.playerStore.state.playMode);
+    const isLoading = common_vendor.computed(() => store_modules_player.playerStore.state.isLoading);
     const currentTime = common_vendor.computed(() => store_modules_player.playerStore.state.currentTime);
     const duration = common_vendor.computed(() => store_modules_player.playerStore.state.duration);
     const isDragging = common_vendor.ref(false);
@@ -524,7 +520,10 @@ const _sfc_main = {
     });
     common_vendor.onUnmounted(() => {
       console.log("[player] onUnmounted 调用 - 组件卸载");
-      clearTimeout(sourceSwitchHintTimer);
+      if (favoriteHintTimer) {
+        clearTimeout(favoriteHintTimer);
+        favoriteHintTimer = null;
+      }
     });
     common_vendor.onBackPress(() => {
       console.log("[player] onBackPress 触发 - 系统返回按钮被按下，销毁页面");
@@ -652,6 +651,17 @@ const _sfc_main = {
       console.log("[onPicError] 图片加载失败，使用默认图标");
       songPicCache.value = "";
       showDefaultCover.value = true;
+    };
+    const previewCoverImage = () => {
+      if (!songPicCache.value) {
+        console.log("[player] 没有封面图片，无法预览");
+        return;
+      }
+      console.log("[player] 预览封面图片:", songPicCache.value);
+      common_vendor.index.previewImage({
+        current: utils_imageProxy.proxyImageUrl(songPicCache.value),
+        urls: [utils_imageProxy.proxyImageUrl(songPicCache.value)]
+      });
     };
     const handlePlayerImageError = (event) => {
       if (!songPicCache.value) {
@@ -1035,18 +1045,6 @@ const _sfc_main = {
             const containerCenter = containerRect.height / 2;
             const lineTop = lineRect.top - containerRect.top;
             const scrollTop = scrollInfo.scrollTop + lineTop - containerCenter + lineRect.height / 2;
-            console.log(
-              "[scrollToCurrentLyric] 当前索引:",
-              currentLyricIndex.value,
-              "容器高度:",
-              containerRect.height,
-              "歌词高度:",
-              lineRect.height,
-              "歌词位置:",
-              lineTop,
-              "滚动位置:",
-              scrollTop
-            );
             lyricScrollTop.value = Math.max(0, scrollTop);
             setTimeout(() => {
               isScrollToActive = false;
@@ -1408,38 +1406,38 @@ const _sfc_main = {
     };
     return (_ctx, _cache) => {
       return common_vendor.e({
-        a: common_vendor.s(statusBarStyle.value),
-        b: common_vendor.p({
+        a: common_vendor.p({
           type: "fas",
           name: "chevron-down",
           size: "20",
           color: darkMode.value ? "#ffffff" : "#4b5563"
         }),
-        c: common_vendor.o(goBack),
-        d: common_vendor.t(formatAlbum(currentSong.value)),
-        e: navbarMarqueeScroll.value
+        b: common_vendor.o(goBack, "04"),
+        c: common_vendor.t(formatAlbum(currentSong.value)),
+        d: navbarMarqueeScroll.value
       }, navbarMarqueeScroll.value ? {} : {}, {
-        f: navbarMarqueeScroll.value
+        e: navbarMarqueeScroll.value
       }, navbarMarqueeScroll.value ? {
-        g: common_vendor.t(formatAlbum(currentSong.value))
+        f: common_vendor.t(formatAlbum(currentSong.value))
       } : {}, {
-        h: navbarMarqueeScroll.value ? 1 : "",
-        i: currentSlide.value === 0 ? 1 : "",
-        j: currentSlide.value === 1 ? 1 : "",
-        k: common_vendor.s(navbarStyle.value),
-        l: !showDefaultCover.value && songPicCache.value
+        g: navbarMarqueeScroll.value ? 1 : "",
+        h: currentSlide.value === 0 ? 1 : "",
+        i: currentSlide.value === 1 ? 1 : "",
+        j: common_vendor.s(navbarStyle.value),
+        k: !showDefaultCover.value && songPicCache.value
       }, !showDefaultCover.value && songPicCache.value ? {
-        m: common_vendor.unref(utils_imageProxy.proxyImageUrl)(songPicCache.value),
-        n: common_vendor.o(handlePlayerImageError)
+        l: common_vendor.unref(utils_imageProxy.proxyImageUrl)(songPicCache.value),
+        m: common_vendor.o(handlePlayerImageError, "1e")
       } : {
-        o: common_vendor.p({
+        n: common_vendor.p({
           type: "fas",
           name: "music",
           size: "80",
           color: "rgba(0, 215, 205, 0.4)"
         })
       }, {
-        p: !showDefaultCover.value && songPicCache.value ? 1 : "",
+        o: !showDefaultCover.value && songPicCache.value ? 1 : "",
+        p: common_vendor.o(previewCoverImage, "7d"),
         q: playing.value ? 1 : "",
         r: playing.value ? 1 : "",
         s: common_vendor.t(currentSong.value.name),
@@ -1457,7 +1455,7 @@ const _sfc_main = {
         A: !playing.value ? 1 : "",
         B: showDanmaku.value && danmakuList.value.length > 0
       }, showDanmaku.value && danmakuList.value.length > 0 ? {
-        C: common_vendor.o(handleDanmakuLoadMore),
+        C: common_vendor.o(handleDanmakuLoadMore, "db"),
         D: common_vendor.p({
           ["danmaku-list"]: danmakuList.value,
           ["dark-mode"]: darkMode.value,
@@ -1483,11 +1481,11 @@ const _sfc_main = {
           });
         }),
         G: lyricScrollTop.value,
-        H: common_vendor.o(onLyricScroll),
-        I: common_vendor.o(onLyricScrollTap)
+        H: common_vendor.o(onLyricScroll, "26"),
+        I: common_vendor.o(onLyricScrollTap, "73")
       } : {}, {
         J: currentSlide.value,
-        K: common_vendor.o(onSwiperChange),
+        K: common_vendor.o(onSwiperChange, "c5"),
         L: currentSlide.value === 1
       }, currentSlide.value === 1 ? {
         M: common_vendor.p({
@@ -1496,7 +1494,7 @@ const _sfc_main = {
           size: "16",
           color: darkMode.value ? "#ffffff" : "#4b5563"
         }),
-        N: common_vendor.o(switchToAlbum)
+        N: common_vendor.o(switchToAlbum, "e2")
       } : {}, {
         O: currentSlide.value === 0
       }, currentSlide.value === 0 ? {
@@ -1506,13 +1504,13 @@ const _sfc_main = {
           size: "16",
           color: darkMode.value ? "#ffffff" : "#4b5563"
         }),
-        Q: common_vendor.o(switchToLyrics)
+        Q: common_vendor.o(switchToLyrics, "59")
       } : {}, {
         R: isDragging.value ? dragPercent.value + "%" : progressPercent.value + "%",
         S: isDragging.value ? dragPercent.value + "%" : progressPercent.value + "%",
-        T: common_vendor.o(onProgressTouchStart),
-        U: common_vendor.o(onProgressTouchMove),
-        V: common_vendor.o(onProgressTouchEnd),
+        T: common_vendor.o(onProgressTouchStart, "e4"),
+        U: common_vendor.o(onProgressTouchMove, "f3"),
+        V: common_vendor.o(onProgressTouchEnd, "e8"),
         W: common_vendor.t(formatTime(currentTime.value)),
         X: common_vendor.t(formatTime(duration.value)),
         Y: common_vendor.p({
@@ -1521,105 +1519,109 @@ const _sfc_main = {
           size: "20",
           color: darkMode.value ? "#ffffff" : "#6b7280"
         }),
-        Z: common_vendor.o(togglePlayMode),
+        Z: common_vendor.o(togglePlayMode, "ea"),
         aa: common_vendor.p({
           type: "fas",
           name: "backward-step",
           size: "28",
           color: darkMode.value ? "#ffffff" : "#374151"
         }),
-        ab: common_vendor.o(playPrev),
-        ac: common_vendor.p({
+        ab: common_vendor.o(playPrev, "d7"),
+        ac: isLoading.value
+      }, isLoading.value ? {} : {
+        ad: common_vendor.p({
           type: "fas",
           name: playing.value ? "pause" : "play",
           size: "28",
           color: "#ffffff"
-        }),
-        ad: common_vendor.o(togglePlay),
-        ae: common_vendor.p({
+        })
+      }, {
+        ae: isLoading.value ? 1 : "",
+        af: common_vendor.o(togglePlay, "24"),
+        ag: common_vendor.p({
           type: "fas",
           name: "forward-step",
           size: "28",
           color: darkMode.value ? "#ffffff" : "#374151"
         }),
-        af: common_vendor.o(playNext),
-        ag: common_vendor.p({
+        ah: common_vendor.o(playNext, "7a"),
+        ai: common_vendor.p({
           type: "fas",
           name: "comment",
           size: "20",
           color: darkMode.value ? "#ffffff" : "#6b7280"
         }),
-        ah: commentTotalCount.value > 0
+        aj: commentTotalCount.value > 0
       }, commentTotalCount.value > 0 ? {
-        ai: common_vendor.t(commentTotalCount.value > 999 ? "999+" : commentTotalCount.value)
+        ak: common_vendor.t(commentTotalCount.value > 999 ? "999+" : commentTotalCount.value)
       } : {}, {
-        aj: common_vendor.o(showComment),
-        ak: common_vendor.p({
+        al: common_vendor.o(showComment, "68"),
+        am: common_vendor.p({
           type: "fas",
           name: "clock",
           size: "18",
           color: sleepTimerRemaining.value > 0 ? "#00d7cd" : darkMode.value ? "#ffffff" : "#6b7280"
         }),
-        al: sleepTimerRemaining.value > 0
+        an: sleepTimerRemaining.value > 0
       }, sleepTimerRemaining.value > 0 ? {
-        am: common_vendor.t(formatSleepTimerShort.value)
+        ao: common_vendor.t(formatSleepTimerShort.value)
       } : {}, {
-        an: sleepTimerRemaining.value > 0 ? 1 : "",
-        ao: common_vendor.o(showSleepTimerPopup),
-        ap: showFavoriteHint.value
+        ap: sleepTimerRemaining.value > 0 ? 1 : "",
+        aq: common_vendor.o(showSleepTimerPopup, "25"),
+        ar: showFavoriteHint.value
       }, showFavoriteHint.value ? {
-        aq: common_vendor.t(currentFavoriteHintText.value),
-        ar: common_vendor.p({
+        as: common_vendor.t(currentFavoriteHintText.value),
+        at: common_vendor.p({
           type: "fas",
           name: "xmark",
           size: "10",
           color: "rgba(255,255,255,0.7)"
         }),
-        as: common_vendor.o(($event) => showFavoriteHint.value = false),
-        at: common_vendor.o(handleFavorite)
+        av: common_vendor.o(($event) => showFavoriteHint.value = false, "7b"),
+        aw: common_vendor.o(handleFavorite, "3b")
       } : {}, {
-        av: common_vendor.p({
+        ax: common_vendor.p({
           type: "fas",
           name: isCurrentSongFavorite.value ? "heart" : "heart",
           size: 18,
           color: isCurrentSongFavorite.value ? "#ff6b6b" : darkMode.value ? "#ffffff" : "#6b7280"
         }),
-        aw: isCurrentSongFavorite.value ? 1 : "",
-        ax: common_vendor.o(handleFavorite),
-        ay: common_vendor.p({
+        ay: isCurrentSongFavorite.value ? 1 : "",
+        az: common_vendor.o(handleFavorite, "fc"),
+        aA: common_vendor.p({
           type: "fas",
           name: "plus",
           size: "18",
           color: darkMode.value ? "#ffffff" : "#6b7280"
         }),
-        az: common_vendor.o(createNewList),
-        aA: common_vendor.p({
+        aB: common_vendor.o(createNewList, "d1"),
+        aC: common_vendor.p({
           type: "fas",
           name: "clone",
           size: "18",
           color: darkMode.value ? "#ffffff" : "#6b7280"
         }),
-        aB: hasSwitchedSource.value && showSourceSwitchHint.value
+        aD: hasSwitchedSource.value && showSourceSwitchHint.value
       }, hasSwitchedSource.value && showSourceSwitchHint.value ? {} : {}, {
-        aC: hasSwitchedSource.value && showSourceSwitchHint.value ? 1 : "",
-        aD: common_vendor.o(showMusicToggle),
-        aE: showAddToModalFlag.value
+        aE: hasSwitchedSource.value && showSourceSwitchHint.value ? 1 : "",
+        aF: common_vendor.o(showMusicToggle, "c5"),
+        aG: showAddToModalFlag.value
       }, showAddToModalFlag.value ? {
-        aF: common_vendor.p({
+        aH: common_vendor.p({
           type: "fas",
           name: "xmark",
           size: "20",
           color: "#999"
         }),
-        aG: common_vendor.o(closeAddToModal),
-        aH: common_vendor.p({
+        aI: common_vendor.o(closeAddToModal, "ff"),
+        aJ: common_vendor.p({
           type: "fas",
           name: "plus",
           size: "18",
           color: "#00d7cd"
         }),
-        aI: common_vendor.o(createNewList),
-        aJ: common_vendor.f(availableLists.value, (list, k0, i0) => {
+        aK: common_vendor.o(createNewList, "d8"),
+        aL: common_vendor.f(availableLists.value, (list, k0, i0) => {
           return {
             a: "54811c87-17-" + i0,
             b: common_vendor.p({
@@ -1637,60 +1639,60 @@ const _sfc_main = {
             i: common_vendor.o(($event) => addToList(list.id), list.id)
           };
         }),
-        aK: common_vendor.o(() => {
-        }),
-        aL: common_vendor.o(closeAddToModal)
+        aM: common_vendor.o(() => {
+        }, "8f"),
+        aN: common_vendor.o(closeAddToModal, "c2")
       } : {}, {
-        aM: showSleepTimerPopupFlag.value
+        aO: showSleepTimerPopupFlag.value
       }, showSleepTimerPopupFlag.value ? common_vendor.e({
-        aN: common_vendor.p({
+        aP: common_vendor.p({
           type: "fas",
           name: "xmark",
           size: "16",
           color: "#6b7280"
         }),
-        aO: common_vendor.o(closeSleepTimerPopup),
-        aP: sleepTimerRemaining.value > 0
+        aQ: common_vendor.o(closeSleepTimerPopup, "d6"),
+        aR: sleepTimerRemaining.value > 0
       }, sleepTimerRemaining.value > 0 ? {
-        aQ: common_vendor.t(formatSleepTimerRemaining.value),
-        aR: common_vendor.o(cancelSleepTimer)
+        aS: common_vendor.t(formatSleepTimerRemaining.value),
+        aT: common_vendor.o(cancelSleepTimer, "f8")
       } : {}, {
-        aS: common_vendor.f(hourOptions.value, (hour, index, i0) => {
+        aU: common_vendor.f(hourOptions.value, (hour, index, i0) => {
           return {
             a: common_vendor.t(hour),
             b: index
           };
         }),
-        aT: common_vendor.f(minuteOptions.value, (minute, index, i0) => {
+        aV: common_vendor.f(minuteOptions.value, (minute, index, i0) => {
           return {
             a: common_vendor.t(minute),
             b: index
           };
         }),
-        aU: sleepTimerPickerValue.value,
-        aV: common_vendor.o(onSleepTimerPickerChange),
-        aW: common_vendor.o(closeSleepTimerPopup),
-        aX: common_vendor.o(confirmSleepTimerSelection),
-        aY: common_vendor.o(() => {
-        }),
-        aZ: common_vendor.o(closeSleepTimerPopup)
+        aW: sleepTimerPickerValue.value,
+        aX: common_vendor.o(onSleepTimerPickerChange, "93"),
+        aY: common_vendor.o(closeSleepTimerPopup, "39"),
+        aZ: common_vendor.o(confirmSleepTimerSelection, "2b"),
+        ba: common_vendor.o(() => {
+        }, "76"),
+        bb: common_vendor.o(closeSleepTimerPopup, "29")
       }) : {}, {
-        ba: common_vendor.o(closeComment),
-        bb: common_vendor.p({
+        bc: common_vendor.o(closeComment, "cc"),
+        bd: common_vendor.p({
           show: showCommentFlag.value,
           ["music-info"]: originalSong.value
         }),
-        bc: common_vendor.o(closeMusicToggleModal),
-        bd: common_vendor.o(handleToggleConfirm),
-        be: common_vendor.o(handleTogglePreview),
-        bf: common_vendor.p({
+        be: common_vendor.o(closeMusicToggleModal, "96"),
+        bf: common_vendor.o(handleToggleConfirm, "0f"),
+        bg: common_vendor.o(handleTogglePreview, "3d"),
+        bh: common_vendor.p({
           visible: showMusicToggleModal.value,
           ["original-song"]: toggleOriginalSong.value,
           ["list-id"]: null,
           ["dark-mode"]: darkMode.value
         }),
-        bg: darkMode.value ? 1 : "",
-        bh: common_vendor.s(_ctx.__cssVars())
+        bi: darkMode.value ? 1 : "",
+        bj: common_vendor.s(_ctx.__cssVars())
       });
     };
   }

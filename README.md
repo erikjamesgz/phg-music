@@ -1,3 +1,5 @@
+![拼好歌 Logo](static/logo.png)
+
 # 拼好歌 (PHG Music)
 
 ## ✨ 项目简介
@@ -24,7 +26,34 @@
 
 ### 📋 使用步骤
 
-#### 第一步：准备环境
+#### 🤖 Android 用户
+
+Android 用户可以直接下载安装 APK，无需配置开发环境。
+
+1. **下载安装拼好歌**
+   - 访问 [GitHub Releases](https://github.com/erikjamesgz/phg-music/releases) 下载最新版本 APK
+   - 安装到手机即可使用
+
+2. **配置服务器地址**
+   - 打开拼好歌 APP 的设置页面
+   - 点击"添加服务器地址"
+   - 填入服务器地址：`https://xxxxx-dn-phg-musi-xx.deno.dev/你的API_KEY`
+   - 点击"测试"，返回正常即配置成功
+   
+   > 如果没有自己的服务器，可以使用拼好歌的附属服务器项目：[dn-phg-music-server](https://github.com/erikjamesgz/dn-phg-music-server)
+
+3. **导入音源脚本**
+   - 在设置页面点击"音源管理"
+   - 点击"在线导入"
+   - 输入音源脚本地址
+   - 点击"导入"
+   - 选择默认调用音源
+
+#### 🍎 iOS 以及纯血鸿蒙系统用户
+
+iOS 和纯血鸿蒙系统用户需要使用微信开发者工具编译项目。
+
+##### 第一步：准备环境
 
 1. **下载项目代码**
    - 准备一台电脑
@@ -32,14 +61,14 @@
 
 2. **注册微信小程序开发者**
    - 注册成为微信小程序开发者
-   - 获取 AppID（此AppID不能分享小程序他人使用，每个用户需要自己注册微信小程序开发者获取自己的AppID）
+   - 获取 AppID（此 AppID 不能分享小程序给他人使用，每个用户需要自己注册微信小程序开发者获取自己的 AppID）
    - 教程：[微信小程序快速开始](https://developers.weixin.qq.com/miniprogram/dev/framework/quickstart/getstart.html)
 
 3. **安装微信开发者工具**
    - 下载并安装微信开发者工具
    - 打开项目并设置 AppID
 
-#### 第二步：配置项目
+##### 第二步：配置项目
 
 1. **配置开发者工具**
    - 在微信开发者工具中配置"不校验合法域名"
@@ -49,7 +78,7 @@
    - 点击微信开发者工具右上方的"预览"按钮
    - 生成二维码供手机扫描
 
-#### 第三步：手机端配置
+##### 第三步：手机端配置
 
 1. **开启开发者模式**
    - 手机扫描二维码打开小程序
@@ -205,7 +234,7 @@
 ## 🙏 致谢
 
 - [洛雪音乐](https://github.com/lyswhut/lx-music-desktop) - 桌面版参考,抄了洛雪音乐部分代码，感谢洛雪大哥
-- Trae、Kimi、GML、MiniMax、Deepseek感谢它们这几个Ai工具写的屎山代码
+- Trae、Kimi、GML、MiniMax、Deepseek感谢它们这几个AI工具写的屎山代码
 
 ## ⚠️ 重要提示
 

@@ -101,28 +101,32 @@ const getAppVersion = () => {
   try {
     const systemInfo = common_vendor.index.getSystemInfoSync();
     console.log("[getAppVersion] 系统信息:", systemInfo);
+    const version = systemInfo.appVersion || systemInfo.version || "1.0.05";
+    const versionCode = systemInfo.appVersionCode || systemInfo.versionCode || 1005;
     return {
       name: "拼好歌",
-      version: systemInfo.appVersion || "1.0.0",
-      versionCode: systemInfo.appVersionCode || 100
+      version,
+      versionCode: parseInt(versionCode) || 1005
     };
   } catch (e) {
     console.error("[getAppVersion] 获取版本信息失败:", e);
     return {
       name: "拼好歌",
-      version: "1.0.0",
-      versionCode: 100
+      version: "1.0.05",
+      versionCode: 1005
     };
   }
 };
 const setStatusBarTextColor = (color = "black") => {
+  console.log("[setStatusBarTextColor] 设置状态栏颜色:", color);
   try {
     common_vendor.index.setNavigationBarColor({
       frontColor: color === "white" ? "#ffffff" : "#000000",
       backgroundColor: color === "white" ? "#000000" : "#ffffff"
     });
+    console.log("[setStatusBarTextColor] 微信小程序设置成功");
   } catch (e) {
-    console.error("[setStatusBarTextColor] 设置状态栏颜色失败:", e);
+    console.error("[setStatusBarTextColor] 微信小程序设置状态栏颜色失败:", e);
   }
 };
 exports.getAppVersion = getAppVersion;

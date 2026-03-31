@@ -28,12 +28,23 @@ const playSongCommon = async (song, options = {}) => {
     console.log("[playSongCommon] 使用音质:", quality);
     const previousSongId = (_a = store_modules_player.playerStore.state.currentSong) == null ? void 0 : _a.id;
     console.log("[playSongCommon] 之前播放的歌曲ID:", previousSongId);
+    console.log("[playSongCommon] 原始专辑信息:", {
+      album: song.album,
+      albumType: typeof song.album,
+      albumName: song.albumName,
+      al: song.al
+    });
     let albumNameForList = "";
     if (typeof song.album === "string") {
       albumNameForList = song.album;
     } else if (song.album && typeof song.album === "object") {
       albumNameForList = song.album.name || "";
+    } else if (song.albumName) {
+      albumNameForList = song.albumName;
+    } else if (song.al && song.al.name) {
+      albumNameForList = song.al.name;
     }
+    console.log("[playSongCommon] 提取的专辑名称:", albumNameForList);
     let singerStr = "";
     let singerArr = [];
     if (song.singer && typeof song.singer === "string") {

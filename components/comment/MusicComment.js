@@ -197,30 +197,30 @@ const _sfc_main = {
           size: "16",
           color: "#00d7cd"
         }),
-        d: common_vendor.o(handleRefresh),
+        d: common_vendor.o(handleRefresh, "82"),
         e: common_vendor.p({
           type: "fas",
           name: "xmark",
           size: "16",
           color: "#999"
         }),
-        f: common_vendor.o(handleClose),
+        f: common_vendor.o(handleClose, "0c"),
         g: available.value
       }, available.value ? common_vendor.e({
         h: common_vendor.t(hotComment.value.total),
         i: tabActiveId.value === "hot" ? 1 : "",
-        j: common_vendor.o(($event) => handleToggleTab("hot")),
+        j: common_vendor.o(($event) => handleToggleTab("hot"), "18"),
         k: newComment.value.total > 0
       }, newComment.value.total > 0 ? {
         l: common_vendor.t(newComment.value.total)
       } : {}, {
         m: tabActiveId.value === "new" ? 1 : "",
-        n: common_vendor.o(($event) => handleToggleTab("new")),
+        n: common_vendor.o(($event) => handleToggleTab("new"), "ee"),
         o: tabActiveId.value === "hot"
       }, tabActiveId.value === "hot" ? common_vendor.e({
         p: hotComment.value.isLoadError
       }, hotComment.value.isLoadError ? {
-        q: common_vendor.o(($event) => handleGetHotComment(hotComment.value.page, hotComment.value.limit))
+        q: common_vendor.o(($event) => handleGetHotComment(hotComment.value.page, hotComment.value.limit), "e1")
       } : hotComment.value.isLoading && hotComment.value.list.length === 0 ? {} : hotComment.value.list.length > 0 ? {
         t: common_vendor.p({
           comments: hotComment.value.list
@@ -236,7 +236,7 @@ const _sfc_main = {
       }, tabActiveId.value === "new" ? common_vendor.e({
         y: newComment.value.isLoadError
       }, newComment.value.isLoadError ? {
-        z: common_vendor.o(($event) => handleGetNewComment(newComment.value.page, newComment.value.limit))
+        z: common_vendor.o(($event) => handleGetNewComment(newComment.value.page, newComment.value.limit), "32")
       } : newComment.value.isLoading && newComment.value.list.length === 0 ? {} : newComment.value.list.length > 0 ? {
         C: common_vendor.p({
           comments: newComment.value.list
@@ -249,12 +249,12 @@ const _sfc_main = {
         E: common_vendor.t(newComment.value.isLoading ? "加载中..." : "上拉加载更多")
       } : {}) : {}, {
         F: scrollTop.value,
-        G: common_vendor.o(handleLoadMore)
+        G: common_vendor.o(handleLoadMore, "53")
       }) : {}, {
         H: darkMode.value ? 1 : "",
         I: common_vendor.o(() => {
-        }),
-        J: common_vendor.o(handleClose)
+        }, "8f"),
+        J: common_vendor.o(handleClose, "36")
       }) : {});
     };
   }

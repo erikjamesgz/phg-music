@@ -71,8 +71,9 @@ const _sfc_main = {
     };
     const checkDarkMode = () => {
       const darkMode = common_vendor.index.getStorageSync("darkMode") === "true";
-      const followSystem = common_vendor.index.getStorageSync("followSystem") !== "false";
-      if (followSystem) {
+      const followSystem = common_vendor.index.getStorageSync("followSystem");
+      const isFollowSystem = followSystem !== "false" && followSystem !== false;
+      if (isFollowSystem) {
         const systemInfo = common_vendor.index.getSystemInfoSync();
         isDarkMode.value = systemInfo.theme === "dark";
       } else {
@@ -80,7 +81,7 @@ const _sfc_main = {
       }
       const theme = isDarkMode.value ? "dark" : "light";
       utils_system.setAppTheme(theme);
-      console.log("[Index] checkDarkMode - 暗黑模式:", isDarkMode.value);
+      console.log("[Index] checkDarkMode - 暗黑模式:", isDarkMode.value, "isFollowSystem:", isFollowSystem);
     };
     const checkMiniPlayerStatus = () => {
       console.log("[Index] checkMiniPlayerStatus - 开始检查");
@@ -120,7 +121,6 @@ const _sfc_main = {
         },
         onActivated: () => {
           console.log("[Index] 页面激活");
-          utils_system.setStatusBarTextColor("black");
           checkDarkMode();
           checkMiniPlayerStatus();
           console.log("[Index] 页面激活完成 - 底部高度:", totalBottomHeight.value);
@@ -715,13 +715,15 @@ const _sfc_main = {
           }
           store_modules_list.listStore.clearTempList();
           const playlistId = `banner_${Date.now()}`;
+          const originalPlaylistId = banner.targetId ? String(banner.targetId) : playlistId;
           store_modules_list.listStore.setTempList(
             playlistId,
             playlistDetail.list,
             {
               id: playlistId,
               source: "kw",
-              name: banner.typeTitle || "歌单推荐"
+              name: banner.typeTitle || "歌单推荐",
+              link: originalPlaylistId
             }
           );
           store_modules_list.listStore.setPlayerListId(store_modules_list.LIST_IDS.TEMP);
@@ -776,11 +778,12 @@ const _sfc_main = {
           store_modules_list.listStore.setPlayMusicInfo(store_modules_list.LIST_IDS.TEMP, musicInfo, false);
           store_modules_player.playerStore.playSong(musicInfo);
           store_modules_player.playerStore.addToListHistory({
-            id: playlistId,
+            id: originalPlaylistId,
             name: banner.typeTitle || "歌单推荐",
             source: "kw",
             coverUrl: banner.imageUrl || "",
-            trackCount: ((_b = playlistDetail.list) == null ? void 0 : _b.length) || 0
+            trackCount: ((_b = playlistDetail.list) == null ? void 0 : _b.length) || 0,
+            link: originalPlaylistId
           });
           common_vendor.index.showToast({
             title: `正在播放: ${banner.typeTitle}`,
@@ -960,12 +963,18 @@ const _sfc_main = {
       });
     };
     const goToSearch = () => {
+      console.log("[Index] goToSearch 被调用");
       common_vendor.index.setStorageSync("fromSearchBar", true);
-      common_vendor.index.$emit("main-switch-tab", { index: 1 });
+      setTimeout(() => {
+        console.log("[Index] 发送 main-switch-tab 事件，目标: 1");
+        common_vendor.index.$emit("main-switch-tab", { index: 1 });
+      }, 100);
     };
     const goToSearchWithArtist = (artistName) => {
       common_vendor.index.setStorageSync("searchKeywordFromIndex", artistName);
-      common_vendor.index.$emit("main-switch-tab", { index: 1 });
+      setTimeout(() => {
+        common_vendor.index.$emit("main-switch-tab", { index: 1 });
+      }, 50);
     };
     const goToHotSongs = () => {
       common_vendor.index.setStorageSync("rank_temp_source", "mg");
@@ -1020,13 +1029,15 @@ const _sfc_main = {
         const songs = playlistDetail.list;
         store_modules_list.listStore.clearTempList();
         const playlistId = `daily_${Date.now()}`;
+        const originalPlaylistId = `digest-${selectedPlaylist.digest}__${selectedPlaylist.id}`;
         store_modules_list.listStore.setTempList(
           playlistId,
           songs,
           {
             id: playlistId,
             source: "kw",
-            name: selectedPlaylist.name || "每日推荐"
+            name: selectedPlaylist.name || "每日推荐",
+            link: originalPlaylistId
           }
         );
         store_modules_list.listStore.setPlayerListId(store_modules_list.LIST_IDS.TEMP);
@@ -1085,11 +1096,12 @@ const _sfc_main = {
         store_modules_list.listStore.setPlayMusicInfo(store_modules_list.LIST_IDS.TEMP, musicInfo, false);
         store_modules_player.playerStore.playSong(musicInfo);
         store_modules_player.playerStore.addToListHistory({
-          id: `digest-${selectedPlaylist.digest}__${selectedPlaylist.id}`,
+          id: originalPlaylistId,
           name: selectedPlaylist.name || "每日推荐",
           source: "kw",
           coverUrl: utils_imageProxy.proxyImageUrl(selectedPlaylist.img) || "",
-          trackCount: songs.length || 0
+          trackCount: songs.length || 0,
+          link: originalPlaylistId
         });
         common_vendor.index.showToast({
           title: `正在播放: ${selectedPlaylist.name || "每日推荐"}`,
@@ -1173,87 +1185,91 @@ const _sfc_main = {
       handlePlaylistImageError
     });
     return (_ctx, _cache) => {
-      return {
+      return common_vendor.e({
         a: common_vendor.s(statusBarStyle.value),
         b: common_vendor.p({
-          name: "leaf",
+          name: "wave-square",
           size: "20",
           color: "#ffffff"
         }),
         c: common_vendor.t(appName.value),
-        d: common_vendor.o(handleAppLogoClick),
+        d: common_vendor.o(handleAppLogoClick, "3a"),
         e: common_vendor.p({
-          name: "magnifying-glass",
-          size: "20",
-          color: "#999999"
+          type: "fas",
+          name: "search",
+          size: "16",
+          color: "#9ca3af"
         }),
-        f: common_vendor.o(goToSearch),
+        f: common_vendor.o(goToSearch, "4d"),
         g: common_vendor.s(searchBarStyle.value),
-        h: common_vendor.f(banners.value, (banner, index, i0) => {
+        h: banners.value.length > 0
+      }, banners.value.length > 0 ? {
+        i: common_vendor.f(banners.value, (banner, index, i0) => {
           return {
             a: banner.imageUrl,
-            b: common_vendor.o(($event) => handleBannerImageError($event, banner), index),
+            b: common_vendor.o(($event) => handleBannerImageError($event, banner), banner.targetId || index),
             c: common_vendor.t(banner.typeTitle),
             d: common_vendor.t(banner.subtitle || "精选音乐，为你推荐"),
             e: "31670c42-2-" + i0,
-            f: common_vendor.o(($event) => playBanner(banner), index),
+            f: common_vendor.o(($event) => playBanner(banner), banner.targetId || index),
             g: "31670c42-3-" + i0,
-            h: common_vendor.o(($event) => collectBanner(banner), index),
-            i: index,
-            j: common_vendor.o(($event) => handleBannerClick(banner), index),
+            h: common_vendor.o(($event) => collectBanner(banner), banner.targetId || index),
+            i: banner.targetId || index,
+            j: common_vendor.o(($event) => handleBannerClick(banner), banner.targetId || index),
             k: index === currentBannerIndex.value ? 1 : ""
           };
         }),
-        i: common_vendor.p({
+        j: common_vendor.p({
           name: "play",
           size: "18",
           color: "#ffffff"
         }),
-        j: common_vendor.p({
+        k: common_vendor.p({
           name: "heart",
           size: "18",
           color: "#ffffff"
         }),
-        k: common_vendor.o(onBannerChange),
-        l: common_vendor.f(banners.value, (item, index, i0) => {
+        l: common_vendor.o(onBannerChange, "f8"),
+        m: common_vendor.f(banners.value, (item, index, i0) => {
           return {
-            a: index,
+            a: item.targetId || index,
             b: common_vendor.n({
               "indicator-dot-active": index === currentBannerIndex.value
             })
           };
-        }),
-        m: common_vendor.p({
+        })
+      } : {}, {
+        n: common_vendor.p({
           name: "heart",
           size: "22",
           color: "#ffffff"
         }),
-        n: common_vendor.o(goToDailyRecommend),
-        o: common_vendor.p({
+        o: common_vendor.o(goToDailyRecommend, "86"),
+        p: common_vendor.p({
           name: "ranking-star",
           size: "22",
           color: "#ffffff"
         }),
-        p: common_vendor.o(($event) => navigateTo("/pages/rank/index")),
-        q: common_vendor.p({
+        q: common_vendor.o(($event) => navigateTo("/pages/rank/index"), "36"),
+        r: common_vendor.p({
           name: "fire",
           size: "20",
           color: "#ffffff"
         }),
-        r: common_vendor.o(goToHotSongs),
-        s: common_vendor.p({
+        s: common_vendor.o(goToHotSongs, "7e"),
+        t: common_vendor.p({
           name: "list",
           size: "20",
           color: "#ffffff"
         }),
-        t: common_vendor.o(($event) => navigateTo("/pages/songlist-list/index")),
-        v: common_vendor.p({
+        v: common_vendor.o(($event) => navigateTo("/pages/songlist-list/index"), "31"),
+        w: common_vendor.p({
           name: "chevron-right",
           size: "12",
           color: "#999999"
         }),
-        w: common_vendor.o(($event) => navigateTo("/pages/songlist-list/index")),
-        x: common_vendor.f(recommendPlaylists.value, (playlist, index, i0) => {
+        x: common_vendor.o(($event) => navigateTo("/pages/songlist-list/index"), "3f"),
+        y: common_vendor.f(recommendPlaylists.value, (playlist, index, i0) => {
           return {
             a: playlist.coverImgUrl,
             b: common_vendor.o(($event) => handlePlaylistImageError($event, playlist), playlist.id),
@@ -1263,18 +1279,18 @@ const _sfc_main = {
             f: common_vendor.o(($event) => goToPlaylistDetail(playlist), playlist.id)
           };
         }),
-        y: common_vendor.p({
+        z: common_vendor.p({
           name: "play",
           size: "12",
           color: "#ffffff"
         }),
-        z: common_vendor.p({
+        A: common_vendor.p({
           name: "chevron-right",
           size: "12",
           color: "#999999"
         }),
-        A: common_vendor.o(goToNewSongRank),
-        B: common_vendor.f(newSongs.value, (song, index, i0) => {
+        B: common_vendor.o(goToNewSongRank, "95"),
+        C: common_vendor.f(newSongs.value, (song, index, i0) => {
           return {
             a: song.img,
             b: common_vendor.t(song.name),
@@ -1284,7 +1300,7 @@ const _sfc_main = {
             f: common_vendor.o(($event) => playNewSong(song, index), song.id)
           };
         }),
-        C: common_vendor.f(topArtists.value, (artist, index, i0) => {
+        D: common_vendor.f(topArtists.value, (artist, index, i0) => {
           return {
             a: artist.picUrl,
             b: common_vendor.t(artist.name),
@@ -1292,12 +1308,12 @@ const _sfc_main = {
             d: common_vendor.o(($event) => goToSearchWithArtist(artist.name), artist.id)
           };
         }),
-        D: common_vendor.s(safeBottomStyle.value),
-        E: common_vendor.s(scrollViewStyle.value),
-        F: isRefreshing.value,
-        G: common_vendor.o(onRefresh),
-        H: isDarkMode.value ? 1 : ""
-      };
+        E: common_vendor.s(safeBottomStyle.value),
+        F: common_vendor.s(scrollViewStyle.value),
+        G: isRefreshing.value,
+        H: common_vendor.o(onRefresh, "29"),
+        I: isDarkMode.value ? 1 : ""
+      });
     };
   }
 };

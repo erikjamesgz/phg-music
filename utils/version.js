@@ -2,8 +2,8 @@
 const common_vendor = require("../common/vendor.js");
 const utils_system = require("./system.js");
 const VERSION_URLS = [
-  `https://cdn.jsdelivr.net/gh/erikjamesgz/phg-music/doc/version/version.json`,
   `https://fastly.jsdelivr.net/gh/erikjamesgz/phg-music/doc/version/version.json`,
+  `https://cdn.jsdelivr.net/gh/erikjamesgz/phg-music/doc/version/version.json`,
   `https://raw.githubusercontent.com/erikjamesgz/phg-music/main/doc/version/version.json`
 ];
 const VERSION_KEY = "ignore_version";
@@ -105,7 +105,7 @@ const checkUpdate = async (force = false) => {
         version: versionInfo.version,
         versionCode: versionInfo.versionCode,
         desc: versionInfo.desc || "",
-        downloadUrl: versionInfo.downloadUrl || "",
+        platforms: versionInfo.platforms || {},
         releaseUrl: versionInfo.releaseUrl || "",
         projectUrl: versionInfo.projectUrl || ""
       },
@@ -117,6 +117,9 @@ const checkUpdate = async (force = false) => {
 const ignoreVersion = (version) => {
   common_vendor.index.setStorageSync(VERSION_KEY, version);
   console.log("[Version] 已忽略版本:", version);
+};
+const setBackgroundDownload = (isBackground) => {
+  console.log("[Version] 设置后台下载模式:", isBackground);
 };
 const checkUpdateAndShow = async (force = false) => {
   const result = await checkUpdate(force);
@@ -135,3 +138,4 @@ const checkUpdateAndShow = async (force = false) => {
 exports.checkUpdate = checkUpdate;
 exports.checkUpdateAndShow = checkUpdateAndShow;
 exports.ignoreVersion = ignoreVersion;
+exports.setBackgroundDownload = setBackgroundDownload;

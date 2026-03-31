@@ -56,16 +56,14 @@ const _sfc_main = {
     console.log("[CustomTabBar] safeAreaInsets:", systemInfo.safeAreaInsets);
     console.log("[CustomTabBar] safeAreaInsetBottom:", this.safeAreaInsetBottom);
     console.log("[CustomTabBar] 深色模式:", this.isDarkMode);
-    const pages = getCurrentPages();
-    const currentPage = pages[pages.length - 1];
-    if (currentPage) {
-      const originalOnShow = currentPage.onShow;
-      currentPage.onShow = () => {
-        this.updateDarkMode();
-        if (originalOnShow)
-          originalOnShow.call(currentPage);
-      };
-    }
+    common_vendor.index.$on("themeChanged", this.handleThemeChange);
+    common_vendor.index.$on("systemThemeChange", this.handleSystemThemeChange);
+    console.log("[CustomTabBar] 已注册主题变化监听");
+  },
+  beforeUnmount() {
+    common_vendor.index.$off("themeChanged", this.handleThemeChange);
+    common_vendor.index.$off("systemThemeChange", this.handleSystemThemeChange);
+    console.log("[CustomTabBar] 已移除主题变化监听");
   },
   methods: {
     switchTab(index) {
@@ -90,27 +88,36 @@ const _sfc_main = {
       }
       return icon;
     },
+    // 处理主题变化事件（来自 main/index.vue）
+    handleThemeChange(data) {
+      console.log("[CustomTabBar] 收到 themeChanged 事件:", data);
+      if (data && typeof data.isDark === "boolean") {
+        this.isDarkMode = data.isDark;
+      }
+    },
+    // 处理系统主题变化事件（来自 App.vue）
+    handleSystemThemeChange(data) {
+      console.log("[CustomTabBar] 收到 systemThemeChange 事件:", data);
+      const followSystem = common_vendor.index.getStorageSync("followSystem");
+      const isFollowSystem = followSystem !== "false" && followSystem !== false;
+      if (isFollowSystem && data && typeof data.isDark === "boolean") {
+        this.isDarkMode = data.isDark;
+        console.log("[CustomTabBar] handleSystemThemeChange - isFollowSystem:", isFollowSystem, "isDarkMode:", this.isDarkMode);
+      }
+    },
     // 更新深色模式状态
     updateDarkMode() {
-      const followSystem = common_vendor.index.getStorageSync("followSystem") !== "false";
+      const followSystem = common_vendor.index.getStorageSync("followSystem");
+      const isFollowSystem = followSystem !== "false" && followSystem !== false;
       const darkMode = common_vendor.index.getStorageSync("darkMode") === "true";
-      if (followSystem) {
+      if (isFollowSystem) {
         const systemInfo = common_vendor.index.getSystemInfoSync();
         if (systemInfo.theme) {
           this.isDarkMode = systemInfo.theme === "dark";
+          console.log("[CustomTabBar] 跟随系统主题:", systemInfo.theme, "isDarkMode:", this.isDarkMode);
         } else {
-          try {
-            const mediaQuery = common_vendor.index.createMediaQueryObserver();
-            if (mediaQuery) {
-              mediaQuery.observe({
-                prefersColorScheme: "dark"
-              }, (res) => {
-                this.isDarkMode = res.matches;
-              });
-            }
-          } catch (e) {
-            this.isDarkMode = false;
-          }
+          this.isDarkMode = darkMode;
+          console.log("[CustomTabBar] 系统主题信息不可用，使用手动设置:", darkMode);
         }
       } else {
         this.isDarkMode = darkMode;
@@ -131,7 +138,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return {
     a: common_vendor.f($data.list, (item, index, i0) => {
       return {
-        a: "7171c65a-0-" + i0,
+        a: "47fdb5b7-0-" + i0,
         b: common_vendor.p({
           name: $options.getIconName(item.icon, index),
           size: $props.currentIndex === index ? 22 : 20,
@@ -152,5 +159,5 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     })
   };
 }
-const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-7171c65a"]]);
+const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-47fdb5b7"]]);
 wx.createComponent(Component);

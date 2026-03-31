@@ -16,6 +16,7 @@ const MiniPlayer = () => "../../components/player/MiniPlayer.js";
 const STORAGE_KEY_SOURCE = "songlist_last_source";
 const STORAGE_KEY_TAG = "songlist_last_tag";
 const STORAGE_KEY_SORT = "songlist_last_sort";
+const STORAGE_KEY_MAX_PAGE_PREFIX = "songlist_max_page_";
 const _sfc_main = {
   __name: "index",
   setup(__props) {
@@ -210,7 +211,19 @@ const _sfc_main = {
         const source = currentSource.value;
         const tagId = currentTagId.value;
         const sortId = currentSortId.value;
-        const page = currentPage.value;
+        const storageKey = `${STORAGE_KEY_MAX_PAGE_PREFIX}${source}_${tagId || "all"}_${sortId}`;
+        let targetPage = currentPage.value;
+        const rn = 30;
+        if (currentPage.value === 1) {
+          const savedMaxPage = common_vendor.index.getStorageSync(storageKey);
+          if (savedMaxPage && savedMaxPage > 0) {
+            targetPage = Math.floor(Math.random() * savedMaxPage) + 1;
+            console.log("[SonglistList] 使用保存的页码范围:", savedMaxPage, "随机选择页码:", targetPage);
+          } else {
+            console.log("[SonglistList] 首次打开，使用第1页");
+            targetPage = 1;
+          }
+        }
         let url = "";
         switch (source) {
           case "kw": {
@@ -218,21 +231,21 @@ const _sfc_main = {
             if (tagId) {
               const [kwId, kwType] = tagId.split("-");
               if (kwType === "10000") {
-                url = `http://wapi.kuwo.cn/api/pc/classify/playlist/getTagPlayList?loginUid=0&loginSid=0&appUid=76039576&pn=${page}&id=${kwId}&rn=30`;
+                url = `http://wapi.kuwo.cn/api/pc/classify/playlist/getTagPlayList?loginUid=0&loginSid=0&appUid=76039576&pn=${targetPage}&id=${kwId}&rn=${rn}`;
               } else if (kwType === "43") {
                 url = `http://mobileinterfaces.kuwo.cn/er.s?type=get_pc_qz_data&f=web&id=${kwId}&prod=pc`;
               } else {
-                url = `http://wapi.kuwo.cn/api/pc/classify/playlist/getTagPlayList?loginUid=0&loginSid=0&appUid=76039576&pn=${page}&id=${kwId}&rn=30`;
+                url = `http://wapi.kuwo.cn/api/pc/classify/playlist/getTagPlayList?loginUid=0&loginSid=0&appUid=76039576&pn=${targetPage}&id=${kwId}&rn=${rn}`;
               }
             } else {
-              url = `http://wapi.kuwo.cn/api/pc/classify/playlist/getRcmPlayList?loginUid=0&loginSid=0&appUid=76039576&pn=${page}&rn=30&order=${kwOrder}`;
+              url = `http://wapi.kuwo.cn/api/pc/classify/playlist/getRcmPlayList?loginUid=0&loginSid=0&appUid=76039576&pn=${targetPage}&rn=${rn}&order=${kwOrder}`;
             }
             console.log("酷我音乐请求URL:", url);
             break;
           }
           case "kg": {
             const kgSortId = sortId || "6";
-            url = `http://www2.kugou.kugou.com/yueku/v9/special/getSpecial?is_ajax=1&cdn=cdn&t=${kgSortId}&c=${tagId || ""}&p=${page}`;
+            url = `http://www2.kugou.kugou.com/yueku/v9/special/getSpecial?is_ajax=1&cdn=cdn&t=${kgSortId}&c=${tagId || ""}&p=${targetPage}`;
             console.log("酷狗音乐请求URL:", url);
             break;
           }
@@ -242,7 +255,7 @@ const _sfc_main = {
               comm: { cv: 1602, ct: 20 },
               playlist: {
                 method: tagId ? "get_category_content" : "get_playlist_by_tag",
-                param: tagId ? { titleid: parseInt(tagId), caller: "0", category_id: parseInt(tagId), size: 30, page: page - 1, use_page: 1 } : { id: 1e7, sin: 30 * (page - 1), size: 30, order: txOrder, cur_page: page },
+                param: tagId ? { titleid: parseInt(tagId), caller: "0", category_id: parseInt(tagId), size: rn, page: targetPage - 1, use_page: 1 } : { id: 1e7, sin: rn * (targetPage - 1), size: rn, order: txOrder, cur_page: targetPage },
                 module: tagId ? "playlist.PlayListCategoryServer" : "playlist.PlayListPlazaServer"
               }
             };
@@ -252,9 +265,9 @@ const _sfc_main = {
           }
           case "mg": {
             if (tagId) {
-              url = `https://app.c.nf.migu.cn/pc/v1.0/template/musiclistplaza-listbytag/release?pageNumber=${page}&templateVersion=2&tagId=${tagId}`;
+              url = `https://app.c.nf.migu.cn/pc/v1.0/template/musiclistplaza-listbytag/release?pageNumber=${targetPage}&templateVersion=2&tagId=${tagId}`;
             } else {
-              url = `https://app.c.nf.migu.cn/pc/bmw/page-data/playlist-square-recommend/v1.0?templateVersion=2&pageNo=${page}`;
+              url = `https://app.c.nf.migu.cn/pc/bmw/page-data/playlist-square-recommend/v1.0?templateVersion=2&pageNo=${targetPage}`;
             }
             console.log("咪咕音乐请求URL:", url);
             break;
@@ -262,12 +275,12 @@ const _sfc_main = {
           case "wy": {
             const wyOrder = sortId === "new" ? "new" : "hot";
             const wyCat = tagId || "全部";
-            url = `https://music.163.com/api/playlist/list?cat=${encodeURIComponent(wyCat)}&order=${wyOrder}&limit=30&offset=${(page - 1) * 30}`;
+            url = `https://music.163.com/api/playlist/list?cat=${encodeURIComponent(wyCat)}&order=${wyOrder}&limit=${rn}&offset=${(targetPage - 1) * rn}`;
             console.log("网易云音乐请求URL:", url);
             break;
           }
           default: {
-            url = `http://wapi.kuwo.cn/api/pc/classify/playlist/getRcmPlayList?loginUid=0&loginSid=0&appUid=76039576&pn=${page}&rn=30&order=hot`;
+            url = `http://wapi.kuwo.cn/api/pc/classify/playlist/getRcmPlayList?loginUid=0&loginSid=0&appUid=76039576&pn=${targetPage}&rn=${rn}&order=hot`;
             console.log("默认请求URL:", url);
           }
         }
@@ -279,8 +292,13 @@ const _sfc_main = {
           const result = parseSonglistData(res.data, source);
           console.log("=== fetchSonglist 完成 ===");
           console.log("result.list.length:", result.list.length);
-          console.log("currentPage:", currentPage.value);
+          console.log("targetPage:", targetPage);
           console.log("result.total:", result.total);
+          if (currentPage.value === 1 && result.total > 0) {
+            const maxPage = Math.ceil(result.total / rn) || 1;
+            common_vendor.index.setStorageSync(storageKey, maxPage);
+            console.log("[SonglistList] 保存最大页码:", maxPage, "存储键:", storageKey);
+          }
           if (currentPage.value === 1) {
             songlist.value = result.list;
           } else {
@@ -613,14 +631,14 @@ const _sfc_main = {
           size: "24",
           color: "#333"
         }),
-        b: common_vendor.o(goBack),
+        b: common_vendor.o(goBack, "c7"),
         c: common_vendor.t(currentSourceName.value),
         d: common_vendor.p({
           name: "chevron-down",
           size: "14",
-          color: "#666"
+          color: darkMode.value ? "#f3f4f6" : "#333"
         }),
-        e: common_vendor.o(($event) => showSourcePicker.value = true),
+        e: common_vendor.o(($event) => showSourcePicker.value = true, "15"),
         f: common_vendor.f(tagList.value, (tag, k0, i0) => {
           return {
             a: common_vendor.t(tag.name),
@@ -655,7 +673,7 @@ const _sfc_main = {
             b: common_vendor.o(($event) => handleSonglistImageError($event, item), item.id + index),
             c: item.play_count
           }, item.play_count ? {
-            d: "46e80bd5-2-" + i0,
+            d: "0bf68261-2-" + i0,
             e: common_vendor.p({
               name: "play",
               size: "10",
@@ -665,7 +683,7 @@ const _sfc_main = {
           } : {}, {
             g: item.total
           }, item.total ? {
-            h: "46e80bd5-3-" + i0,
+            h: "0bf68261-3-" + i0,
             i: common_vendor.p({
               name: "music",
               size: "10",
@@ -709,8 +727,8 @@ const _sfc_main = {
           color: "#ccc"
         })
       } : {}, {
-        t: common_vendor.o(onScroll),
-        v: common_vendor.o(onTouchMove),
+        t: common_vendor.o(onScroll, "c0"),
+        v: common_vendor.o(onTouchMove, "9b"),
         w: showSourcePicker.value
       }, showSourcePicker.value ? {
         x: common_vendor.p({
@@ -718,13 +736,13 @@ const _sfc_main = {
           size: "20",
           color: "#999"
         }),
-        y: common_vendor.o(($event) => showSourcePicker.value = false),
+        y: common_vendor.o(($event) => showSourcePicker.value = false, "b3"),
         z: common_vendor.f(sourceList, (source, k0, i0) => {
           return common_vendor.e({
             a: common_vendor.t(source.name),
             b: currentSource.value === source.id
           }, currentSource.value === source.id ? {
-            c: "46e80bd5-6-" + i0,
+            c: "0bf68261-6-" + i0,
             d: common_vendor.p({
               name: "check",
               size: "16",
@@ -737,13 +755,13 @@ const _sfc_main = {
           });
         }),
         A: common_vendor.o(() => {
-        }),
-        B: common_vendor.o(($event) => showSourcePicker.value = false)
+        }, "9d"),
+        B: common_vendor.o(($event) => showSourcePicker.value = false, "44")
       } : {}, {
         C: darkMode.value ? 1 : ""
       });
     };
   }
 };
-const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-46e80bd5"]]);
+const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-0bf68261"]]);
 wx.createPage(MiniProgramPage);

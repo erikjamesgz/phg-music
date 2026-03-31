@@ -23,7 +23,7 @@
 /* 垂直间距 */
 /* 透明度 */
 /* 文章场景相关 */
-.playlist-container.data-v-0879bfb8 {
+.playlist-container.data-v-0755d4e3 {
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -33,12 +33,12 @@
 }
 
 /* 暗黑模式下的页面背景 */
-.playlist-container.dark-mode.data-v-0879bfb8 {
+.playlist-container.dark-mode.data-v-0755d4e3 {
   background-color: #1f2937;
 }
 
 /* 侧边栏遮罩层 */
-.sidebar-overlay.data-v-0879bfb8 {
+.sidebar-overlay.data-v-0755d4e3 {
   position: fixed;
   top: 0;
   left: 0;
@@ -47,15 +47,15 @@
   background-color: rgba(0, 0, 0, 0.5);
   z-index: 1009;
   opacity: 0;
-  animation: fadeIn-0879bfb8 0.3s forwards;
+  animation: fadeIn-0755d4e3 0.3s forwards;
 }
-@keyframes fadeIn-0879bfb8 {
+@keyframes fadeIn-0755d4e3 {
 to {
     opacity: 1;
 }
 }
 /* 左侧边栏 */
-.sidebar.data-v-0879bfb8 {
+.sidebar.data-v-0755d4e3 {
   position: fixed;
   top: 0;
   left: 0;
@@ -68,213 +68,251 @@ to {
   transition: transform 0.3s ease;
   display: flex;
   flex-direction: column;
-  box-shadow: 2rpx 0 20rpx rgba(0, 0, 0, 0.1);
+  box-shadow: 1px 0 10px rgba(0, 0, 0, 0.1);
   box-sizing: border-box;
   overflow: hidden;
 }
-.sidebar-open.data-v-0879bfb8 {
+.sidebar-open.data-v-0755d4e3 {
   transform: translateX(0);
 }
-.sidebar-header.data-v-0879bfb8 {
+.sidebar-header.data-v-0755d4e3 {
   flex-shrink: 0;
-  padding: 30rpx 24rpx 24rpx;
-  border-bottom: 1rpx solid #f0f0f0;
+  padding: 15px 12px 12px;
+  border-bottom: 0.5px solid #f0f0f0;
   background: #fff;
 }
-.sidebar-title.data-v-0879bfb8 {
-  font-size: 32rpx;
+.sidebar-title.data-v-0755d4e3 {
+  font-size: 16px;
   font-weight: bold;
   color: #333;
 }
-.sidebar-content.data-v-0879bfb8 {
+.sidebar-content.data-v-0755d4e3 {
   flex: 1;
   overflow: hidden;
-  padding: 16rpx 0;
+  padding: 8px 0;
   height: 0;
 }
-.sidebar-section.data-v-0879bfb8 {
-  margin-bottom: 24rpx;
+.sidebar-section.data-v-0755d4e3 {
+  margin-bottom: 12px;
 }
-.section-title.data-v-0879bfb8 {
-  font-size: 24rpx;
+.section-title.data-v-0755d4e3 {
+  font-size: 12px;
   color: #999;
-  padding: 0 24rpx;
-  margin-bottom: 12rpx;
+  padding: 0 12px;
+  margin-bottom: 6px;
 }
-.sidebar-item.data-v-0879bfb8 {
+.sidebar-item.data-v-0755d4e3 {
   display: flex;
   align-items: center;
-  padding: 16rpx 24rpx;
+  padding: 8px 12px;
   transition: background-color 0.2s;
 }
-.sidebar-item.data-v-0879bfb8:active {
+.sidebar-item.data-v-0755d4e3:active {
   background-color: #f5f5f5;
 }
-.sidebar-item.active.data-v-0879bfb8 {
+.sidebar-item.active.data-v-0755d4e3 {
   background: linear-gradient(to right, rgba(0, 215, 205, 0.1), rgba(0, 175, 255, 0.05));
-  border-left: 4rpx solid #00d7cd;
+  border-left: 2px solid #00d7cd;
 }
-.sidebar-item-icon.data-v-0879bfb8 {
-  width: 56rpx;
-  height: 56rpx;
-  border-radius: 10rpx;
+.sidebar-item-icon.data-v-0755d4e3 {
+  width: 28px;
+  height: 28px;
+  border-radius: 5px;
   background-color: #f5f5f5;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 16rpx;
+  margin-right: 8px;
   flex-shrink: 0;
 }
-.sidebar-item-cover.data-v-0879bfb8 {
-  width: 56rpx;
-  height: 56rpx;
-  border-radius: 10rpx;
-  margin-right: 16rpx;
+.sidebar-item-cover.data-v-0755d4e3 {
+  width: 28px;
+  height: 28px;
+  border-radius: 5px;
+  margin-right: 8px;
   flex-shrink: 0;
 }
-.sidebar-item-info.data-v-0879bfb8 {
+.sidebar-item-info.data-v-0755d4e3 {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-width: 0;
   overflow: hidden;
 }
-.sidebar-item-name.data-v-0879bfb8 {
-  font-size: 26rpx;
+.sidebar-item-name.data-v-0755d4e3 {
+  font-size: 13px;
   color: #333;
-  margin-bottom: 4rpx;
+  margin-bottom: 2px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.sidebar-item-count.data-v-0879bfb8 {
-  font-size: 22rpx;
+.sidebar-item-count.data-v-0755d4e3 {
+  font-size: 11px;
   color: #999;
 }
-.sidebar-item-action.data-v-0879bfb8 {
-  padding: 10rpx;
+.sidebar-item-action.data-v-0755d4e3 {
+  padding: 5px;
 }
-.sidebar-item-action.data-v-0879bfb8:active {
+.sidebar-item-action.data-v-0755d4e3:active {
   opacity: 0.7;
 }
-.more-icon.data-v-0879bfb8 {
+.more-icon.data-v-0755d4e3 {
   color: #ccc;
 }
-.sidebar-footer.data-v-0879bfb8 {
+.sidebar-footer.data-v-0755d4e3 {
   flex-shrink: 0;
-  padding: 12rpx 12rpx;
-  border-top: 1rpx solid #f0f0f0;
+  padding: 6px 6px;
+  border-top: 0.5px solid #f0f0f0;
   background-color: #fff;
   box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8rpx;
+  gap: 4px;
   width: 100%;
 }
-.footer-btn.data-v-0879bfb8 {
+.footer-btn.data-v-0755d4e3 {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 10rpx 6rpx;
+  padding: 5px 3px;
   background-color: rgba(0, 215, 205, 0.08);
-  border: 1rpx solid rgba(0, 215, 205, 0.2);
-  border-radius: 8rpx;
+  border: 0.5px solid rgba(0, 215, 205, 0.2);
+  border-radius: 4px;
   transition: all 0.2s ease;
-  min-height: 56rpx;
+  min-height: 28px;
   box-sizing: border-box;
 }
-.footer-icon.data-v-0879bfb8 {
-  width: 20rpx;
-  height: 20rpx;
+.footer-icon.data-v-0755d4e3 {
+  width: 10px;
+  height: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   background-color: #00d7cd;
   color: #fff;
-  font-size: 14rpx;
+  font-size: 7px;
   font-weight: bold;
   border-radius: 50%;
-  margin-right: 4rpx;
+  margin-right: 2px;
   flex-shrink: 0;
   line-height: 1;
   overflow: hidden;
 }
-.footer-btn text.data-v-0879bfb8 {
+.footer-btn text.data-v-0755d4e3 {
   color: #333;
-  font-size: 18rpx;
+  font-size: 12px;
   font-weight: 500;
 }
-.footer-btn.data-v-0879bfb8:active {
+.footer-btn.data-v-0755d4e3:active {
   background-color: rgba(0, 215, 205, 0.15);
   border-color: rgba(0, 215, 205, 0.4);
   transform: scale(0.98);
 }
-.footer-divider.data-v-0879bfb8 {
-  width: 1rpx;
-  height: 40rpx;
+.footer-divider.data-v-0755d4e3 {
+  width: 0.5px;
+  height: 20px;
   background-color: #e0e0e0;
 }
 
 /* 歌单头部 */
-.playlist-header.data-v-0879bfb8 {
+.playlist-header.data-v-0755d4e3 {
   background: #fff;
-  padding: 0 30rpx;
+  padding: 0 15px;
   padding-bottom: 12px;
   flex-shrink: 0;
 }
 
 /* 头部操作区 */
-.header-actions.data-v-0879bfb8 {
+.header-actions.data-v-0755d4e3 {
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  height: 88rpx;
+  height: 44px;
 }
-.back-btn.data-v-0879bfb8 {
-  width: 64rpx;
-  height: 64rpx;
+.back-btn.data-v-0755d4e3 {
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   background-color: rgba(255, 255, 255, 0.8);
   border-radius: 50%;
-  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
 }
-.playlist-selector.data-v-0879bfb8 {
+.playlist-selector.data-v-0755d4e3 {
   position: relative;
 }
-.selector-btn.data-v-0879bfb8 {
+.selector-btn.data-v-0755d4e3 {
   display: flex;
   align-items: center;
-  padding: 8rpx 0;
-  gap: 6rpx;
-  max-width: 480rpx;
+  padding: 4px 0;
+  gap: 3px;
+  max-width: 240px;
 }
-.current-playlist-name.data-v-0879bfb8 {
-  font-size: 32rpx;
+.current-playlist-name.data-v-0755d4e3 {
+  font-size: 16px;
   font-weight: 600;
   color: #333;
-  max-width: 400rpx;
+  max-width: 200px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.selector-btn.data-v-0879bfb8 roc-icon-plus {
+.selector-btn.data-v-0755d4e3 roc-icon-plus {
   flex-shrink: 0;
   font-size: 14px !important;
 }
 
+/* 歌单切换提示气泡 */
+.sidebar-tip.data-v-0755d4e3 {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 8px;
+  background: linear-gradient(135deg, #00d7cd, #00afff);
+  padding: 6px 12px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 215, 205, 0.3);
+  z-index: 100;
+  animation: tipFadeIn-0755d4e3 0.3s ease-out;
+}
+.sidebar-tip-text.data-v-0755d4e3 {
+  font-size: 12px;
+  color: #fff;
+  white-space: nowrap;
+}
+.sidebar-tip-arrow.data-v-0755d4e3 {
+  position: absolute;
+  top: -6px;
+  left: 20px;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 6px solid #00c4bb;
+}
+@keyframes tipFadeIn-0755d4e3 {
+from {
+    opacity: 0;
+    transform: translateY(-5px);
+}
+to {
+    opacity: 1;
+    transform: translateY(0);
+}
+}
 /* 歌曲列表分隔线 */
-.list-divider.data-v-0879bfb8 {
-  height: 1rpx;
+.list-divider.data-v-0755d4e3 {
+  height: 0.5px;
   background-color: #f0f0f0;
-  margin: 0 30rpx;
+  margin: 0 15px;
 }
 
 /* 歌曲列表容器 */
-.song-list-container.data-v-0879bfb8 {
+.song-list-container.data-v-0755d4e3 {
   flex: 1;
   position: relative;
   display: flex;
@@ -283,303 +321,288 @@ to {
 }
 
 /* 歌曲列表 */
-.song-list-scroll.data-v-0879bfb8 {
+.song-list-scroll.data-v-0755d4e3 {
   flex: 1;
   position: relative;
   height: 100%;
 }
-.song-list.data-v-0879bfb8 {
-  padding: 0 30rpx;
-  padding-bottom: calc(140rpx + env(safe-area-inset-bottom) + 20rpx);
+.song-list.data-v-0755d4e3 {
+  padding: 0 15px;
+  padding-bottom: calc(70px + env(safe-area-inset-bottom) + 10px);
 }
-.locate-song-btn.data-v-0879bfb8 {
+.locate-song-btn.data-v-0755d4e3 {
   position: fixed;
-  bottom: 280rpx;
-  right: 30rpx;
-  width: 80rpx;
-  height: 80rpx;
+  right: 15px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background: linear-gradient(to right, rgba(0, 215, 205, 0.8), rgba(0, 175, 255, 0.8));
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
-  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.2);
-  z-index: 50;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  z-index: 999;
   opacity: 0.7;
-  animation: pulse-0879bfb8 2s infinite;
+  animation: pulse-0755d4e3 2s infinite;
 }
-.locate-song-btn.data-v-0879bfb8:active {
+.locate-song-btn.data-v-0755d4e3:active {
   opacity: 1;
   transform: scale(0.95);
 }
-.btn-tooltip.data-v-0879bfb8 {
+.btn-tooltip.data-v-0755d4e3 {
   position: absolute;
-  top: -70rpx;
+  top: -35px;
   right: 0;
   background-color: rgba(0, 0, 0, 0.7);
   color: #fff;
-  font-size: 24rpx;
-  padding: 10rpx 20rpx;
-  border-radius: 10rpx;
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 5px;
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
 }
-.locate-song-btn:hover .btn-tooltip.data-v-0879bfb8 {
+.locate-song-btn:hover .btn-tooltip.data-v-0755d4e3 {
   opacity: 1;
 }
-.song-item.data-v-0879bfb8 {
+.song-item.data-v-0755d4e3 {
   display: flex;
   align-items: center;
-  padding: 24rpx 0;
-  border-bottom: 1rpx solid #f5f5f5;
+  padding: 12px 0;
+  border-bottom: 0.5px solid #f5f5f5;
   transition: all 0.2s;
 }
-.song-item.playing.data-v-0879bfb8 {
-  background: linear-gradient(to right, rgba(0, 215, 205, 0.05), rgba(0, 175, 255, 0.05));
-  border-radius: 16rpx;
-  border-color: rgba(0, 215, 205, 0.1);
-  padding: 24rpx 16rpx;
-  margin: 0 -16rpx;
-}
-.song-index.data-v-0879bfb8 {
-  width: 60rpx;
+.song-index.data-v-0755d4e3 {
+  width: 30px;
   text-align: center;
-  font-size: 28rpx;
+  font-size: 14px;
   color: #999;
-  margin-right: 20rpx;
+  margin-right: 10px;
 }
-.song-info.data-v-0879bfb8 {
+.song-info.data-v-0755d4e3 {
   flex: 1;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-.song-main-info.data-v-0879bfb8 {
+.song-main-info.data-v-0755d4e3 {
   flex: 1;
   overflow: hidden;
 }
-.song-name.data-v-0879bfb8 {
-  font-size: 30rpx;
+.song-name.data-v-0755d4e3 {
+  font-size: 15px;
   color: #333;
-  margin-bottom: 8rpx;
+  margin-bottom: 4px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.song-artist.data-v-0879bfb8 {
-  font-size: 24rpx;
+.song-artist.data-v-0755d4e3 {
+  font-size: 12px;
   color: #999;
   display: flex;
   align-items: center;
 }
-.quality-tag.data-v-0879bfb8 {
+.quality-tag.data-v-0755d4e3 {
   display: inline-block;
-  padding: 2rpx 10rpx;
+  padding: 1px 5px;
   background-color: rgba(0, 215, 205, 0.1);
   color: #00d7cd;
-  border-radius: 6rpx;
-  font-size: 20rpx;
-  margin-right: 10rpx;
+  border-radius: 3px;
+  font-size: 10px;
+  margin-right: 5px;
 }
-.song-actions.data-v-0879bfb8 {
+.song-actions.data-v-0755d4e3 {
   display: flex;
   align-items: center;
 }
-.play-icon.data-v-0879bfb8 {
-  color: #00d7cd;
-  margin-right: 20rpx;
-  opacity: 0;
-}
-.song-item:hover .play-icon.data-v-0879bfb8,
-.song-item.playing .play-icon.data-v-0879bfb8 {
-  opacity: 1;
-}
-.song-duration.data-v-0879bfb8 {
-  font-size: 24rpx;
+.song-duration.data-v-0755d4e3 {
+  font-size: 12px;
   color: #999;
-  margin-right: 20rpx;
-  min-width: 80rpx;
+  margin-right: 10px;
+  min-width: 40px;
   text-align: right;
 }
-.more-icon.data-v-0879bfb8 {
+.more-icon.data-v-0755d4e3 {
   color: #999;
 }
-.loading-more.data-v-0879bfb8, .loading.data-v-0879bfb8 {
+.loading-more.data-v-0755d4e3, .loading.data-v-0755d4e3 {
   text-align: center;
-  padding: 30rpx 0;
+  padding: 15px 0;
   color: #999;
-  font-size: 24rpx;
+  font-size: 12px;
 }
-.empty-state.data-v-0879bfb8 {
+.empty-state.data-v-0755d4e3 {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 120rpx 40rpx;
+  padding: 60px 20px;
 }
-.empty-icon.data-v-0879bfb8 {
-  margin-bottom: 24rpx;
+.empty-icon.data-v-0755d4e3 {
+  margin-bottom: 12px;
   opacity: 0.6;
 }
-.empty-text.data-v-0879bfb8 {
-  font-size: 32rpx;
-  margin-bottom: 12rpx;
+.empty-text.data-v-0755d4e3 {
+  font-size: 16px;
+  margin-bottom: 6px;
 }
-.empty-tip.data-v-0879bfb8 {
-  font-size: 24rpx;
+.empty-tip.data-v-0755d4e3 {
+  font-size: 12px;
 }
-.safe-bottom.data-v-0879bfb8 {
+.safe-bottom.data-v-0755d4e3 {
   height: 0;
 }
-.song-cover.data-v-0879bfb8 {
-  width: 80rpx;
-  height: 80rpx;
-  border-radius: 16rpx;
-  margin-right: 20rpx;
+.song-cover.data-v-0755d4e3 {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  margin-right: 10px;
 }
-.song-info.data-v-0879bfb8 {
+.song-info.data-v-0755d4e3 {
   flex: 1;
   overflow: hidden;
 }
-.song-name.data-v-0879bfb8 {
-  font-size: 28rpx;
+.song-name.data-v-0755d4e3 {
+  font-size: 14px;
   color: #333;
-  margin-bottom: 6rpx;
+  margin-bottom: 3px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.song-artist.data-v-0879bfb8 {
-  font-size: 24rpx;
+.song-artist.data-v-0755d4e3 {
+  font-size: 12px;
   color: #999;
 }
-.player-controls.data-v-0879bfb8 {
+.player-controls.data-v-0755d4e3 {
   display: flex;
   align-items: center;
 }
-.player-controls.data-v-0879bfb8 roc-icon-plus {
+.player-controls.data-v-0755d4e3 roc-icon-plus {
   color: #00d7cd;
-  margin-left: 30rpx;
+  margin-left: 15px;
 }
 
 /* 定义脉动动画 */
-@keyframes pulse-0879bfb8 {
+@keyframes pulse-0755d4e3 {
 0% {
     transform: scale(1);
-    box-shadow: 0 4rpx 20rpx rgba(0, 175, 255, 0.2);
+    box-shadow: 0 2px 10px rgba(0, 175, 255, 0.2);
 }
 50% {
     transform: scale(1.05);
-    box-shadow: 0 4rpx 25rpx rgba(0, 175, 255, 0.4);
+    box-shadow: 0 2px 12.5px rgba(0, 175, 255, 0.4);
 }
 100% {
     transform: scale(1);
-    box-shadow: 0 4rpx 20rpx rgba(0, 175, 255, 0.2);
+    box-shadow: 0 2px 10px rgba(0, 175, 255, 0.2);
 }
 }
 /* 适配暗黑模式 */
-.playlist-container.dark-mode .sidebar.data-v-0879bfb8 {
+.playlist-container.dark-mode .sidebar.data-v-0755d4e3 {
   background-color: #1f2937;
 }
-.playlist-container.dark-mode .sidebar-header.data-v-0879bfb8 {
-  border-bottom: 1rpx solid #374151;
+.playlist-container.dark-mode .sidebar-header.data-v-0755d4e3 {
+  border-bottom: 0.5px solid #374151;
   background: #1a1a1a;
 }
-.playlist-container.dark-mode .sidebar-title.data-v-0879bfb8 {
+.playlist-container.dark-mode .sidebar-title.data-v-0755d4e3 {
   color: #f0f0f0;
 }
-.playlist-container.dark-mode .section-title.data-v-0879bfb8 {
+.playlist-container.dark-mode .section-title.data-v-0755d4e3 {
   color: #9ca3af;
 }
-.playlist-container.dark-mode .sidebar-item.data-v-0879bfb8:active {
+.playlist-container.dark-mode .sidebar-item.data-v-0755d4e3:active {
   background-color: #374151;
 }
-.playlist-container.dark-mode .sidebar-item.active.data-v-0879bfb8 {
+.playlist-container.dark-mode .sidebar-item.active.data-v-0755d4e3 {
   background: linear-gradient(to right, rgba(0, 215, 205, 0.15), rgba(0, 175, 255, 0.1));
 }
-.playlist-container.dark-mode .sidebar-item-icon.data-v-0879bfb8 {
+.playlist-container.dark-mode .sidebar-item-icon.data-v-0755d4e3 {
   background-color: #374151;
 }
-.playlist-container.dark-mode .sidebar-item-name.data-v-0879bfb8 {
+.playlist-container.dark-mode .sidebar-item-name.data-v-0755d4e3 {
   color: #f0f0f0;
 }
-.playlist-container.dark-mode .sidebar-item-count.data-v-0879bfb8 {
+.playlist-container.dark-mode .sidebar-item-count.data-v-0755d4e3 {
   color: #9ca3af;
 }
-.playlist-container.dark-mode .sidebar-footer.data-v-0879bfb8 {
-  border-top: 1rpx solid #374151;
+.playlist-container.dark-mode .sidebar-footer.data-v-0755d4e3 {
+  border-top: 0.5px solid #374151;
   background-color: #1f2937;
 }
-.playlist-container.dark-mode .footer-btn.data-v-0879bfb8 {
+.playlist-container.dark-mode .footer-btn.data-v-0755d4e3 {
   background-color: rgba(0, 215, 205, 0.1);
   border-color: rgba(0, 215, 205, 0.3);
 }
-.playlist-container.dark-mode .footer-btn text.data-v-0879bfb8 {
+.playlist-container.dark-mode .footer-btn text.data-v-0755d4e3 {
   color: #f0f0f0;
 }
-.playlist-container.dark-mode .footer-btn .footer-icon.data-v-0879bfb8 {
+.playlist-container.dark-mode .footer-btn .footer-icon.data-v-0755d4e3 {
   color: #f0f0f0;
   background-color: #00d7cd;
 }
-.playlist-container.dark-mode .footer-divider.data-v-0879bfb8 {
+.playlist-container.dark-mode .sidebar-tip.data-v-0755d4e3 {
+  box-shadow: 0 2px 8px rgba(0, 215, 205, 0.2);
+}
+.playlist-container.dark-mode .sidebar-tip .sidebar-tip-arrow.data-v-0755d4e3 {
+  border-bottom-color: #00c4bb;
+}
+.playlist-container.dark-mode .footer-divider.data-v-0755d4e3 {
   background-color: #374151;
 }
-.playlist-container.dark-mode .playlist-header.data-v-0879bfb8 {
+.playlist-container.dark-mode .playlist-header.data-v-0755d4e3 {
   background: #1f2937;
 }
-.playlist-container.dark-mode .selector-btn.data-v-0879bfb8 {
+.playlist-container.dark-mode .selector-btn.data-v-0755d4e3 {
   background-color: transparent;
 }
-.playlist-container.dark-mode .current-playlist-name.data-v-0879bfb8 {
+.playlist-container.dark-mode .current-playlist-name.data-v-0755d4e3 {
   color: #f0f0f0;
 }
-.playlist-container.dark-mode .list-divider.data-v-0879bfb8 {
+.playlist-container.dark-mode .list-divider.data-v-0755d4e3 {
   background-color: #374151;
 }
-.playlist-container.dark-mode .song-item.data-v-0879bfb8 {
-  border-bottom: 1rpx solid #374151;
+.playlist-container.dark-mode .song-item.data-v-0755d4e3 {
+  border-bottom: 0.5px solid #374151;
 }
-.playlist-container.dark-mode .song-item.playing.data-v-0879bfb8 {
-  background: linear-gradient(to right, rgba(0, 215, 205, 0.1), rgba(0, 175, 255, 0.1));
-  border-color: rgba(0, 215, 205, 0.2);
-}
-.playlist-container.dark-mode .song-index.data-v-0879bfb8 {
+.playlist-container.dark-mode .song-index.data-v-0755d4e3 {
   color: #9ca3af;
 }
-.playlist-container.dark-mode .song-name.data-v-0879bfb8 {
+.playlist-container.dark-mode .song-name.data-v-0755d4e3 {
   color: #f0f0f0;
 }
-.playlist-container.dark-mode .song-artist.data-v-0879bfb8 {
+.playlist-container.dark-mode .song-artist.data-v-0755d4e3 {
   color: #9ca3af;
 }
-.playlist-container.dark-mode .quality-tag.data-v-0879bfb8 {
+.playlist-container.dark-mode .quality-tag.data-v-0755d4e3 {
   background-color: rgba(0, 215, 205, 0.2);
   color: #33dfd8;
 }
-.playlist-container.dark-mode .song-duration.data-v-0879bfb8 {
+.playlist-container.dark-mode .song-duration.data-v-0755d4e3 {
   color: #9ca3af;
 }
-.playlist-container.dark-mode .more-icon.data-v-0879bfb8 {
+.playlist-container.dark-mode .more-icon.data-v-0755d4e3 {
   color: #9ca3af;
 }
-.playlist-container.dark-mode .mini-player.data-v-0879bfb8 {
+.playlist-container.dark-mode .mini-player.data-v-0755d4e3 {
   background-color: rgba(31, 41, 55, 0.9);
-  border: 1rpx solid rgba(255, 255, 255, 0.05);
+  border: 0.5px solid rgba(255, 255, 255, 0.05);
 }
-.playlist-container.dark-mode .mini-player .song-name.data-v-0879bfb8 {
+.playlist-container.dark-mode .mini-player .song-name.data-v-0755d4e3 {
   color: #f0f0f0;
 }
-.playlist-container.dark-mode .mini-player .song-artist.data-v-0879bfb8 {
+.playlist-container.dark-mode .mini-player .song-artist.data-v-0755d4e3 {
   color: #9ca3af;
 }
-.playlist-container.dark-mode .player-controls.data-v-0879bfb8 roc-icon-plus {
+.playlist-container.dark-mode .player-controls.data-v-0755d4e3 roc-icon-plus {
   color: #33dfd8;
 }
 
 /* 导入弹窗样式 */
-.import-modal-overlay.data-v-0879bfb8 {
+.import-modal-overlay.data-v-0755d4e3 {
   position: fixed;
   top: 0;
   left: 0;
@@ -591,107 +614,107 @@ to {
   justify-content: center;
   z-index: 2000;
 }
-.import-modal.data-v-0879bfb8 {
+.import-modal.data-v-0755d4e3 {
   width: 80%;
-  max-width: 600rpx;
+  max-width: 300px;
   background-color: #fff;
-  border-radius: 24rpx;
+  border-radius: 12px;
   overflow: hidden;
 }
-.import-modal-header.data-v-0879bfb8 {
+.import-modal-header.data-v-0755d4e3 {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 30rpx;
-  border-bottom: 1rpx solid #f0f0f0;
+  padding: 15px;
+  border-bottom: 0.5px solid #f0f0f0;
 }
-.import-modal-title.data-v-0879bfb8 {
-  font-size: 32rpx;
+.import-modal-title.data-v-0755d4e3 {
+  font-size: 16px;
   font-weight: 600;
   color: #333;
 }
-.import-modal-close.data-v-0879bfb8 {
-  width: 48rpx;
-  height: 48rpx;
+.import-modal-close.data-v-0755d4e3 {
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.import-modal-content.data-v-0879bfb8 {
-  padding: 30rpx;
+.import-modal-content.data-v-0755d4e3 {
+  padding: 15px;
 }
-.import-modal-tip.data-v-0879bfb8 {
+.import-modal-tip.data-v-0755d4e3 {
   display: block;
-  font-size: 24rpx;
+  font-size: 12px;
   color: #666;
   line-height: 1.6;
-  margin-bottom: 24rpx;
-  padding: 20rpx;
+  margin-bottom: 12px;
+  padding: 10px;
   background-color: #f8f9fa;
-  border-radius: 12rpx;
+  border-radius: 6px;
 }
-.import-modal-input.data-v-0879bfb8 {
+.import-modal-input.data-v-0755d4e3 {
   width: 100%;
-  height: 80rpx;
-  padding: 0 24rpx;
-  border: 2rpx solid #e0e0e0;
-  border-radius: 12rpx;
-  font-size: 28rpx;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
   color: #333;
   box-sizing: border-box;
 }
-.import-modal-input.data-v-0879bfb8:focus {
+.import-modal-input.data-v-0755d4e3:focus {
   border-color: #00d7cd;
 }
-.import-modal-footer.data-v-0879bfb8 {
+.import-modal-footer.data-v-0755d4e3 {
   display: flex;
-  padding: 20rpx 30rpx 30rpx;
-  gap: 20rpx;
+  padding: 10px 15px 15px;
+  gap: 10px;
 }
-.import-modal-btn.data-v-0879bfb8 {
+.import-modal-btn.data-v-0755d4e3 {
   flex: 1;
-  height: 80rpx;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12rpx;
-  font-size: 28rpx;
+  border-radius: 6px;
+  font-size: 14px;
 }
-.import-modal-btn.cancel.data-v-0879bfb8 {
+.import-modal-btn.cancel.data-v-0755d4e3 {
   background-color: #f5f5f5;
   color: #666;
 }
-.import-modal-btn.confirm.data-v-0879bfb8 {
+.import-modal-btn.confirm.data-v-0755d4e3 {
   background: linear-gradient(90deg, #00d7cd, #00afff);
   color: #fff;
 }
 
 /* 暗黑模式适配 */
-.playlist-container.dark-mode .import-modal.data-v-0879bfb8 {
+.playlist-container.dark-mode .import-modal.data-v-0755d4e3 {
   background-color: #1f2937;
 }
-.playlist-container.dark-mode .import-modal-header.data-v-0879bfb8 {
-  border-bottom: 1rpx solid #374151;
+.playlist-container.dark-mode .import-modal-header.data-v-0755d4e3 {
+  border-bottom: 0.5px solid #374151;
 }
-.playlist-container.dark-mode .import-modal-title.data-v-0879bfb8 {
+.playlist-container.dark-mode .import-modal-title.data-v-0755d4e3 {
   color: #f0f0f0;
 }
-.playlist-container.dark-mode .import-modal-tip.data-v-0879bfb8 {
+.playlist-container.dark-mode .import-modal-tip.data-v-0755d4e3 {
   background-color: #374151;
   color: #9ca3af;
 }
-.playlist-container.dark-mode .import-modal-input.data-v-0879bfb8 {
+.playlist-container.dark-mode .import-modal-input.data-v-0755d4e3 {
   background-color: #374151;
   border-color: #4b5563;
   color: #f0f0f0;
 }
-.playlist-container.dark-mode .import-modal-btn.cancel.data-v-0879bfb8 {
+.playlist-container.dark-mode .import-modal-btn.cancel.data-v-0755d4e3 {
   background-color: #374151;
   color: #9ca3af;
 }
 
 /* 歌曲菜单弹窗样式 */
-.song-menu-overlay.data-v-0879bfb8 {
+.song-menu-overlay.data-v-0755d4e3 {
   position: fixed;
   top: 0;
   left: 0;
@@ -703,67 +726,67 @@ to {
   justify-content: center;
   z-index: 1500;
 }
-.song-menu-modal.data-v-0879bfb8 {
+.song-menu-modal.data-v-0755d4e3 {
   width: 100%;
   max-height: 70vh;
   background-color: #fff;
-  border-radius: 32rpx 32rpx 0 0;
+  border-radius: 16px 16px 0 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
-.song-menu-header.data-v-0879bfb8 {
-  padding: 32rpx;
-  border-bottom: 1rpx solid #f0f0f0;
+.song-menu-header.data-v-0755d4e3 {
+  padding: 16px;
+  border-bottom: 0.5px solid #f0f0f0;
   text-align: center;
 }
-.song-menu-title.data-v-0879bfb8 {
-  font-size: 32rpx;
+.song-menu-title.data-v-0755d4e3 {
+  font-size: 16px;
   font-weight: 600;
   color: #333;
-  margin-bottom: 8rpx;
+  margin-bottom: 4px;
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.song-menu-artist.data-v-0879bfb8 {
-  font-size: 26rpx;
+.song-menu-artist.data-v-0755d4e3 {
+  font-size: 13px;
   color: #999;
   display: block;
 }
-.song-menu-actions.data-v-0879bfb8 {
+.song-menu-actions.data-v-0755d4e3 {
   display: flex;
   justify-content: space-around;
-  padding: 40rpx 32rpx;
-  border-bottom: 1rpx solid #f0f0f0;
+  padding: 20px 16px;
+  border-bottom: 0.5px solid #f0f0f0;
 }
-.menu-action-item.data-v-0879bfb8 {
+.menu-action-item.data-v-0755d4e3 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20rpx;
+  padding: 10px;
 }
-.menu-action-icon.data-v-0879bfb8 {
-  width: 96rpx;
-  height: 96rpx;
+.menu-action-icon.data-v-0755d4e3 {
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
   background-color: #f5f5f5;
-  margin-bottom: 16rpx;
+  margin-bottom: 8px;
 }
-.menu-action-icon.is-favorite.data-v-0879bfb8 {
+.menu-action-icon.is-favorite.data-v-0755d4e3 {
   background-color: rgba(239, 68, 68, 0.1);
 }
-.menu-action-text.data-v-0879bfb8 {
-  font-size: 26rpx;
+.menu-action-text.data-v-0755d4e3 {
+  font-size: 13px;
   color: #333;
 }
 
 /* 子菜单 */
-.song-menu-submenu.data-v-0879bfb8 {
+.song-menu-submenu.data-v-0755d4e3 {
   position: absolute;
   top: 0;
   left: 0;
@@ -773,110 +796,110 @@ to {
   display: flex;
   flex-direction: column;
 }
-.submenu-header.data-v-0879bfb8 {
+.submenu-header.data-v-0755d4e3 {
   display: flex;
   align-items: center;
-  padding: 24rpx 32rpx;
-  border-bottom: 1rpx solid #f0f0f0;
+  padding: 12px 16px;
+  border-bottom: 0.5px solid #f0f0f0;
 }
-.submenu-back.data-v-0879bfb8 {
+.submenu-back.data-v-0755d4e3 {
   display: flex;
   align-items: center;
   color: #666;
-  font-size: 28rpx;
-  margin-right: 20rpx;
+  font-size: 14px;
+  margin-right: 10px;
 }
-.submenu-title.data-v-0879bfb8 {
+.submenu-title.data-v-0755d4e3 {
   flex: 1;
-  font-size: 30rpx;
+  font-size: 15px;
   font-weight: 600;
   color: #333;
   text-align: center;
-  margin-right: 80rpx;
+  margin-right: 40px;
 }
-.submenu-content.data-v-0879bfb8 {
+.submenu-content.data-v-0755d4e3 {
   flex: 1;
   max-height: 50vh;
 }
-.add-to-item.data-v-0879bfb8 {
+.add-to-item.data-v-0755d4e3 {
   display: flex;
   align-items: center;
-  padding: 24rpx 32rpx;
-  border-bottom: 1rpx solid #f8f8f8;
+  padding: 12px 16px;
+  border-bottom: 0.5px solid #f8f8f8;
 }
-.add-to-item.data-v-0879bfb8:active {
+.add-to-item.data-v-0755d4e3:active {
   background-color: #f9fafb;
 }
-.add-to-icon.data-v-0879bfb8 {
-  width: 72rpx;
-  height: 72rpx;
+.add-to-icon.data-v-0755d4e3 {
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 16rpx;
+  border-radius: 8px;
   background-color: #f5f5f5;
-  margin-right: 24rpx;
+  margin-right: 12px;
 }
-.add-to-info.data-v-0879bfb8 {
+.add-to-info.data-v-0755d4e3 {
   flex: 1;
 }
-.add-to-name.data-v-0879bfb8 {
-  font-size: 30rpx;
+.add-to-name.data-v-0755d4e3 {
+  font-size: 15px;
   color: #333;
-  margin-bottom: 4rpx;
+  margin-bottom: 2px;
   display: block;
 }
-.add-to-count.data-v-0879bfb8 {
-  font-size: 24rpx;
+.add-to-count.data-v-0755d4e3 {
+  font-size: 12px;
   color: #999;
 }
 
 /* 暗黑模式适配 */
-.playlist-container.dark-mode .song-menu-modal.data-v-0879bfb8 {
+.playlist-container.dark-mode .song-menu-modal.data-v-0755d4e3 {
   background-color: #1f2937;
 }
-.playlist-container.dark-mode .song-menu-header.data-v-0879bfb8 {
-  border-bottom: 1rpx solid #374151;
+.playlist-container.dark-mode .song-menu-header.data-v-0755d4e3 {
+  border-bottom: 0.5px solid #374151;
 }
-.playlist-container.dark-mode .song-menu-title.data-v-0879bfb8 {
+.playlist-container.dark-mode .song-menu-title.data-v-0755d4e3 {
   color: #f0f0f0;
 }
-.playlist-container.dark-mode .song-menu-artist.data-v-0879bfb8 {
+.playlist-container.dark-mode .song-menu-artist.data-v-0755d4e3 {
   color: #9ca3af;
 }
-.playlist-container.dark-mode .song-menu-actions.data-v-0879bfb8 {
-  border-bottom: 1rpx solid #374151;
+.playlist-container.dark-mode .song-menu-actions.data-v-0755d4e3 {
+  border-bottom: 0.5px solid #374151;
 }
-.playlist-container.dark-mode .menu-action-icon.data-v-0879bfb8 {
+.playlist-container.dark-mode .menu-action-icon.data-v-0755d4e3 {
   background-color: #374151;
 }
-.playlist-container.dark-mode .menu-action-text.data-v-0879bfb8 {
+.playlist-container.dark-mode .menu-action-text.data-v-0755d4e3 {
   color: #f0f0f0;
 }
-.playlist-container.dark-mode .song-menu-submenu.data-v-0879bfb8 {
+.playlist-container.dark-mode .song-menu-submenu.data-v-0755d4e3 {
   background-color: #1f2937;
 }
-.playlist-container.dark-mode .submenu-header.data-v-0879bfb8 {
-  border-bottom: 1rpx solid #374151;
+.playlist-container.dark-mode .submenu-header.data-v-0755d4e3 {
+  border-bottom: 0.5px solid #374151;
 }
-.playlist-container.dark-mode .submenu-back.data-v-0879bfb8 {
+.playlist-container.dark-mode .submenu-back.data-v-0755d4e3 {
   color: #9ca3af;
 }
-.playlist-container.dark-mode .submenu-title.data-v-0879bfb8 {
+.playlist-container.dark-mode .submenu-title.data-v-0755d4e3 {
   color: #f0f0f0;
 }
-.playlist-container.dark-mode .add-to-item.data-v-0879bfb8 {
-  border-bottom: 1rpx solid #374151;
+.playlist-container.dark-mode .add-to-item.data-v-0755d4e3 {
+  border-bottom: 0.5px solid #374151;
 }
-.playlist-container.dark-mode .add-to-item.data-v-0879bfb8:active {
+.playlist-container.dark-mode .add-to-item.data-v-0755d4e3:active {
   background-color: #374151;
 }
-.playlist-container.dark-mode .add-to-icon.data-v-0879bfb8 {
+.playlist-container.dark-mode .add-to-icon.data-v-0755d4e3 {
   background-color: #374151;
 }
-.playlist-container.dark-mode .add-to-name.data-v-0879bfb8 {
+.playlist-container.dark-mode .add-to-name.data-v-0755d4e3 {
   color: #f0f0f0;
 }
-.playlist-container.dark-mode .add-to-count.data-v-0879bfb8 {
+.playlist-container.dark-mode .add-to-count.data-v-0755d4e3 {
   color: #9ca3af;
 }

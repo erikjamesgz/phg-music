@@ -17,7 +17,7 @@ const _sfc_main = {
   __name: "MiniPlayer",
   setup(__props) {
     common_vendor.useCssVars((_ctx) => ({
-      "6db3aebe": miniPlayerBottom.value
+      "b842bbc2": miniPlayerBottom.value
     }));
     let instance = null;
     try {
@@ -30,11 +30,13 @@ const _sfc_main = {
     const originalSong = common_vendor.computed(() => store_modules_player.playerStore.getState().originalSong);
     const playing = common_vendor.computed(() => store_modules_player.playerStore.getState().playing);
     const playMode = common_vendor.computed(() => store_modules_player.playerStore.getState().playMode);
+    const isLoading = common_vendor.computed(() => store_modules_player.playerStore.getState().isLoading);
     const playlist = common_vendor.computed(() => store_modules_player.playerStore.getState().playlist);
     const currentTime = common_vendor.computed(() => store_modules_player.playerStore.getState().currentTime);
     const duration = common_vendor.computed(() => store_modules_player.playerStore.getState().duration);
     const tabBarBottom = common_vendor.ref(0);
     const tabBarHeight = common_vendor.ref(0);
+    const screenWidth = common_vendor.ref(375);
     const darkMode = common_vendor.ref(false);
     common_vendor.ref(null);
     const marqueeScroll = common_vendor.ref(false);
@@ -123,6 +125,7 @@ const _sfc_main = {
       shownIds = /* @__PURE__ */ new Set();
       lastPlayedSongId = null;
       danmakuLoadedForSong = null;
+      lyricsLoadedForSong = null;
       if (oldId && oldId !== newId) {
         const oldSong = store_modules_player.playerStore.getState().originalSong;
         if (oldSong && oldSong.source) {
@@ -142,30 +145,34 @@ const _sfc_main = {
       }
     });
     const checkDarkMode = () => {
-      const followSystem = common_vendor.index.getStorageSync("followSystem") !== "false";
-      if (followSystem) {
+      const followSystem = common_vendor.index.getStorageSync("followSystem");
+      const isFollowSystem = followSystem !== "false" && followSystem !== false;
+      if (isFollowSystem) {
         const systemInfo = common_vendor.index.getSystemInfoSync();
         darkMode.value = systemInfo.theme === "dark";
       } else {
         darkMode.value = common_vendor.index.getStorageSync("darkMode") === "true";
       }
+      console.log("[MiniPlayer] checkDarkMode - isFollowSystem:", isFollowSystem, "darkMode:", darkMode.value);
     };
     const initDanmaku = () => {
       const storedDanmaku = common_vendor.index.getStorageSync("showMiniPlayerDanmaku");
       showDanmaku.value = storedDanmaku === "true";
       console.log("[MiniPlayer] 初始化弹幕设置:", showDanmaku.value, "storage:", storedDanmaku);
-      common_vendor.index.$on("miniPlayerDanmakuChanged", (show) => {
-        showDanmaku.value = show;
-        if (!show) {
-          danmakuList.value = [];
-          activeDanmaku.value = [];
-          if (danmakuTimer) {
-            clearInterval(danmakuTimer);
-            danmakuTimer = null;
+      if (common_vendor.index && common_vendor.index.$on) {
+        common_vendor.index.$on("miniPlayerDanmakuChanged", (show) => {
+          showDanmaku.value = show;
+          if (!show) {
+            danmakuList.value = [];
+            activeDanmaku.value = [];
+            if (danmakuTimer) {
+              clearInterval(danmakuTimer);
+              danmakuTimer = null;
+            }
           }
-        }
-        console.log("[MiniPlayer] 弹幕设置变化:", show);
-      });
+          console.log("[MiniPlayer] 弹幕设置变化:", show);
+        });
+      }
     };
     const fetchDanmakuComments = async () => {
       console.log("[MiniPlayer] fetchDanmakuComments 开始, showDanmaku:", showDanmaku.value);
@@ -243,8 +250,7 @@ const _sfc_main = {
           resolve(true);
           return;
         }
-        const systemInfo = common_vendor.index.getSystemInfoSync();
-        const screenWidth = systemInfo.windowWidth;
+        const currentScreenWidth = screenWidth.value;
         const currentInstance = getInstance();
         if (!currentInstance) {
           resolve(true);
@@ -256,7 +262,7 @@ const _sfc_main = {
             resolve(true);
             return;
           }
-          const isVisible = rect.right < screenWidth;
+          const isVisible = rect.right < currentScreenWidth;
           resolve(isVisible);
         }).exec();
       });
@@ -337,10 +343,18 @@ const _sfc_main = {
       });
     };
     const showNextDanmaku = async () => {
+      console.log("[MiniPlayer] showNextDanmaku 调用:", {
+        isPaused,
+        danmakuListLength: danmakuList.value.length,
+        activeDanmakuLength: activeDanmaku.value.length,
+        showDanmaku: showDanmaku.value
+      });
       if (isPaused) {
+        console.log("[MiniPlayer] showNextDanmaku 返回, 已暂停");
         return;
       }
       if (danmakuList.value.length === 0) {
+        console.log("[MiniPlayer] showNextDanmaku 返回, 无弹幕数据");
         return;
       }
       if (activeDanmaku.value.length >= 2) {
@@ -440,26 +454,56 @@ const _sfc_main = {
         userName: removeAtSymbol(item.userName || item.nick || "用户"),
         text: formatText(item.text || item.content || "", maxTextLength)
       };
+      console.log("[MiniPlayer] 添加弹幕到 activeDanmaku:", {
+        userName: danmakuItem.userName,
+        text: danmakuItem.text.substring(0, 20) + "...",
+        uniqueId: danmakuItem.uniqueId,
+        currentActiveLength: activeDanmaku.value.length
+      });
       activeDanmaku.value = [...activeDanmaku.value, danmakuItem];
-      danmakuTimer = setTimeout(() => {
-        if (!isPaused)
-          showNextDanmaku();
-      }, 1e3);
+      console.log("[MiniPlayer] 添加后 activeDanmaku 长度:", activeDanmaku.value.length);
+      if (activeDanmaku.value.length < 2) {
+        danmakuTimer = setTimeout(() => {
+          if (!isPaused)
+            showNextDanmaku();
+        }, 1e3);
+      }
     };
     const onDanmakuEnd = (event) => {
       let uniqueId = null;
+      console.log("[MiniPlayer] onDanmakuEnd event:", event);
       if (event.currentTarget && event.currentTarget.dataset) {
         uniqueId = event.currentTarget.dataset.uniqueId;
+        console.log("[MiniPlayer] 从 currentTarget.dataset 获取 uniqueId:", uniqueId);
       } else if (event.target && event.target.dataset) {
         uniqueId = event.target.dataset.uniqueId;
+        console.log("[MiniPlayer] 从 target.dataset 获取 uniqueId:", uniqueId);
       } else if (event.detail && event.detail.uniqueId) {
         uniqueId = event.detail.uniqueId;
+        console.log("[MiniPlayer] 从 detail 获取 uniqueId:", uniqueId);
       }
-      if (!uniqueId)
+      console.log("[MiniPlayer] onDanmakuEnd uniqueId:", uniqueId, "activeDanmaku:", activeDanmaku.value.map((item) => item.uniqueId));
+      if (!uniqueId) {
+        console.log("[MiniPlayer] onDanmakuEnd 无法获取 uniqueId，跳过");
         return;
+      }
       const index = activeDanmaku.value.findIndex((item) => item.uniqueId === uniqueId);
+      console.log("[MiniPlayer] onDanmakuEnd 找到索引:", index);
       if (index !== -1) {
         activeDanmaku.value.splice(index, 1);
+        console.log("[MiniPlayer] onDanmakuEnd 移除后 activeDanmaku 长度:", activeDanmaku.value.length);
+        if (activeDanmaku.value.length < 2 && !isPaused && showDanmaku.value && danmakuList.value.length > 0) {
+          console.log("[MiniPlayer] onDanmakuEnd activeDanmaku < 2，触发 showNextDanmaku");
+          if (danmakuTimer) {
+            clearTimeout(danmakuTimer);
+            danmakuTimer = null;
+          }
+          setTimeout(() => {
+            if (!isPaused && activeDanmaku.value.length < 2) {
+              showNextDanmaku();
+            }
+          }, 500);
+        }
       }
     };
     const formatText = (text, maxLength) => {
@@ -520,19 +564,38 @@ const _sfc_main = {
       return !!((_a = currentSong.value) == null ? void 0 : _a.id);
     });
     let danmakuLoadedForSong = null;
+    let lyricsLoadedForSong = null;
     const checkAndLoadDanmaku = () => {
       var _a;
       const store = store_modules_player.playerStore.getState();
       const currentSongId = (_a = store.currentSong) == null ? void 0 : _a.id;
-      if (store.playing && currentSongId && danmakuLoadedForSong !== currentSongId) {
+      console.log("[MiniPlayer] checkAndLoadDanmaku 调用:", {
+        playing: store.playing,
+        currentSongId,
+        danmakuLoadedForSong,
+        lyricsLoadedForSong,
+        showDanmaku: showDanmaku.value
+      });
+      if (currentSongId && danmakuLoadedForSong !== currentSongId && showDanmaku.value) {
+        console.log("[MiniPlayer] 条件满足，开始加载弹幕");
         danmakuLoadedForSong = currentSongId;
         lastPlayedSongId = currentSongId;
         fetchDanmakuComments();
+      } else {
+        console.log("[MiniPlayer] 条件不满足，跳过弹幕加载");
       }
     };
     const updateCachedLyrics = () => {
-      var _a;
+      var _a, _b, _c, _d, _e, _f;
       const store = store_modules_player.playerStore.getState();
+      console.log("[MiniPlayer] updateCachedLyrics 调用:", {
+        lyricLength: (_a = store.lyric) == null ? void 0 : _a.length,
+        tlyricLength: (_b = store.tlyric) == null ? void 0 : _b.length,
+        lxlyricLength: (_c = store.lxlyric) == null ? void 0 : _c.length,
+        cachedLength: cachedParsedLyrics.value.length,
+        playing: store.playing,
+        currentSongId: (_d = store.currentSong) == null ? void 0 : _d.id
+      });
       const lyricInfo = {
         lyric: store.lyric || "",
         tlyric: store.tlyric || "",
@@ -560,16 +623,27 @@ const _sfc_main = {
         }
       }
       const finalLyric = lxlyricText || lyricText;
+      console.log("[MiniPlayer] 歌词内容检查:", {
+        finalLyricLength: finalLyric == null ? void 0 : finalLyric.length,
+        lastLyricTextLength: (_e = lastLyricText.value) == null ? void 0 : _e.length,
+        isSame: finalLyric === lastLyricText.value
+      });
       if (finalLyric !== lastLyricText.value) {
         lastLyricText.value = finalLyric;
         if (finalLyric) {
           cachedParsedLyrics.value = utils_lyric.parseLyric(finalLyric);
+          console.log("[MiniPlayer] 解析歌词成功，行数:", cachedParsedLyrics.value.length);
           hasCheckedLyrics.value = true;
           common_vendor.nextTick$1(() => {
             updateCurrentLyricText();
           });
-          const currentSongId = (_a = store.currentSong) == null ? void 0 : _a.id;
+          const currentSongId = (_f = store.currentSong) == null ? void 0 : _f.id;
+          console.log("[MiniPlayer] 歌词加载完成，准备触发弹幕:", {
+            currentSongId,
+            lyricsLoadedForSong
+          });
           if (currentSongId) {
+            lyricsLoadedForSong = currentSongId;
             checkAndLoadDanmaku();
           }
         } else {
@@ -580,6 +654,8 @@ const _sfc_main = {
             updateCurrentLyricText();
           });
         }
+      } else {
+        console.log("[MiniPlayer] 歌词内容未变化，跳过解析");
       }
     };
     let danmakuTimer = null;
@@ -663,9 +739,10 @@ const _sfc_main = {
           "pages/my/index"
         ];
         const isTab = tabPages.some((tab) => route.includes(tab));
-        console.log("[MiniPlayer] isTab:", isTab, "tabBarHeight:", tabBarHeight.value);
+        console.log("[MiniPlayer] isTab:", isTab, "tabBarHeight:", tabBarHeight.value, "tabBarBottom:", tabBarBottom.value);
         if (isTab) {
-          miniPlayerBottom.value = `${tabBarHeight.value}px`;
+          miniPlayerBottom.value = `${tabBarHeight.value + tabBarBottom.value}px`;
+          console.log("[MiniPlayer] MiniPlayer bottom:", miniPlayerBottom.value);
         } else {
           miniPlayerBottom.value = "20px";
         }
@@ -677,12 +754,19 @@ const _sfc_main = {
     const getSystemInfo = () => {
       try {
         const deviceInfo = utils_system.getDeviceInfo();
+        screenWidth.value = deviceInfo.windowWidth || 375;
         if (deviceInfo.safeArea) {
           const { bottom, height } = deviceInfo.safeArea;
           tabBarBottom.value = deviceInfo.screenHeight - bottom;
         }
-        const rpxToPx = 140 * (deviceInfo.windowWidth / 750);
-        tabBarHeight.value = rpxToPx;
+        const platform = deviceInfo.platform;
+        const safeAreaBottom = tabBarBottom.value || 0;
+        if (platform === "ios") {
+          tabBarHeight.value = 12 + 50 + safeAreaBottom + 10;
+        } else {
+          tabBarHeight.value = 12 + 55;
+        }
+        console.log("[MiniPlayer] getSystemInfo - platform:", platform, "safeAreaBottom:", safeAreaBottom, "tabBarHeight:", tabBarHeight.value, "screenWidth:", screenWidth.value);
       } catch (error) {
         console.error("获取系统信息失败:", error);
       }
@@ -779,12 +863,11 @@ const _sfc_main = {
     common_vendor.watch(() => showMiniPlayer.value, (isShowing) => {
       let height = 0;
       if (isShowing) {
-        const rpxToPx = common_vendor.index.getSystemInfoSync().windowWidth / 750;
-        const miniPlayerHeight = 140 * rpxToPx;
+        const miniPlayerHeight = 70 + 10;
         if (isTabPage.value) {
           height = miniPlayerHeight;
         } else {
-          height = miniPlayerHeight + 20;
+          height = miniPlayerHeight + 10;
         }
       }
       common_vendor.index.$emit("miniPlayerHeightChange", { height, isShowing });
@@ -801,6 +884,10 @@ const _sfc_main = {
         } else {
           console.log("[MiniPlayer] 播放状态变为true，尝试触发弹幕加载");
           checkAndLoadDanmaku();
+          if (danmakuLoadedForSong === currentSongId && danmakuList.value.length > 0 && activeDanmaku.value.length === 0) {
+            console.log("[MiniPlayer] 弹幕已加载但未播放，立即开始");
+            startDanmaku();
+          }
         }
       } else {
         pauseDanmaku();
@@ -811,8 +898,7 @@ const _sfc_main = {
       const isShowing = showMiniPlayer.value;
       let height = 0;
       if (isShowing) {
-        const rpxToPx = common_vendor.index.getSystemInfoSync().windowWidth / 750;
-        const miniPlayerHeight = 140 * rpxToPx;
+        const miniPlayerHeight = 70 + 10;
         let isTab = false;
         try {
           const pages = getCurrentPages();
@@ -830,11 +916,26 @@ const _sfc_main = {
         if (isTab) {
           height = miniPlayerHeight;
         } else {
-          height = miniPlayerHeight + 20;
+          height = miniPlayerHeight + 10;
         }
         updateMiniPlayerBottom();
       }
       common_vendor.index.$emit("miniPlayerHeightChange", { height, isShowing });
+    };
+    const handleThemeChange = (data) => {
+      console.log("[MiniPlayer] 收到 themeChanged 事件:", data);
+      if (data && typeof data.isDark === "boolean") {
+        darkMode.value = data.isDark;
+      }
+    };
+    const handleSystemThemeChange = (data) => {
+      console.log("[MiniPlayer] 收到 systemThemeChange 事件:", data);
+      const followSystem = common_vendor.index.getStorageSync("followSystem");
+      const isFollowSystem = followSystem !== "false" && followSystem !== false;
+      if (isFollowSystem && data && typeof data.isDark === "boolean") {
+        darkMode.value = data.isDark;
+        console.log("[MiniPlayer] handleSystemThemeChange - isFollowSystem:", isFollowSystem, "darkMode:", darkMode.value);
+      }
     };
     common_vendor.onMounted(() => {
       var _a;
@@ -867,6 +968,14 @@ const _sfc_main = {
             originalOnShow.call(currentPage);
         };
       }
+      common_vendor.index.$on("themeChanged", handleThemeChange);
+      common_vendor.index.$on("systemThemeChange", handleSystemThemeChange);
+      console.log("[MiniPlayer] 已注册主题变化监听");
+    });
+    common_vendor.onUnmounted(() => {
+      common_vendor.index.$off("themeChanged", handleThemeChange);
+      common_vendor.index.$off("systemThemeChange", handleSystemThemeChange);
+      console.log("[MiniPlayer] 已移除主题变化监听");
     });
     return (_ctx, _cache) => {
       var _a, _b, _c, _d, _e, _f;
@@ -874,7 +983,7 @@ const _sfc_main = {
         a: showMiniPlayer.value
       }, showMiniPlayer.value ? common_vendor.e({
         b: coverUrl.value,
-        c: common_vendor.o(handleCoverImageError),
+        c: common_vendor.o(handleCoverImageError, "88"),
         d: common_vendor.t(((_a = currentSong.value) == null ? void 0 : _a.name) || "夏日微风"),
         e: common_vendor.t(((_b = currentSong.value) == null ? void 0 : _b.ar) ? currentSong.value.ar.map((a) => a.name).join("/") : ((_c = currentSong.value) == null ? void 0 : _c.artists) ? currentSong.value.artists.map((a) => a.name).join("/") : "海洋之声"),
         f: marqueeScroll.value
@@ -901,30 +1010,34 @@ const _sfc_main = {
       } : {}, {
         r: statusMarqueeScroll.value ? 1 : ""
       }) : {}, {
-        s: common_vendor.p({
+        s: isLoading.value
+      }, isLoading.value ? {} : {
+        t: common_vendor.p({
           name: playing.value ? "pause" : "play",
           size: "16",
           color: "#ffffff"
-        }),
-        t: common_vendor.o(togglePlay),
-        v: common_vendor.p({
+        })
+      }, {
+        v: isLoading.value ? 1 : "",
+        w: common_vendor.o(togglePlay, "f4"),
+        x: common_vendor.p({
           name: "forward-step",
           size: "16",
           color: "#999999"
         }),
-        w: common_vendor.o(playNext),
-        x: isDragging.value ? dragPercent.value + "%" : progressPercent.value + "%",
-        y: isDragging.value ? dragPercent.value + "%" : progressPercent.value + "%",
-        z: common_vendor.o(onProgressTouchStart),
-        A: common_vendor.o(onProgressTouchMove),
-        B: common_vendor.o(onProgressTouchEnd),
-        C: common_vendor.o(() => {
-        }),
-        D: darkMode.value ? 1 : "",
-        E: common_vendor.o(openFullPlayer),
-        F: showDanmaku.value && activeDanmaku.value.length > 0
+        y: common_vendor.o(playNext, "69"),
+        z: isDragging.value ? dragPercent.value + "%" : progressPercent.value + "%",
+        A: isDragging.value ? dragPercent.value + "%" : progressPercent.value + "%",
+        B: common_vendor.o(onProgressTouchStart, "8e"),
+        C: common_vendor.o(onProgressTouchMove, "e9"),
+        D: common_vendor.o(onProgressTouchEnd, "88"),
+        E: common_vendor.o(() => {
+        }, "5f"),
+        F: darkMode.value ? 1 : "",
+        G: common_vendor.o(openFullPlayer, "cd"),
+        H: showDanmaku.value && activeDanmaku.value.length > 0
       }, showDanmaku.value && activeDanmaku.value.length > 0 ? {
-        G: common_vendor.f(activeDanmaku.value, (item, index, i0) => {
+        I: common_vendor.f(activeDanmaku.value, (item, index, i0) => {
           return {
             a: common_vendor.t(item.userName),
             b: common_vendor.t(item.text),
@@ -933,13 +1046,13 @@ const _sfc_main = {
             e: common_vendor.o(($event) => onDanmakuEnd($event), item.uniqueId)
           };
         }),
-        H: darkMode.value ? 1 : "",
-        I: !playing.value ? 1 : ""
+        J: darkMode.value ? 1 : "",
+        K: !playing.value ? 1 : ""
       } : {}, {
-        J: common_vendor.s(_ctx.__cssVars())
+        L: common_vendor.s(_ctx.__cssVars())
       }) : {});
     };
   }
 };
-const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-6d13b8ba"]]);
+const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-78971899"]]);
 wx.createComponent(Component);

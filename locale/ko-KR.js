@@ -1134,6 +1134,16 @@ const koKR = {
     comingSoon: "출시 예정",
     beta: "베타",
     experimental: "실험적 기능"
+  },
+  // 배터리 최적화 알림
+  batteryOptimization: {
+    title: "백그라운드 실행 권한 설정 알림",
+    tip: 'PHG Music이 "배터리 최적화 무시" 화이트리스트에 없습니다. 이로 인해 백그라운드에서 음악을 재생할 때 시스템에 의해 일시 중지될 수 있습니다. PHG Music을 화이트리스트에 추가하시겠습니까?',
+    goSettings: "설정으로 이동",
+    cancel: "취소",
+    neverShow: "다시 표시 안 함",
+    neverShowTip: "이 알림이 비활성화되었습니다",
+    openFailed: "설정 페이지를 열 수 없습니다"
   }
 };
 exports.koKR = koKR;

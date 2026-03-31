@@ -953,14 +953,14 @@ const _sfc_main = {
           size: "24",
           color: "#333"
         }),
-        b: common_vendor.o(goBack),
+        b: common_vendor.o(goBack, "69"),
         c: common_vendor.t(currentSourceName.value),
         d: common_vendor.p({
           name: "chevron-down",
           size: "14",
-          color: "#666"
+          color: darkMode.value ? "#f3f4f6" : "#333"
         }),
-        e: common_vendor.o(($event) => showSourcePicker.value = true),
+        e: common_vendor.o(($event) => showSourcePicker.value = true, "4b"),
         f: common_vendor.f(boardList.value, (board, k0, i0) => {
           return {
             a: common_vendor.t(board.name),
@@ -980,7 +980,7 @@ const _sfc_main = {
           color: "#999"
         }),
         k: common_vendor.t(loadError.value),
-        l: common_vendor.o(retryLoad)
+        l: common_vendor.o(retryLoad, "99")
       } : {}, {
         m: songList.value.length > 0
       }, songList.value.length > 0 ? {
@@ -1009,7 +1009,7 @@ const _sfc_main = {
             l: common_vendor.t(song.album)
           } : {}, {
             m: common_vendor.t(formatDuration(song.duration)),
-            n: "f0791970-3-" + i0,
+            n: "9949ef41-3-" + i0,
             o: common_vendor.o(($event) => showSongMenu(song, index), song.id || index),
             p: song.id || index,
             q: common_vendor.o(($event) => playSong(song, index), song.id || index),
@@ -1030,8 +1030,8 @@ const _sfc_main = {
       }) : {}, {
         s: !isLoading.value && !loadError.value && songList.value.length === 0
       }, !isLoading.value && !loadError.value && songList.value.length === 0 ? {} : {}, {
-        t: common_vendor.o(onScroll),
-        v: common_vendor.o(onTouchMove),
+        t: common_vendor.o(onScroll, "e5"),
+        v: common_vendor.o(onTouchMove, "11"),
         w: showSourcePicker.value
       }, showSourcePicker.value ? {
         x: common_vendor.p({
@@ -1039,13 +1039,13 @@ const _sfc_main = {
           size: "20",
           color: "#999"
         }),
-        y: common_vendor.o(($event) => showSourcePicker.value = false),
+        y: common_vendor.o(($event) => showSourcePicker.value = false, "76"),
         z: common_vendor.f(sourceList, (source, k0, i0) => {
           return common_vendor.e({
             a: common_vendor.t(source.name),
             b: currentSource.value === source.id
           }, currentSource.value === source.id ? {
-            c: "f0791970-5-" + i0,
+            c: "9949ef41-5-" + i0,
             d: common_vendor.p({
               name: "check",
               size: "16",
@@ -1058,8 +1058,8 @@ const _sfc_main = {
           });
         }),
         A: common_vendor.o(() => {
-        }),
-        B: common_vendor.o(($event) => showSourcePicker.value = false)
+        }, "b2"),
+        B: common_vendor.o(($event) => showSourcePicker.value = false, "f7")
       } : {}, {
         C: showMenu.value
       }, showMenu.value ? {
@@ -1070,29 +1070,29 @@ const _sfc_main = {
           size: "18",
           color: "#00d7cd"
         }),
-        G: common_vendor.o(playSelectedSong),
+        G: common_vendor.o(playSelectedSong, "76"),
         H: common_vendor.p({
           name: "forward",
           size: "18",
           color: "#00d7cd"
         }),
-        I: common_vendor.o(addToNext),
+        I: common_vendor.o(addToNext, "98"),
         J: common_vendor.p({
           name: "plus",
           size: "18",
           color: "#00d7cd"
         }),
-        K: common_vendor.o(addToPlaylist),
+        K: common_vendor.o(addToPlaylist, "c5"),
         L: common_vendor.p({
           name: "heart",
           size: "18",
           color: "#ff6b6b"
         }),
-        M: common_vendor.o(collectSong),
-        N: common_vendor.o(closeMenu),
+        M: common_vendor.o(collectSong, "9c"),
+        N: common_vendor.o(closeMenu, "50"),
         O: common_vendor.o(() => {
-        }),
-        P: common_vendor.o(closeMenu)
+        }, "fc"),
+        P: common_vendor.o(closeMenu, "4f")
       } : {}, {
         Q: showMiniPlayer.value
       }, showMiniPlayer.value ? {} : {}, {
@@ -1101,5 +1101,5 @@ const _sfc_main = {
     };
   }
 };
-const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-f0791970"]]);
+const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-9949ef41"]]);
 wx.createPage(MiniProgramPage);

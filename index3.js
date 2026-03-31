@@ -89,8 +89,11 @@ const _sfc_main = /* @__PURE__ */ Object.assign({
           const isFromSearchBar = common_vendor.index.getStorageSync("fromSearchBar");
           console.log("[Search] isFromSearchBar:", isFromSearchBar);
           if (isFromSearchBar) {
-            shouldFocus.value = true;
             common_vendor.index.removeStorageSync("fromSearchBar");
+            setTimeout(() => {
+              shouldFocus.value = true;
+              console.log("[Search] 搜索框已设置焦点");
+            }, 300);
           }
           const keywordFromIndex = common_vendor.index.getStorageSync("searchKeywordFromIndex");
           if (keywordFromIndex) {
@@ -881,15 +884,15 @@ const _sfc_main = /* @__PURE__ */ Object.assign({
           size: "16",
           color: "#9ca3af"
         }),
-        d: common_vendor.o(onSearch),
-        e: common_vendor.o([($event) => searchKeyword.value = $event.detail.value, onInput]),
+        d: common_vendor.o(onSearch, "29"),
+        e: common_vendor.o([($event) => searchKeyword.value = $event.detail.value, onInput], "d0"),
         f: shouldFocus.value,
-        g: common_vendor.o(handleFocus),
-        h: common_vendor.o(handleBlur),
+        g: common_vendor.o(handleFocus, "fe"),
+        h: common_vendor.o(handleBlur, "ca"),
         i: searchKeyword.value,
         j: searchKeyword.value
       }, searchKeyword.value ? {
-        k: common_vendor.o(clearSearch),
+        k: common_vendor.o(clearSearch, "56"),
         l: common_vendor.p({
           type: "fas",
           name: "times-circle",
@@ -900,7 +903,7 @@ const _sfc_main = /* @__PURE__ */ Object.assign({
         m: searchKeyword.value ? 1 : "",
         n: searchKeyword.value
       }, searchKeyword.value ? {
-        o: common_vendor.o(onSearch)
+        o: common_vendor.o(onSearch, "94")
       } : {}, {
         p: common_vendor.s(searchBarStyle.value)
       }, {
@@ -938,7 +941,7 @@ const _sfc_main = /* @__PURE__ */ Object.assign({
           size: "14",
           color: "#999999"
         }),
-        x: common_vendor.o(clearHistory),
+        x: common_vendor.o(clearHistory, "90"),
         y: common_vendor.f(searchHistory.value, (item, index, i0) => {
           return {
             a: common_vendor.t(item.keyword),
@@ -950,7 +953,7 @@ const _sfc_main = /* @__PURE__ */ Object.assign({
       } : {}, {
         z: !hasSearched.value && !searchKeyword.value
       }, !hasSearched.value && !searchKeyword.value ? {
-        A: common_vendor.o(getHotSearches),
+        A: common_vendor.o(getHotSearches, "d3"),
         B: common_vendor.f(hotSearches.value, (item, index, i0) => {
           return common_vendor.e({
             a: common_vendor.t(index + 1),
@@ -975,7 +978,7 @@ const _sfc_main = /* @__PURE__ */ Object.assign({
       }, searchError.value ? {
         F: common_assets._imports_0,
         G: common_vendor.t(searchError.value),
-        H: common_vendor.o(onSearch)
+        H: common_vendor.o(onSearch, "83")
       } : {}, {
         I: hasSearched.value && !isLoading.value && isEmpty.value
       }, hasSearched.value && !isLoading.value && isEmpty.value ? {
@@ -1066,14 +1069,14 @@ const _sfc_main = /* @__PURE__ */ Object.assign({
         O: currentType.value === "playlists",
         Q: hasMore.value && !isLoading.value && !isEmpty.value
       }, hasMore.value && !isLoading.value && !isEmpty.value ? {
-        R: common_vendor.o(loadMore)
+        R: common_vendor.o(loadMore, "45")
       } : isLoading.value && currentPage.value > 1 ? {} : !hasMore.value && !isEmpty.value ? {} : {}, {
         S: isLoading.value && currentPage.value > 1,
         T: !hasMore.value && !isEmpty.value
       }) : {}, {
         U: common_vendor.s(safeBottomStyle.value),
-        V: common_vendor.o(loadMore),
-        W: common_vendor.o(onRefresh),
+        V: common_vendor.o(loadMore, "d1"),
+        W: common_vendor.o(onRefresh, "98"),
         X: hasSearched.value,
         Y: isRefreshing.value,
         Z: darkMode.value ? 1 : ""

@@ -23,7 +23,7 @@
 /* 垂直间距 */
 /* 透明度 */
 /* 文章场景相关 */
-.custom-tabbar.data-v-7171c65a {
+.custom-tabbar.data-v-47fdb5b7 {
   position: fixed;
   bottom: 0;
   left: 0;
@@ -32,40 +32,40 @@
   justify-content: space-around;
   align-items: flex-start;
   background-color: #ffffff;
-  box-shadow: 0 -2rpx 10rpx rgba(0, 0, 0, 0.05);
+  box-shadow: 0 -1px 5px rgba(0, 0, 0, 0.05);
   z-index: 999;
   border-top: 1px solid rgba(0, 0, 0, 0.05);
-  padding-top: 24rpx;
+  padding-top: 12px;
   /* iOS 适配 - 减少底部空白但确保选中色块不被遮挡 */
   /* Android 适配 - 增加高度确保选中色块完整显示 */
   /* 深色模式适配 - 通过类名控制 */
 }
-.custom-tabbar.is-ios.data-v-7171c65a {
-  padding-bottom: calc(env(safe-area-inset-bottom) - 20px);
-  min-height: 100rpx;
+.custom-tabbar.is-ios.data-v-47fdb5b7 {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 10px);
+  height: 50px;
 }
-.custom-tabbar.is-ios .tab-bar-item.data-v-7171c65a {
-  padding-bottom: 12rpx;
+.custom-tabbar.is-ios .tab-bar-item.data-v-47fdb5b7 {
+  padding-bottom: 6px;
 }
-.custom-tabbar.is-ios .tab-text.active.data-v-7171c65a::after {
-  bottom: -8rpx;
+.custom-tabbar.is-ios .tab-text.active.data-v-47fdb5b7::after {
+  bottom: -4px;
 }
-.custom-tabbar.is-android.data-v-7171c65a {
+.custom-tabbar.is-android.data-v-47fdb5b7 {
   padding-bottom: 0;
-  height: 110rpx;
+  height: 55px;
 }
-.custom-tabbar.is-android .tab-bar-item.data-v-7171c65a {
-  padding-bottom: 16rpx;
+.custom-tabbar.is-android .tab-bar-item.data-v-47fdb5b7 {
+  padding-bottom: 8px;
 }
-.custom-tabbar.is-android .tab-text.active.data-v-7171c65a::after {
-  bottom: -8rpx;
+.custom-tabbar.is-android .tab-text.active.data-v-47fdb5b7::after {
+  bottom: -4px;
 }
-.custom-tabbar.dark-mode.data-v-7171c65a {
+.custom-tabbar.dark-mode.data-v-47fdb5b7 {
   background-color: #1f2937;
-  box-shadow: 0 -2rpx 10rpx rgba(0, 0, 0, 0.2);
+  box-shadow: 0 -1px 5px rgba(0, 0, 0, 0.2);
   border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
-.tab-bar-item.data-v-7171c65a {
+.tab-bar-item.data-v-47fdb5b7 {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -74,35 +74,35 @@
   position: relative;
   transition: all 0.2s ease;
 }
-.tab-bar-item.data-v-7171c65a:active {
+.tab-bar-item.data-v-47fdb5b7:active {
   transform: scale(0.95);
 }
-.tab-text.data-v-7171c65a {
-  font-size: 24rpx;
+.tab-text.data-v-47fdb5b7 {
+  font-size: 12px;
   color: #999999;
   transition: all 0.2s ease;
-  margin-top: 8rpx;
+  margin-top: 4px;
   position: relative;
 }
-.tab-text.active.data-v-7171c65a {
+.tab-text.active.data-v-47fdb5b7 {
   color: transparent;
   background: linear-gradient(135deg, #00d7cd 0%, #00afff 100%);
   -webkit-background-clip: text;
   background-clip: text;
   font-weight: 500;
 }
-.tab-text.active.data-v-7171c65a::after {
+.tab-text.active.data-v-47fdb5b7::after {
   content: "";
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  width: 24rpx;
-  height: 4rpx;
+  width: 12px;
+  height: 2px;
   background: linear-gradient(90deg, #00d7cd 0%, #00afff 100%);
-  border-radius: 2rpx;
+  border-radius: 1px;
 }
 
 /* 深色模式下的 tab-text 样式 */
-.dark-mode .tab-text.data-v-7171c65a {
+.dark-mode .tab-text.data-v-47fdb5b7 {
   color: #9ca3af;
 }

@@ -1134,6 +1134,16 @@ const jaJP = {
     comingSoon: "近日公開",
     beta: "ベータ版",
     experimental: "実験的機能"
+  },
+  // 電池最適化リマインダー
+  batteryOptimization: {
+    title: "バックグラウンド実行権限の設定通知",
+    tip: "PHG Musicが「電池最適化を無視」のホワイトリストにありません。これにより、バックグラウンドで音楽を再生中にシステムによって一時停止される可能性があります。PHG Musicをホワイトリストに追加しますか？",
+    goSettings: "設定へ",
+    cancel: "キャンセル",
+    neverShow: "今後表示しない",
+    neverShowTip: "この通知を無効にしました",
+    openFailed: "設定ページを開けません"
   }
 };
 exports.jaJP = jaJP;

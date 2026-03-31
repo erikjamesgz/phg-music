@@ -18,11 +18,38 @@ const _sfc_main = {
   setup(__props) {
     const currentTime = common_vendor.ref("9:41");
     const currentSourceId = common_vendor.ref(null);
-    const isDarkMode = common_vendor.computed(() => {
+    const isDarkMode = common_vendor.ref(false);
+    const checkDarkMode = () => {
+      const followSystem = common_vendor.index.getStorageSync("followSystem");
+      const isFollowSystem = followSystem !== "false" && followSystem !== false;
       const darkMode = common_vendor.index.getStorageSync("darkMode") === "true";
-      console.log("[music-sources] isDarkMode:", darkMode);
-      return darkMode;
-    });
+      if (isFollowSystem) {
+        const systemInfo = common_vendor.index.getSystemInfoSync();
+        if (systemInfo.theme) {
+          isDarkMode.value = systemInfo.theme === "dark";
+        } else {
+          isDarkMode.value = darkMode;
+        }
+      } else {
+        isDarkMode.value = darkMode;
+      }
+      console.log("[music-sources] checkDarkMode:", isDarkMode.value, "isFollowSystem:", isFollowSystem);
+    };
+    const handleThemeChange = (data) => {
+      console.log("[music-sources] 收到主题变化事件:", data);
+      if (data && typeof data.isDark === "boolean") {
+        isDarkMode.value = data.isDark;
+      }
+    };
+    const handleSystemThemeChange = (data) => {
+      console.log("[music-sources] 收到系统主题变化事件:", data);
+      const followSystem = common_vendor.index.getStorageSync("followSystem");
+      const isFollowSystem = followSystem !== "false" && followSystem !== false;
+      if (isFollowSystem && data && typeof data.isDark === "boolean") {
+        isDarkMode.value = data.isDark;
+        console.log("[music-sources] handleSystemThemeChange - isFollowSystem:", isFollowSystem, "isDarkMode:", isDarkMode.value);
+      }
+    };
     const statusBarHeight = common_vendor.ref(utils_system.getStatusBarHeight());
     const statusBarStyle = common_vendor.computed(() => ({
       height: `${statusBarHeight.value}px`,
@@ -320,10 +347,17 @@ const _sfc_main = {
     };
     common_vendor.onMounted(() => {
       startClock();
+      checkDarkMode();
+      common_vendor.index.$on("themeChanged", handleThemeChange);
+      common_vendor.index.$on("systemThemeChange", handleSystemThemeChange);
       fetchMusicSources();
       activities.value = utils_musicSourceStorage.getActivities();
       initDefaultSources();
       utils_system.setStatusBarTextColor("black");
+    });
+    common_vendor.onUnmounted(() => {
+      common_vendor.index.$off("themeChanged", handleThemeChange);
+      common_vendor.index.$off("systemThemeChange", handleSystemThemeChange);
     });
     return (_ctx, _cache) => {
       return common_vendor.e({
@@ -334,7 +368,7 @@ const _sfc_main = {
           size: "20",
           color: "#4b5563"
         }),
-        c: common_vendor.o(goBack),
+        c: common_vendor.o(goBack, "4d"),
         d: sources.value.length === 0
       }, sources.value.length === 0 ? {
         e: common_vendor.p({
@@ -346,18 +380,18 @@ const _sfc_main = {
       } : {
         f: common_vendor.f(sources.value, (source, index, i0) => {
           return common_vendor.e({
-            a: "92af1ee3-2-" + i0,
+            a: "83a85831-2-" + i0,
             b: common_vendor.t(source.name),
             c: common_vendor.t(source.version),
-            d: "92af1ee3-3-" + i0,
+            d: "83a85831-3-" + i0,
             e: common_vendor.t(source.developer),
-            f: "92af1ee3-4-" + i0,
+            f: "83a85831-4-" + i0,
             g: common_vendor.t(source.updateDate),
-            h: "92af1ee3-5-" + i0,
+            h: "83a85831-5-" + i0,
             i: common_vendor.t(source.description),
             j: source.selected
           }, source.selected ? {
-            k: "92af1ee3-6-" + i0,
+            k: "83a85831-6-" + i0,
             l: common_vendor.p({
               type: "fas",
               name: "check-circle",
@@ -402,14 +436,14 @@ const _sfc_main = {
           size: "20",
           color: "#0084ff"
         }),
-        l: common_vendor.o(importOnline),
+        l: common_vendor.o(importOnline, "df"),
         m: common_vendor.p({
           type: "fas",
           name: "file-import",
           size: "20",
           color: "#00d7cd"
         }),
-        n: common_vendor.o(importLocal),
+        n: common_vendor.o(importLocal, "dd"),
         o: activities.value.length === 0
       }, activities.value.length === 0 ? {
         p: common_vendor.p({
@@ -421,7 +455,7 @@ const _sfc_main = {
       } : {
         q: common_vendor.f(activities.value, (activity, index, i0) => {
           return {
-            a: "92af1ee3-10-" + i0,
+            a: "83a85831-10-" + i0,
             b: common_vendor.p({
               type: "fas",
               name: getActivityIcon(activity.type),
@@ -442,11 +476,11 @@ const _sfc_main = {
           size: "20",
           color: "#999"
         }),
-        t: common_vendor.o(closeOnlineImportPopup),
+        t: common_vendor.o(closeOnlineImportPopup, "3e"),
         v: importing.value,
         w: importUrl.value,
-        x: common_vendor.o(($event) => importUrl.value = $event.detail.value),
-        y: common_vendor.o(closeOnlineImportPopup),
+        x: common_vendor.o(($event) => importUrl.value = $event.detail.value, "0e"),
+        y: common_vendor.o(closeOnlineImportPopup, "0d"),
         z: importing.value ? 1 : "",
         A: importing.value
       }, importing.value ? {
@@ -457,16 +491,16 @@ const _sfc_main = {
           color: "#fff"
         })
       } : {}, {
-        C: common_vendor.o(startImport),
+        C: common_vendor.o(startImport, "a3"),
         D: importing.value || !importUrl.value.trim() ? 1 : "",
         E: common_vendor.o(() => {
-        }),
-        F: common_vendor.o(closeOnlineImportPopup)
+        }, "7a"),
+        F: common_vendor.o(closeOnlineImportPopup, "5e")
       }) : {}, {
         G: isDarkMode.value ? 1 : ""
       });
     };
   }
 };
-const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-92af1ee3"]]);
+const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-83a85831"]]);
 wx.createPage(MiniProgramPage);

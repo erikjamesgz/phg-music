@@ -30,14 +30,16 @@ const initHeights = () => {
   }
   try {
     const systemInfo = common_vendor.index.getSystemInfoSync();
-    const windowWidth = systemInfo.windowWidth;
-    const rpxToPx = windowWidth / 750;
-    tabBarHeight.value = 140 * rpxToPx;
-    miniPlayerHeight.value = 140 * rpxToPx;
+    const platform = systemInfo.platform;
+    if (platform === "ios") {
+      tabBarHeight.value = 12 + 50;
+    } else {
+      tabBarHeight.value = 12 + 55;
+    }
+    miniPlayerHeight.value = 70 + 10;
     safeAreaBottom.value = ((_a = systemInfo.safeAreaInsets) == null ? void 0 : _a.bottom) || 0;
     console.log("[globalBottomHeight] 初始化高度:", {
-      windowWidth,
-      rpxToPx,
+      platform,
       tabBarHeight: tabBarHeight.value,
       miniPlayerHeight: miniPlayerHeight.value,
       safeAreaBottom: safeAreaBottom.value
@@ -45,8 +47,8 @@ const initHeights = () => {
     isInitialized = true;
   } catch (error) {
     console.error("[globalBottomHeight] 初始化高度失败:", error);
-    tabBarHeight.value = 70;
-    miniPlayerHeight.value = 70;
+    tabBarHeight.value = 67;
+    miniPlayerHeight.value = 80;
     safeAreaBottom.value = 0;
     isInitialized = true;
   }

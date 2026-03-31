@@ -105,7 +105,9 @@ const state = common_vendor.reactive({
   // 用户是否正在拖动进度条或点击歌词快进（用于禁用通知栏切歌误判）
   isUserSeeking: false,
   // 用户快进操作的防抖定时器
-  seekingDebounceTimer: null
+  seekingDebounceTimer: null,
+  // 是否已检查过电池优化（App端）
+  hasCheckedBatteryOptimization: false
 });
 function formatTime(time) {
   time = Math.floor(time);
@@ -211,6 +213,19 @@ const playerStore = {
       this.clearStatusText();
       state.playNextRetryCount = 0;
       state.isUsingCachedUrl = false;
+      if (state._pendingSeekTime > 0 && state.duration > 0) {
+        console.log("[BackgroundAudio] onPlay - 恢复播放进度:", state._pendingSeekTime);
+        const seekTime = Math.min(state._pendingSeekTime, state.duration - 1);
+        if (seekTime > 0) {
+          setTimeout(() => {
+            console.log("[BackgroundAudio] onPlay - 执行 seek 到:", seekTime);
+            audio.seek(seekTime);
+            state.currentTime = seekTime;
+          }, 500);
+        }
+        state._pendingSeekTime = 0;
+        state._pendingSeekDuration = 0;
+      }
     });
     audio.onPause(() => {
       console.log("[BackgroundAudio] onPause");
@@ -234,20 +249,28 @@ const playerStore = {
       var _a;
       state.currentTime = audio.currentTime;
       state.duration = audio.duration;
-      const now = Date.now();
       if (!state.lastSaveTime || now - state.lastSaveTime > 5e3) {
         state.lastSaveTime = now;
-        let playerListId = store_modules_list.listStore.state.playInfo.playerListId || store_modules_list.LIST_IDS.DEFAULT;
-        let playIndex = store_modules_list.listStore.state.playInfo.playIndex ?? 0;
-        if (playerListId === store_modules_list.LIST_IDS.TEMP && ((_a = store_modules_list.listStore.state.tempList.meta) == null ? void 0 : _a.id)) {
-          playerListId = store_modules_list.listStore.state.tempList.meta.id;
+        if (state.currentSong && state.currentSong.id && state.currentSong.id !== 0) {
+          let playerListId = store_modules_list.listStore.state.playInfo.playerListId || store_modules_list.LIST_IDS.TEMP;
+          let playIndex = store_modules_list.listStore.state.playInfo.playerPlayIndex ?? 0;
+          if (playerListId === store_modules_list.LIST_IDS.TEMP && ((_a = store_modules_list.listStore.state.tempList.meta) == null ? void 0 : _a.id)) {
+            playerListId = store_modules_list.listStore.state.tempList.meta.id;
+          }
+          const playlist = store_modules_list.listStore.getList(playerListId);
+          if (playlist && playlist.length > 0) {
+            utils_playInfoStorage.savePlayState({
+              time: Math.floor(state.currentTime),
+              maxTime: Math.floor(state.duration),
+              listId: playerListId,
+              index: playIndex,
+              currentSong: state.currentSong,
+              originalSong: state.originalSong,
+              playlist,
+              playing: state.playing
+            });
+          }
         }
-        utils_playInfoStorage.savePlayInfo({
-          time: Math.floor(state.currentTime),
-          maxTime: Math.floor(state.duration),
-          listId: playerListId,
-          index: playIndex
-        });
       }
       if (state.enablePreload && state.duration > 10) {
         const remainingTime = state.duration - state.currentTime;
@@ -286,7 +309,7 @@ const playerStore = {
           icon: "none"
         });
         setTimeout(() => {
-          this.handlePlayEndedDefault();
+          this.handlePlayEndedWithRetry();
         }, 1500);
       }
     });
@@ -304,7 +327,8 @@ const playerStore = {
   },
   // 播放指定歌曲
   async playSong(song) {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _A, _B, _C, _D, _E;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _A, _B, _C, _D;
+    console.log("[playSong] ========== playSong 被调用 ==========");
     if (!song) {
       console.error("[playSong] song is null or undefined");
       return;
@@ -317,6 +341,33 @@ const playerStore = {
     console.log("[playSong] ========== 开始播放歌曲 ==========");
     console.log("[playSong] 歌曲ID:", song.id);
     console.log("[playSong] 歌曲名称:", song.name);
+    const currentPlayerListId = store_modules_list.listStore.state.playInfo.playerListId;
+    const tempListMeta = store_modules_list.listStore.state.tempList.meta;
+    console.log("[playSong] 当前播放列表ID:", currentPlayerListId, "LIST_IDS.TEMP:", store_modules_list.LIST_IDS.TEMP, "是否相等:", currentPlayerListId === store_modules_list.LIST_IDS.TEMP);
+    console.log("[playSong] 临时列表元数据:", tempListMeta);
+    let isLocalPlaylist = false;
+    if (tempListMeta && tempListMeta.id) {
+      if (tempListMeta.id.startsWith("userlist_") || tempListMeta.id.startsWith("custom_") || tempListMeta.id.startsWith("local_") || tempListMeta.source === "local" || tempListMeta.source === "user") {
+        isLocalPlaylist = true;
+        console.log("[playSong] 是用户创建的歌单");
+      }
+      if (!isLocalPlaylist) {
+        try {
+          const importedPlaylists = common_vendor.index.getStorageSync("imported_playlists") || [];
+          const isImported = importedPlaylists.some((p) => p.id === tempListMeta.id);
+          if (isImported) {
+            isLocalPlaylist = true;
+            console.log("[playSong] 是导入的歌单，ID:", tempListMeta.id);
+          }
+        } catch (e) {
+          console.error("[playSong] 检查导入歌单失败:", e);
+        }
+      }
+    }
+    console.log("[playSong] 是否是本地歌单:", isLocalPlaylist);
+    if (currentPlayerListId === store_modules_list.LIST_IDS.TEMP && !isLocalPlaylist) {
+      console.log("[playSong] 当前播放列表是临时列表且不是本地歌单");
+    }
     if (!state.originalSong || state.originalSong.id !== song.id) {
       state.originalSong = { ...song };
       console.log("[playSong] 保存原始歌曲信息:", song.name, "source:", song.source);
@@ -558,17 +609,35 @@ const playerStore = {
       store_modules_user.userStore.increaseListenCount(singerName);
       state.showMiniPlayer = true;
       state.isLoading = false;
-      let playerListId = store_modules_list.listStore.state.playInfo.playerListId || store_modules_list.LIST_IDS.DEFAULT;
+      const currentPlayerListId2 = store_modules_list.listStore.state.playInfo.playerListId || store_modules_list.LIST_IDS.DEFAULT;
       let playIndex = store_modules_list.listStore.state.playInfo.playIndex ?? 0;
-      if (playerListId === store_modules_list.LIST_IDS.TEMP && ((_E = store_modules_list.listStore.state.tempList.meta) == null ? void 0 : _E.id)) {
-        playerListId = store_modules_list.listStore.state.tempList.meta.id;
+      let saveListId = currentPlayerListId2;
+      let playlist = null;
+      if (currentPlayerListId2 === store_modules_list.LIST_IDS.TEMP) {
+        const tempListMeta2 = store_modules_list.listStore.state.tempList.meta;
+        if (tempListMeta2 && tempListMeta2.id) {
+          saveListId = tempListMeta2.id;
+          console.log("[playSong] 临时列表的真实歌单ID:", saveListId);
+        }
+        playlist = store_modules_list.listStore.state.tempList.list;
+      } else {
+        playlist = store_modules_list.listStore.getList(currentPlayerListId2);
       }
-      utils_playInfoStorage.savePlayInfo({
-        time: 0,
-        maxTime: 0,
-        listId: playerListId,
-        index: playIndex
-      });
+      const savedTime = state._pendingSeekTime || 0;
+      const savedMaxTime = state._pendingSeekDuration || 0;
+      if (playlist && playlist.length > 0) {
+        console.log("[playSong] 保存播放状态, saveListId:", saveListId, "playlist长度:", playlist.length, "savedTime:", savedTime);
+        utils_playInfoStorage.savePlayState({
+          time: savedTime,
+          maxTime: savedMaxTime,
+          listId: saveListId,
+          index: playIndex,
+          currentSong: state.currentSong,
+          originalSong: state.originalSong,
+          playlist,
+          playing: state.playing
+        });
+      }
       this.loadLyricsForSong(song);
     } catch (error) {
       console.error("[playSong] 播放歌曲失败:", error);
@@ -606,8 +675,37 @@ const playerStore = {
   },
   // 继续播放
   resume() {
+    var _a, _b, _c;
     console.log("[resume] 继续播放, 当前 playing 状态:", state.playing);
-    if (state.audioContext && !state.playing) {
+    console.log("[resume] 当前歌曲:", (_a = state.currentSong) == null ? void 0 : _a.name, "ID:", (_b = state.currentSong) == null ? void 0 : _b.id);
+    console.log("[resume] audioContext:", state.audioContext ? "存在" : "不存在");
+    console.log("[resume] audioContext.src:", (_c = state.audioContext) == null ? void 0 : _c.src);
+    if (!state.currentSong || !state.currentSong.id) {
+      console.log("[resume] 没有当前歌曲，无法播放");
+      return;
+    }
+    if (!state.audioContext) {
+      console.log("[resume] audioContext 不存在，初始化...");
+      this.initAudioContext();
+    }
+    if (!state.audioContext) {
+      console.log("[resume] audioContext 初始化失败，无法播放");
+      return;
+    }
+    if (!state.audioContext.src) {
+      console.log("[resume] 音频源未加载，重新加载歌曲");
+      const savedTime = state.currentTime || 0;
+      const savedDuration = state.duration || 0;
+      state._pendingSeekTime = savedTime;
+      state._pendingSeekDuration = savedDuration;
+      this.playSong(state.currentSong).then(() => {
+        console.log("[resume] 歌曲重新加载完成");
+      }).catch((err) => {
+        console.error("[resume] 歌曲重新加载失败:", err);
+      });
+      return;
+    }
+    if (!state.playing) {
       state.audioContext.play();
       state.playing = true;
     }
@@ -1205,6 +1303,13 @@ const playerStore = {
         if (state.retryNum < 2) {
           console.log("[startQuickCheckTimeout] 尝试刷新URL");
           this.refreshMusicUrl();
+        } else {
+          console.log("[startQuickCheckTimeout] 重试次数用完，切换下一首");
+          common_vendor.index.showToast({
+            title: "缓存链接已过期，切换下一首",
+            icon: "none"
+          });
+          this.handlePlayEndedWithRetry();
         }
       }
     }, 5e3);
@@ -1531,6 +1636,59 @@ const playerStore = {
       }
     } catch (error) {
       console.error("[playerStore] 加载歌词失败:", error);
+    }
+  },
+  // 恢复播放状态（APP启动时调用）
+  async restorePlayState() {
+    var _a, _b;
+    console.log("[playerStore] ========== restorePlayState 开始 ==========");
+    try {
+      const playState = await utils_playInfoStorage.getPlayState();
+      if (!playState) {
+        console.log("[playerStore] 没有保存的播放状态，无需恢复");
+        return null;
+      }
+      if (!playState.currentSong || !playState.currentSong.id || playState.currentSong.id === 0) {
+        console.log("[playerStore] 保存的播放状态无效（无有效歌曲），跳过恢复");
+        return null;
+      }
+      console.log("[playerStore] 恢复播放状态:", {
+        playing: playState.playing,
+        currentSong: (_a = playState.currentSong) == null ? void 0 : _a.name,
+        playlistLength: (_b = playState.playlist) == null ? void 0 : _b.length,
+        time: playState.time,
+        listId: playState.listId,
+        index: playState.index
+      });
+      if (playState.currentSong) {
+        state.currentSong = playState.currentSong;
+        console.log("[playerStore] 已恢复当前歌曲:", state.currentSong.name, "ID:", state.currentSong.id);
+      }
+      if (playState.originalSong) {
+        state.originalSong = playState.originalSong;
+        console.log("[playerStore] 已恢复原始歌曲:", state.originalSong.name);
+      }
+      if (playState.playlist && playState.playlist.length > 0) {
+        state.playlist = playState.playlist;
+        console.log("[playerStore] 已恢复播放列表，长度:", state.playlist.length);
+      }
+      if (playState.time > 0) {
+        state.currentTime = playState.time;
+        state._pendingSeekTime = playState.time;
+        console.log("[playerStore] 已设置待恢复播放进度:", state.currentTime);
+      }
+      if (playState.maxTime > 0) {
+        state.duration = playState.maxTime;
+        state._pendingSeekDuration = playState.maxTime;
+        console.log("[playerStore] 已恢复歌曲时长:", state.duration);
+      }
+      state.playing = false;
+      console.log("[playerStore] 播放状态设置为暂停（等待用户操作）");
+      console.log("[playerStore] ========== restorePlayState 恢复完成 ==========");
+      return playState;
+    } catch (error) {
+      console.error("[playerStore] 恢复播放状态失败:", error);
+      return null;
     }
   }
 };

@@ -230,7 +230,7 @@ const _sfc_main = {
           } : {}, {
             g: isCurrentPlaying(startIndex.value + i) && __props.isPlaying
           }, isCurrentPlaying(startIndex.value + i) && __props.isPlaying ? {
-            h: "9a1771e2-0-" + i0,
+            h: "2c0b021a-0-" + i0,
             i: common_vendor.p({
               name: "play",
               size: "18"
@@ -238,7 +238,7 @@ const _sfc_main = {
           } : {}, {
             j: common_vendor.t(formatDuration(item.dt || item.interval || item.duration))
           }, __props.showMoreButton ? {
-            k: "9a1771e2-1-" + i0,
+            k: "2c0b021a-1-" + i0,
             l: common_vendor.p({
               name: "ellipsis-vertical",
               size: "18"
@@ -269,14 +269,14 @@ const _sfc_main = {
         k: __props.showTopRadius ? 1 : "",
         l: __props.darkMode ? 1 : "",
         m: listHeight.value,
-        n: common_vendor.o(onScroll),
+        n: common_vendor.o(onScroll, "81"),
         o: computedScrollTop.value,
         p: __props.scrollWithAnimation,
         q: __props.lowerThreshold,
-        r: common_vendor.o(onScrollToLower)
+        r: common_vendor.o(onScrollToLower, "6b")
       });
     };
   }
 };
-const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-9a1771e2"]]);
+const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-2c0b021a"]]);
 wx.createComponent(Component);

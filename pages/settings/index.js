@@ -5,10 +5,12 @@ const utils_system = require("../../utils/system.js");
 const utils_i18n = require("../../utils/i18n.js");
 const utils_config = require("../../utils/config.js");
 const utils_version = require("../../utils/version.js");
+const UpdateModal = () => "../../components/common/UpdateModal.js";
 const RocIconPlus = () => "../../uni_modules/roc-icon-plus/components/roc-icon-plus/roc-icon-plus.js";
 const _sfc_main = {
   components: {
-    RocIconPlus
+    RocIconPlus,
+    UpdateModal
   },
   data() {
     return {
@@ -34,6 +36,7 @@ const _sfc_main = {
       celadonTheme: true,
       darkMode: false,
       followSystem: true,
+      showDebugLog: false,
       // 播放设置 - 评论弹幕
       showCommentDanmaku: true,
       showMiniPlayerDanmaku: false,
@@ -47,11 +50,11 @@ const _sfc_main = {
       tempSelectedMinute: 0,
       // 临时选中的分钟
       // 缓存管理
-      resourceCacheSize: "计算中...",
+      resourceCacheSize: "点击查看",
       appCacheSize: "0KB",
       musicUrlCacheSize: "0KB",
       musicUrlCacheCount: 0,
-      metaCacheSize: "0KB",
+      metaCacheSize: "点击查看",
       otherSourceCacheCount: 0,
       otherSourceCacheSize: "0KB",
       lyricCacheCount: 0,
@@ -66,7 +69,10 @@ const _sfc_main = {
       // 语言设置
       currentLanguage: "",
       supportedLanguages: [],
-      tempLanguage: ""
+      tempLanguage: "",
+      // 电池优化相关（仅Android）
+      isAndroid: false,
+      isIgnoringBatteryOptimization: true
     };
   },
   computed: {
@@ -131,7 +137,6 @@ const _sfc_main = {
   beforeUnmount() {
   },
   async onShow() {
-    utils_system.setStatusBarTextColor("black");
     common_vendor.index.$on("systemThemeChange", this.handleSystemThemeChange);
     console.log("[Settings] onShow: 已注册主题变化监听");
     common_vendor.index.$on("sleepTimerUpdate", this.handleSleepTimerUpdate);
@@ -164,18 +169,16 @@ const _sfc_main = {
     initSettings() {
       this.celadonTheme = common_vendor.index.getStorageSync("celadonTheme") !== "false";
       this.darkMode = common_vendor.index.getStorageSync("darkMode") === "true";
-      this.followSystem = common_vendor.index.getStorageSync("followSystem") !== "false";
+      const followSystem = common_vendor.index.getStorageSync("followSystem");
+      this.followSystem = followSystem !== "false" && followSystem !== false;
+      console.log("[Settings] initSettings - followSystem:", followSystem, "类型:", typeof followSystem, "this.followSystem:", this.followSystem);
+      this.showDebugLog = common_vendor.index.getStorageSync("showDebugLog") === "true";
       const storedDanmaku = common_vendor.index.getStorageSync("showCommentDanmaku");
       this.showCommentDanmaku = storedDanmaku === "" || storedDanmaku === null ? true : storedDanmaku === "true";
       const storedMiniDanmaku = common_vendor.index.getStorageSync("showMiniPlayerDanmaku");
       this.showMiniPlayerDanmaku = storedMiniDanmaku === "true";
       const versionInfo = utils_system.getAppVersion();
       this.appVersion = "v" + versionInfo.version;
-      this.$nextTick(() => {
-        setTimeout(() => {
-          this.getCacheSize();
-        }, 300);
-      });
     },
     // 启动时钟
     startClock() {
@@ -206,13 +209,21 @@ const _sfc_main = {
     },
     // 切换夜间模式
     toggleDarkMode(e) {
-      this.darkMode = e.detail.value;
-      common_vendor.index.setStorageSync("darkMode", this.darkMode.toString());
-      if (this.darkMode) {
+      if (this.followSystem) {
         this.followSystem = false;
         common_vendor.index.setStorageSync("followSystem", "false");
+        console.log("[Settings] 用户手动切换模式，关闭跟随系统");
       }
+      this.darkMode = e.detail.value;
+      common_vendor.index.setStorageSync("darkMode", this.darkMode.toString());
       this.applyTheme();
+    },
+    // 切换调试日志显示
+    toggleDebugLog(e) {
+      this.showDebugLog = e.detail.value;
+      common_vendor.index.setStorageSync("showDebugLog", this.showDebugLog.toString());
+      console.log("[Settings] 调试日志显示状态:", this.showDebugLog);
+      common_vendor.index.$emit("debugLogStatusChanged", { show: this.showDebugLog });
     },
     // 获取真实系统主题（不读取缓存）
     async getRealSystemTheme() {
@@ -436,6 +447,7 @@ const _sfc_main = {
             });
             const picSizeKB = (picSize / 1024).toFixed(2);
             this.getAudioFileCacheSize().then((audioFileSizeMB) => {
+              this.audioFileCacheSize = audioFileSizeMB + "MB";
               const otherSizeKB = parseFloat(musicUrlSizeKB) + parseFloat(lyricSizeKB) + parseFloat(picSizeKB);
               const appCacheSizeKB = Math.max(0, totalSizeKB - otherSizeKB);
               this.appCacheSize = appCacheSizeKB.toFixed(2) + "KB";
@@ -448,6 +460,7 @@ const _sfc_main = {
               this.appCacheSize = appCacheSizeKB.toFixed(2) + "KB";
               this.musicUrlCacheSize = musicUrlSizeKB + "KB";
               this.resourceCacheSize = totalSizeMB + "MB";
+              this.audioFileCacheSize = "0MB";
               console.log("[缓存管理] 资源缓存统计完成:", this.resourceCacheSize);
             });
           },
@@ -500,7 +513,6 @@ const _sfc_main = {
           console.error("[缓存管理] 微信小程序获取音频文件缓存异常:", error);
           resolve("0");
         }
-        resolve("0");
       });
     },
     // 清理音频文件缓存
@@ -633,8 +645,12 @@ const _sfc_main = {
     },
     // 显示资源缓存管理
     showResourceCache() {
-      this.getResourceCacheSize();
+      this.resourceCacheSize = "计算中...";
+      this.audioFileCacheSize = "计算中...";
       this.showResourceCachePopup = true;
+      setTimeout(() => {
+        this.getResourceCacheSize();
+      }, 100);
     },
     // 关闭资源缓存管理
     closeResourceCachePopup() {
@@ -680,8 +696,11 @@ const _sfc_main = {
     },
     // 显示其他缓存管理
     showMetaCache() {
-      this.getMetaCacheInfo();
+      this.metaCacheSize = "计算中...";
       this.showMetaCachePopup = true;
+      setTimeout(() => {
+        this.getMetaCacheInfo();
+      }, 100);
     },
     // 关闭其他缓存管理
     closeMetaCachePopup() {
@@ -920,41 +939,6 @@ const _sfc_main = {
       }
       this.closeUpdatePopup();
     },
-    // 复制下载链接
-    copyUpdateUrl() {
-      if (this.updateInfo && this.updateInfo.versionInfo) {
-        const url = this.updateInfo.versionInfo.downloadUrl || this.updateInfo.versionInfo.releaseUrl || "";
-        if (url) {
-          common_vendor.index.setClipboardData({
-            data: url,
-            success: () => {
-              common_vendor.index.showToast({
-                title: "链接已复制",
-                icon: "success"
-              });
-            }
-          });
-        }
-      }
-      this.closeUpdatePopup();
-    },
-    // 打开项目地址
-    openProjectUrl() {
-      if (this.updateInfo && this.updateInfo.versionInfo) {
-        const url = this.updateInfo.versionInfo.projectUrl || "https://github.com/erikjamesgz/phg-music";
-        common_vendor.index.setClipboardData({
-          data: url,
-          success: () => {
-            common_vendor.index.showToast({
-              title: "链接已复制，请到浏览器打开",
-              icon: "none",
-              duration: 3e3
-            });
-          }
-        });
-      }
-      this.closeUpdatePopup();
-    },
     // 打开用户协议
     openUserAgreement() {
       this.pactAgreed = common_vendor.index.getStorageSync("isAgreePact") === "true";
@@ -1026,7 +1010,8 @@ const _sfc_main = {
 };
 if (!Array) {
   const _easycom_roc_icon_plus2 = common_vendor.resolveComponent("roc-icon-plus");
-  _easycom_roc_icon_plus2();
+  const _component_UpdateModal = common_vendor.resolveComponent("UpdateModal");
+  (_easycom_roc_icon_plus2 + _component_UpdateModal)();
 }
 const _easycom_roc_icon_plus = () => "../../uni_modules/roc-icon-plus/components/roc-icon-plus/roc-icon-plus.js";
 if (!Math) {
@@ -1040,7 +1025,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       size: "20",
       color: "#4b5563"
     }),
-    b: common_vendor.o((...args) => $options.goBack && $options.goBack(...args)),
+    b: common_vendor.o((...args) => $options.goBack && $options.goBack(...args), "fe"),
     c: common_vendor.t($options.$t("settings.settings")),
     d: $data.darkMode ? 1 : "",
     e: common_vendor.s($options.navbarStyle),
@@ -1053,7 +1038,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     }),
     h: common_vendor.t($options.$t("settings.darkMode")),
     i: $data.darkMode,
-    j: common_vendor.o((...args) => $options.toggleDarkMode && $options.toggleDarkMode(...args)),
+    j: common_vendor.o((...args) => $options.toggleDarkMode && $options.toggleDarkMode(...args), "8b"),
     k: common_vendor.p({
       type: "fas",
       name: "sync-alt",
@@ -1062,7 +1047,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     }),
     l: common_vendor.t($options.$t("settings.followSystem")),
     m: $data.followSystem,
-    n: common_vendor.o((...args) => $options.toggleFollowSystem && $options.toggleFollowSystem(...args)),
+    n: common_vendor.o((...args) => $options.toggleFollowSystem && $options.toggleFollowSystem(...args), "23"),
     o: common_vendor.p({
       type: "fas",
       name: "language",
@@ -1077,7 +1062,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       size: "14",
       color: "#9ca3af"
     }),
-    s: common_vendor.o((...args) => $options.showLanguageSelector && $options.showLanguageSelector(...args)),
+    s: common_vendor.o((...args) => $options.showLanguageSelector && $options.showLanguageSelector(...args), "ca"),
     t: common_vendor.t($options.$t("settings.playbackSettings")),
     v: common_vendor.p({
       type: "fas",
@@ -1086,7 +1071,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       color: "#00d7cd"
     }),
     w: $data.showCommentDanmaku,
-    x: common_vendor.o((...args) => $options.toggleCommentDanmaku && $options.toggleCommentDanmaku(...args)),
+    x: common_vendor.o((...args) => $options.toggleCommentDanmaku && $options.toggleCommentDanmaku(...args), "c7"),
     y: common_vendor.p({
       type: "fas",
       name: "desktop",
@@ -1094,7 +1079,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       color: "#00d7cd"
     }),
     z: $data.showMiniPlayerDanmaku,
-    A: common_vendor.o((...args) => $options.toggleMiniPlayerDanmaku && $options.toggleMiniPlayerDanmaku(...args)),
+    A: common_vendor.o((...args) => $options.toggleMiniPlayerDanmaku && $options.toggleMiniPlayerDanmaku(...args), "07"),
     B: common_vendor.p({
       type: "fas",
       name: "clock",
@@ -1110,7 +1095,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       size: "14",
       color: "#9ca3af"
     }),
-    G: common_vendor.o((...args) => $options.showSleepTimerSelector && $options.showSleepTimerSelector(...args)),
+    G: common_vendor.o((...args) => $options.showSleepTimerSelector && $options.showSleepTimerSelector(...args), "45"),
     H: common_vendor.p({
       type: "fas",
       name: "database",
@@ -1124,7 +1109,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       size: "14",
       color: "#9ca3af"
     }),
-    K: common_vendor.o((...args) => $options.showResourceCache && $options.showResourceCache(...args)),
+    K: common_vendor.o((...args) => $options.showResourceCache && $options.showResourceCache(...args), "59"),
     L: common_vendor.p({
       type: "fas",
       name: "file-code",
@@ -1138,7 +1123,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       size: "14",
       color: "#9ca3af"
     }),
-    O: common_vendor.o((...args) => $options.showMetaCache && $options.showMetaCache(...args)),
+    O: common_vendor.o((...args) => $options.showMetaCache && $options.showMetaCache(...args), "d6"),
     P: common_vendor.t($options.$t("settings.sourceManagement")),
     Q: common_vendor.p({
       type: "fas",
@@ -1153,7 +1138,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       size: "14",
       color: "#9ca3af"
     }),
-    T: common_vendor.o((...args) => $options.goToMusicSources && $options.goToMusicSources(...args)),
+    T: common_vendor.o((...args) => $options.goToMusicSources && $options.goToMusicSources(...args), "9c"),
     U: common_vendor.p({
       type: "fas",
       name: "server",
@@ -1166,83 +1151,91 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       size: "14",
       color: "#9ca3af"
     }),
-    W: common_vendor.o((...args) => $options.showServerModal && $options.showServerModal(...args)),
-    X: common_vendor.t($options.$t("settings.about")),
-    Y: common_vendor.p({
+    W: common_vendor.o((...args) => $options.showServerModal && $options.showServerModal(...args), "43"),
+    X: common_vendor.p({
+      type: "fas",
+      name: "bug",
+      size: "16",
+      color: "#00d7cd"
+    }),
+    Y: $data.showDebugLog,
+    Z: common_vendor.o((...args) => $options.toggleDebugLog && $options.toggleDebugLog(...args), "64"),
+    aa: common_vendor.t($options.$t("settings.about")),
+    ab: common_vendor.p({
       type: "fas",
       name: "info-circle",
       size: "16",
       color: "#00d7cd"
     }),
-    Z: common_vendor.t($options.$t("settings.aboutCeladonMusic")),
-    aa: common_vendor.p({
+    ac: common_vendor.t($options.$t("settings.aboutCeladonMusic")),
+    ad: common_vendor.p({
       type: "fas",
       name: "chevron-right",
       size: "14",
       color: "#9ca3af"
     }),
-    ab: common_vendor.o((...args) => $options.openAboutPage && $options.openAboutPage(...args)),
-    ac: common_vendor.p({
+    ae: common_vendor.o((...args) => $options.openAboutPage && $options.openAboutPage(...args), "ae"),
+    af: common_vendor.p({
       type: "fas",
       name: "file-alt",
       size: "16",
       color: "#00d7cd"
     }),
-    ad: common_vendor.t($options.$t("settings.userAgreement")),
-    ae: common_vendor.p({
+    ag: common_vendor.t($options.$t("settings.userAgreement")),
+    ah: common_vendor.p({
       type: "fas",
       name: "chevron-right",
       size: "14",
       color: "#9ca3af"
     }),
-    af: common_vendor.o((...args) => $options.openUserAgreement && $options.openUserAgreement(...args)),
-    ag: common_vendor.p({
+    ai: common_vendor.o((...args) => $options.openUserAgreement && $options.openUserAgreement(...args), "77"),
+    aj: common_vendor.p({
       type: "fas",
       name: "question-circle",
       size: "16",
       color: "#00d7cd"
     }),
-    ah: common_vendor.t($options.$t("settings.helpAndFeedback")),
-    ai: common_vendor.p({
+    ak: common_vendor.t($options.$t("settings.helpAndFeedback")),
+    al: common_vendor.p({
       type: "fas",
       name: "chevron-right",
       size: "14",
       color: "#9ca3af"
     }),
-    aj: common_vendor.o((...args) => $options.openHelpAndFeedback && $options.openHelpAndFeedback(...args)),
-    ak: common_vendor.p({
+    am: common_vendor.o((...args) => $options.openHelpAndFeedback && $options.openHelpAndFeedback(...args), "86"),
+    an: common_vendor.p({
       type: "fas",
       name: "sync",
       size: "16",
       color: "#00d7cd"
     }),
-    al: common_vendor.t($options.$t("settings.checkForUpdates")),
-    am: common_vendor.t($data.appVersion),
-    an: common_vendor.p({
+    ao: common_vendor.t($options.$t("settings.checkForUpdates")),
+    ap: common_vendor.t($data.appVersion),
+    aq: common_vendor.p({
       type: "fas",
       name: "chevron-right",
       size: "14",
       color: "#9ca3af"
     }),
-    ao: common_vendor.o((...args) => $options.checkForUpdates && $options.checkForUpdates(...args)),
-    ap: common_vendor.t($options.$t("app.name")),
-    aq: common_vendor.t($options.$t("app.slogan")),
-    ar: $data.showLanguagePopup
+    ar: common_vendor.o((...args) => $options.checkForUpdates && $options.checkForUpdates(...args), "cc"),
+    as: common_vendor.t($options.$t("app.name")),
+    at: common_vendor.t($options.$t("app.slogan")),
+    av: $data.showLanguagePopup
   }, $data.showLanguagePopup ? {
-    as: common_vendor.t($options.$t("settings.selectLanguage")),
-    at: common_vendor.p({
+    aw: common_vendor.t($options.$t("settings.selectLanguage")),
+    ax: common_vendor.p({
       type: "fas",
       name: "times",
       size: "16",
       color: "#6b7280"
     }),
-    av: common_vendor.o((...args) => $options.closeLanguagePopup && $options.closeLanguagePopup(...args)),
-    aw: common_vendor.f($data.supportedLanguages, (lang, k0, i0) => {
+    ay: common_vendor.o((...args) => $options.closeLanguagePopup && $options.closeLanguagePopup(...args), "4b"),
+    az: common_vendor.f($data.supportedLanguages, (lang, k0, i0) => {
       return common_vendor.e({
         a: common_vendor.t(lang.name),
         b: $data.currentLanguage === lang.code
       }, $data.currentLanguage === lang.code ? {
-        c: "45854c89-26-" + i0,
+        c: "45854c89-27-" + i0,
         d: common_vendor.p({
           type: "fas",
           name: "check",
@@ -1255,189 +1248,178 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
         g: common_vendor.o(($event) => $options.selectLanguage(lang.code), lang.code)
       });
     }),
-    ax: common_vendor.t($options.$t("common.confirm")),
-    ay: common_vendor.o((...args) => $options.confirmLanguageSelection && $options.confirmLanguageSelection(...args)),
-    az: common_vendor.o(() => {
-    }),
-    aA: common_vendor.o((...args) => $options.closeLanguagePopup && $options.closeLanguagePopup(...args))
+    aA: common_vendor.t($options.$t("common.confirm")),
+    aB: common_vendor.o((...args) => $options.confirmLanguageSelection && $options.confirmLanguageSelection(...args), "e8"),
+    aC: common_vendor.o(() => {
+    }, "05"),
+    aD: common_vendor.o((...args) => $options.closeLanguagePopup && $options.closeLanguagePopup(...args), "a9")
   } : {}, {
-    aB: $data.showSleepTimerPopup
+    aE: $data.showSleepTimerPopup
   }, $data.showSleepTimerPopup ? common_vendor.e({
-    aC: common_vendor.t($options.$t("settings.sleepTimer")),
-    aD: common_vendor.p({
+    aF: common_vendor.t($options.$t("settings.sleepTimer")),
+    aG: common_vendor.p({
       type: "fas",
       name: "times",
       size: "16",
       color: "#6b7280"
     }),
-    aE: common_vendor.o((...args) => $options.closeSleepTimerPopup && $options.closeSleepTimerPopup(...args)),
-    aF: $data.sleepTimerRemaining > 0
+    aH: common_vendor.o((...args) => $options.closeSleepTimerPopup && $options.closeSleepTimerPopup(...args), "be"),
+    aI: $data.sleepTimerRemaining > 0
   }, $data.sleepTimerRemaining > 0 ? {
-    aG: common_vendor.t($options.formatSleepTimerRemaining),
-    aH: common_vendor.o((...args) => $options.cancelSleepTimer && $options.cancelSleepTimer(...args))
+    aJ: common_vendor.t($options.formatSleepTimerRemaining),
+    aK: common_vendor.o((...args) => $options.cancelSleepTimer && $options.cancelSleepTimer(...args), "22")
   } : {}, {
-    aI: common_vendor.f($options.hourOptions, (hour, index, i0) => {
+    aL: common_vendor.f($options.hourOptions, (hour, index, i0) => {
       return {
         a: common_vendor.t(hour),
         b: index
       };
     }),
-    aJ: common_vendor.f($options.minuteOptions, (minute, index, i0) => {
+    aM: common_vendor.f($options.minuteOptions, (minute, index, i0) => {
       return {
         a: common_vendor.t(minute),
         b: index
       };
     }),
-    aK: $data.sleepTimerPickerValue,
-    aL: common_vendor.o((...args) => $options.onSleepTimerPickerChange && $options.onSleepTimerPickerChange(...args)),
-    aM: common_vendor.o((...args) => $options.closeSleepTimerPopup && $options.closeSleepTimerPopup(...args)),
-    aN: common_vendor.o((...args) => $options.confirmSleepTimerSelection && $options.confirmSleepTimerSelection(...args)),
-    aO: common_vendor.o(() => {
-    }),
-    aP: common_vendor.o((...args) => $options.closeSleepTimerPopup && $options.closeSleepTimerPopup(...args))
+    aN: $data.sleepTimerPickerValue,
+    aO: common_vendor.o((...args) => $options.onSleepTimerPickerChange && $options.onSleepTimerPickerChange(...args), "21"),
+    aP: common_vendor.o((...args) => $options.closeSleepTimerPopup && $options.closeSleepTimerPopup(...args), "c0"),
+    aQ: common_vendor.o((...args) => $options.confirmSleepTimerSelection && $options.confirmSleepTimerSelection(...args), "5d"),
+    aR: common_vendor.o(() => {
+    }, "8e"),
+    aS: common_vendor.o((...args) => $options.closeSleepTimerPopup && $options.closeSleepTimerPopup(...args), "94")
   }) : {}, {
-    aQ: $data.showServerModalFlag
+    aT: $data.showServerModalFlag
   }, $data.showServerModalFlag ? common_vendor.e({
-    aR: common_vendor.p({
+    aU: common_vendor.p({
       type: "fas",
       name: "times",
       size: "16",
       color: "#6b7280"
     }),
-    aS: common_vendor.o((...args) => $options.closeServerModal && $options.closeServerModal(...args)),
-    aT: $data.serverAddress,
-    aU: common_vendor.o(($event) => $data.serverAddress = $event.detail.value),
-    aV: $data.connectionTestResult
+    aV: common_vendor.o((...args) => $options.closeServerModal && $options.closeServerModal(...args), "7b"),
+    aW: $data.serverAddress,
+    aX: common_vendor.o(($event) => $data.serverAddress = $event.detail.value, "6a"),
+    aY: $data.connectionTestResult
   }, $data.connectionTestResult ? {
-    aW: common_vendor.p({
+    aZ: common_vendor.p({
       type: "fas",
       name: $data.connectionTestResult.success ? "check-circle" : "times-circle",
       size: "16",
       color: $data.connectionTestResult.success ? "#10b981" : "#ef4444"
     }),
-    aX: common_vendor.n($data.connectionTestResult.success ? "success" : "error"),
-    aY: common_vendor.t($data.connectionTestResult.message),
-    aZ: common_vendor.n($data.connectionTestResult.success ? "success" : "error")
+    ba: common_vendor.n($data.connectionTestResult.success ? "success" : "error"),
+    bb: common_vendor.t($data.connectionTestResult.message),
+    bc: common_vendor.n($data.connectionTestResult.success ? "success" : "error")
   } : {}, {
-    ba: common_vendor.o((...args) => $options.closeServerModal && $options.closeServerModal(...args)),
-    bb: $data.testingConnection
+    bd: common_vendor.o((...args) => $options.closeServerModal && $options.closeServerModal(...args), "54"),
+    be: $data.testingConnection
   }, $data.testingConnection ? {
-    bc: common_vendor.p({
+    bf: common_vendor.p({
       type: "fas",
       name: "spinner",
       size: "14",
       color: "#6b7280"
     })
   } : {}, {
-    bd: common_vendor.t($data.testingConnection ? "测试中..." : "测试"),
-    be: $data.testingConnection || !$data.serverAddress.trim() ? 1 : "",
-    bf: common_vendor.o((...args) => $options.testServerConnection && $options.testServerConnection(...args)),
-    bg: common_vendor.o((...args) => $options.confirmServerAddress && $options.confirmServerAddress(...args)),
-    bh: common_vendor.o(() => {
-    }),
-    bi: common_vendor.o((...args) => $options.closeServerModal && $options.closeServerModal(...args))
+    bg: common_vendor.t($data.testingConnection ? "测试中..." : "测试"),
+    bh: $data.testingConnection || !$data.serverAddress.trim() ? 1 : "",
+    bi: common_vendor.o((...args) => $options.testServerConnection && $options.testServerConnection(...args), "84"),
+    bj: common_vendor.o((...args) => $options.confirmServerAddress && $options.confirmServerAddress(...args), "6c"),
+    bk: common_vendor.o(() => {
+    }, "17"),
+    bl: common_vendor.o((...args) => $options.closeServerModal && $options.closeServerModal(...args), "e2")
   }) : {}, {
-    bj: $data.showResourceCachePopup
+    bm: $data.showResourceCachePopup
   }, $data.showResourceCachePopup ? {
-    bk: common_vendor.p({
+    bn: common_vendor.p({
       type: "fas",
       name: "times",
       size: "16",
       color: "#6b7280"
     }),
-    bl: common_vendor.o((...args) => $options.closeResourceCachePopup && $options.closeResourceCachePopup(...args)),
-    bm: common_vendor.t($data.resourceCacheSize),
-    bn: common_vendor.t($data.appCacheSize),
-    bo: common_vendor.t($data.musicUrlCacheSize),
-    bp: common_vendor.t($data.musicUrlCacheCount),
-    bq: common_vendor.t($data.audioFileCacheSize),
-    br: common_vendor.t($data.cleaningResourceCache ? "清理中..." : "清理缓存"),
-    bs: $data.cleaningResourceCache ? 1 : "",
-    bt: common_vendor.o((...args) => $options.cleanResourceCache && $options.cleanResourceCache(...args)),
-    bv: common_vendor.o(() => {
-    }),
-    bw: common_vendor.o((...args) => $options.closeResourceCachePopup && $options.closeResourceCachePopup(...args))
+    bo: common_vendor.o((...args) => $options.closeResourceCachePopup && $options.closeResourceCachePopup(...args), "5e"),
+    bp: common_vendor.t($data.resourceCacheSize),
+    bq: common_vendor.t($data.appCacheSize),
+    br: common_vendor.t($data.musicUrlCacheSize),
+    bs: common_vendor.t($data.musicUrlCacheCount),
+    bt: common_vendor.t($data.audioFileCacheSize),
+    bv: common_vendor.t($data.cleaningResourceCache ? "清理中..." : "清理缓存"),
+    bw: $data.cleaningResourceCache ? 1 : "",
+    bx: common_vendor.o((...args) => $options.cleanResourceCache && $options.cleanResourceCache(...args), "5d"),
+    by: common_vendor.o(() => {
+    }, "04"),
+    bz: common_vendor.o((...args) => $options.closeResourceCachePopup && $options.closeResourceCachePopup(...args), "81")
   } : {}, {
-    bx: $data.showMetaCachePopup
+    bA: $data.showMetaCachePopup
   }, $data.showMetaCachePopup ? {
-    by: common_vendor.p({
+    bB: common_vendor.p({
       type: "fas",
       name: "times",
       size: "16",
       color: "#6b7280"
     }),
-    bz: common_vendor.o((...args) => $options.closeMetaCachePopup && $options.closeMetaCachePopup(...args)),
-    bA: common_vendor.t($data.metaCacheSize),
-    bB: common_vendor.t($data.otherSourceCacheSize),
-    bC: common_vendor.t($data.lyricCacheSize),
-    bD: common_vendor.t($data.cleaningOtherSource ? "清理中..." : "清理换源歌曲缓存"),
-    bE: $data.cleaningOtherSource ? 1 : "",
-    bF: common_vendor.o((...args) => $options.cleanOtherSourceCache && $options.cleanOtherSourceCache(...args)),
-    bG: common_vendor.t($data.cleaningLyric ? "清理中..." : "清理歌词缓存"),
-    bH: $data.cleaningLyric ? 1 : "",
-    bI: common_vendor.o((...args) => $options.cleanLyricCache && $options.cleanLyricCache(...args)),
-    bJ: common_vendor.o(() => {
-    }),
-    bK: common_vendor.o((...args) => $options.closeMetaCachePopup && $options.closeMetaCachePopup(...args))
+    bC: common_vendor.o((...args) => $options.closeMetaCachePopup && $options.closeMetaCachePopup(...args), "91"),
+    bD: common_vendor.t($data.metaCacheSize),
+    bE: common_vendor.t($data.otherSourceCacheSize),
+    bF: common_vendor.t($data.lyricCacheSize),
+    bG: common_vendor.t($data.cleaningOtherSource ? "清理中..." : "清理换源歌曲缓存"),
+    bH: $data.cleaningOtherSource ? 1 : "",
+    bI: common_vendor.o((...args) => $options.cleanOtherSourceCache && $options.cleanOtherSourceCache(...args), "8c"),
+    bJ: common_vendor.t($data.cleaningLyric ? "清理中..." : "清理歌词缓存"),
+    bK: $data.cleaningLyric ? 1 : "",
+    bL: common_vendor.o((...args) => $options.cleanLyricCache && $options.cleanLyricCache(...args), "f1"),
+    bM: common_vendor.o(() => {
+    }, "f9"),
+    bN: common_vendor.o((...args) => $options.closeMetaCachePopup && $options.closeMetaCachePopup(...args), "16")
   } : {}, {
-    bL: $data.showAboutPopup
+    bO: $data.showAboutPopup
   }, $data.showAboutPopup ? {
-    bM: common_vendor.p({
+    bP: common_vendor.p({
       type: "fas",
-      name: "leaf",
+      name: "wave-square",
       size: "20",
       color: "#ffffff"
     }),
-    bN: common_vendor.t($data.appVersion),
-    bO: common_vendor.o((...args) => $options.closeAboutPopup && $options.closeAboutPopup(...args)),
-    bP: common_vendor.o(() => {
-    }),
-    bQ: common_vendor.o((...args) => $options.closeAboutPopup && $options.closeAboutPopup(...args))
+    bQ: common_vendor.t($data.appVersion),
+    bR: common_vendor.o((...args) => $options.closeAboutPopup && $options.closeAboutPopup(...args), "83"),
+    bS: common_vendor.o(() => {
+    }, "23"),
+    bT: common_vendor.o((...args) => $options.closeAboutPopup && $options.closeAboutPopup(...args), "0f")
   } : {}, {
-    bR: $data.showUserAgreementPopup
+    bU: $data.showUserAgreementPopup
   }, $data.showUserAgreementPopup ? common_vendor.e({
-    bS: $data.pactAgreed
+    bV: $data.pactAgreed
   }, $data.pactAgreed ? {
-    bT: common_vendor.p({
+    bW: common_vendor.p({
       type: "fas",
       name: "check-circle",
       size: "14",
       color: "#10b981"
     })
   } : {}, {
-    bU: $data.pactAgreed
+    bX: $data.pactAgreed
   }, $data.pactAgreed ? {
-    bV: common_vendor.p({
+    bY: common_vendor.p({
       type: "fas",
       name: "info-circle",
       size: "16",
       color: "#00d7cd"
     }),
-    bW: common_vendor.t($options.pactAgreedTime)
+    bZ: common_vendor.t($options.pactAgreedTime)
   } : {}, {
-    bX: common_vendor.o((...args) => $options.closeUserAgreementPopup && $options.closeUserAgreementPopup(...args)),
-    bY: common_vendor.o(() => {
-    }),
-    bZ: common_vendor.o((...args) => $options.closeUserAgreementPopup && $options.closeUserAgreementPopup(...args))
+    ca: common_vendor.o((...args) => $options.closeUserAgreementPopup && $options.closeUserAgreementPopup(...args), "17"),
+    cb: common_vendor.o(() => {
+    }, "ea"),
+    cc: common_vendor.o((...args) => $options.closeUserAgreementPopup && $options.closeUserAgreementPopup(...args), "05")
   }) : {}, {
-    ca: $data.showUpdatePopup
-  }, $data.showUpdatePopup ? {
-    cb: common_vendor.p({
-      type: "fas",
-      name: "leaf",
-      size: "20",
-      color: "#ffffff"
+    cd: common_vendor.o($options.closeUpdatePopup, "4a"),
+    ce: common_vendor.p({
+      visible: $data.showUpdatePopup,
+      ["update-info"]: $data.updateInfo,
+      ["dark-mode"]: $data.darkMode
     }),
-    cc: common_vendor.t($data.updateInfo ? $data.updateInfo.versionInfo.version : ""),
-    cd: common_vendor.t($data.updateInfo ? $data.updateInfo.currentVersion : ""),
-    ce: common_vendor.t($data.updateInfo ? $data.updateInfo.versionInfo.version : ""),
-    cf: common_vendor.t($data.updateInfo ? $data.updateInfo.versionInfo.desc : ""),
-    cg: common_vendor.o((...args) => $options.closeUpdatePopup && $options.closeUpdatePopup(...args)),
-    ch: common_vendor.o((...args) => $options.openProjectUrl && $options.openProjectUrl(...args)),
-    ci: common_vendor.o((...args) => $options.ignoreUpdateVersion && $options.ignoreUpdateVersion(...args)),
-    cj: $data.darkMode ? 1 : ""
-  } : {}, {
-    ck: $data.darkMode ? 1 : ""
+    cf: $data.darkMode ? 1 : ""
   });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render]]);

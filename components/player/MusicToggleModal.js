@@ -338,7 +338,7 @@ const _sfc_main = {
           size: "20",
           color: "#999"
         }),
-        c: common_vendor.o(closeModal),
+        c: common_vendor.o(closeModal, "92"),
         d: !loading.value && sourceList.value.length > 0
       }, !loading.value && sourceList.value.length > 0 ? {
         e: common_vendor.f(sourceList.value, (source, k0, i0) => {
@@ -352,7 +352,7 @@ const _sfc_main = {
       } : {}, {
         f: loading.value
       }, loading.value ? {} : error.value ? {
-        h: common_vendor.o(retrySearch)
+        h: common_vendor.o(retrySearch, "a2")
       } : !loading.value && searchResults.value.length > 0 ? {
         j: common_vendor.f(searchResults.value, (song, index, i0) => {
           var _a;
@@ -396,15 +396,15 @@ const _sfc_main = {
         w: common_vendor.t(formatSinger(selectedSong.value.singer || selectedSong.value.artists))
       } : {}, {
         x: !selectedSong.value || selectedSong.value.id === __props.originalSong.id ? 1 : "",
-        y: common_vendor.o(confirmToggle),
+        y: common_vendor.o(confirmToggle, "a9"),
         z: common_vendor.s(compareSectionStyle.value)
       }) : {}, {
         A: __props.darkMode ? 1 : "",
         B: scaleRatio.value < 1 ? 1 : "",
         C: common_vendor.s(modalStyle.value),
         D: common_vendor.o(() => {
-        }),
-        E: common_vendor.o(closeModal)
+        }, "05"),
+        E: common_vendor.o(closeModal, "c5")
       }) : {});
     };
   }

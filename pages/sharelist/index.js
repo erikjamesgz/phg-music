@@ -62,9 +62,15 @@ const _sfc_main = {
       console.log("[Sharelist] 当前播放歌曲ID:", currentPlayingSongId);
       if (playerListId === store_modules_list.LIST_IDS.TEMP) {
         const tempId = tempListMeta == null ? void 0 : tempListMeta.id;
-        const isLocalTempList = tempId && (tempId === currentListId.value || tempId.startsWith("local_"));
-        if (isLocalTempList || tempId === currentListId.value) {
+        let isMatch = false;
+        if (tempId === currentListId.value) {
+          isMatch = true;
+        } else if (tempId === "trial" && currentListId.value === store_modules_list.LIST_IDS.DEFAULT) {
+          isMatch = true;
+        }
+        if (isMatch) {
           if (playIndex >= 0 && playIndex < songs.value.length) {
+            console.log("[Sharelist] 临时列表匹配，使用 playIndex:", playIndex);
             return playIndex;
           }
           if (currentPlayingSongId) {
@@ -140,6 +146,43 @@ const _sfc_main = {
       }
       return currentListId.value;
     };
+    const generateGradientBackground = (name, type = "playlist") => {
+      const gradients = [
+        ["#667eea", "#764ba2"],
+        // 紫色渐变
+        ["#f093fb", "#f5576c"],
+        // 粉色渐变
+        ["#4facfe", "#00f2fe"],
+        // 蓝色渐变
+        ["#43e97b", "#38f9d7"],
+        // 绿色渐变
+        ["#fa709a", "#fee140"],
+        // 橙粉渐变
+        ["#a18cd1", "#fbc2eb"],
+        // 淡紫渐变
+        ["#ff9a9e", "#fecfef"],
+        // 粉红渐变
+        ["#ffecd2", "#fcb69f"],
+        // 橙黄渐变
+        ["#a1c4fd", "#c2e9fb"],
+        // 淡蓝渐变
+        ["#d299c2", "#fef9d7"],
+        // 粉黄渐变
+        ["#89f7fe", "#66a6ff"],
+        // 青蓝渐变
+        ["#cd9cf2", "#f6f3ff"]
+        // 淡紫白渐变
+      ];
+      let hash = 0;
+      if (name) {
+        for (let i = 0; i < name.length; i++) {
+          hash = name.charCodeAt(i) + ((hash << 5) - hash);
+        }
+      }
+      const index = Math.abs(hash) % gradients.length;
+      const [color1, color2] = gradients[index];
+      return `linear-gradient(135deg, ${color1} 0%, ${color2} 100%)`;
+    };
     const getPlatformName = (source) => {
       const platformMap = {
         "wy": "网易云音乐",
@@ -169,6 +212,17 @@ const _sfc_main = {
         playlistCover.value = nextUrl;
       }
     };
+    const previewCoverImage = () => {
+      if (!playlistCover.value) {
+        console.log("[Sharelist] 没有封面图片，无法预览");
+        return;
+      }
+      console.log("[Sharelist] 预览封面图片:", playlistCover.value);
+      common_vendor.index.previewImage({
+        current: utils_imageProxy.proxyImageUrl(playlistCover.value),
+        urls: [utils_imageProxy.proxyImageUrl(playlistCover.value)]
+      });
+    };
     const playAll = async () => {
       if (songs.value.length === 0)
         return;
@@ -189,7 +243,8 @@ const _sfc_main = {
         {
           id: importedId,
           source: listSource.value,
-          name: playlistName.value
+          name: playlistName.value,
+          link: pageLink.value || ""
         }
       );
       store_modules_list.listStore.setPlayerListId(store_modules_list.LIST_IDS.TEMP);
@@ -217,13 +272,12 @@ const _sfc_main = {
         let targetListId;
         if (isLocalPlaylist.value) {
           console.log("[Sharelist] 本地歌单，使用临时列表播放，不添加到试听列表");
-          const tempId = `local_${currentListId.value}`;
           store_modules_list.listStore.setTempList(store_modules_list.LIST_IDS.TEMP, [], {});
           store_modules_list.listStore.setTempList(
             store_modules_list.LIST_IDS.TEMP,
             songs.value,
             {
-              id: tempId,
+              id: currentListId.value,
               source: listSource.value,
               name: playlistName.value
             }
@@ -241,7 +295,8 @@ const _sfc_main = {
             {
               id: importedId,
               source: listSource.value,
-              name: playlistName.value
+              name: playlistName.value,
+              link: pageLink.value || ""
             }
           );
           store_modules_list.listStore.setPlayerListId(store_modules_list.LIST_IDS.TEMP);
@@ -309,7 +364,7 @@ const _sfc_main = {
         store_modules_player.playerStore.updatePendingSong(null);
         console.log("[Sharelist] 调用 playerStore.playSong");
         store_modules_player.playerStore.playSong(musicInfo);
-        if (!isLocalPlaylist.value) {
+        if (!isLocalPlaylist.value && listSource.value !== "default" && currentListId.value !== "recent_deleted") {
           const playlistLink = pageLink.value || "";
           let playlistId2 = "";
           if (playlistLink) {
@@ -367,15 +422,29 @@ const _sfc_main = {
     const onScrollHandler = (e) => {
     };
     const locateCurrentSong = async () => {
-      var _a, _b;
+      var _a;
       console.log("[locateCurrentSong] ========== 开始定位当前歌曲 ==========");
       const playIndex = store_modules_list.listStore.state.playInfo.playIndex;
       const playerListId = store_modules_list.listStore.state.playInfo.playerListId;
       const tempListMeta = store_modules_list.listStore.state.tempList.meta;
       console.log("[locateCurrentSong] 播放索引:", playIndex, "列表ID:", playerListId);
       console.log("[locateCurrentSong] 当前列表歌曲数:", songs.value.length);
-      const isPlayingCurrentList = playerListId === store_modules_list.LIST_IDS.TEMP && ((tempListMeta == null ? void 0 : tempListMeta.id) === currentListId.value || ((_a = tempListMeta == null ? void 0 : tempListMeta.id) == null ? void 0 : _a.startsWith("local_")));
+      console.log("[locateCurrentSong] tempListMeta?.id:", tempListMeta == null ? void 0 : tempListMeta.id, "currentListId:", currentListId.value);
+      const tempId = tempListMeta == null ? void 0 : tempListMeta.id;
+      let isPlayingCurrentList = false;
+      if (playerListId === store_modules_list.LIST_IDS.TEMP && tempId) {
+        if (tempId === currentListId.value) {
+          isPlayingCurrentList = true;
+          console.log("[locateCurrentSong] 匹配成功：临时列表ID直接等于当前列表ID");
+        } else if (tempId === "trial" && currentListId.value === store_modules_list.LIST_IDS.DEFAULT) {
+          isPlayingCurrentList = true;
+          console.log("[locateCurrentSong] 匹配成功：试听列表特殊匹配");
+        } else {
+          console.log("[locateCurrentSong] 未匹配：tempId=", tempId, "currentListId=", currentListId.value);
+        }
+      }
       const isPlayingDirectly = playerListId === currentListId.value;
+      console.log("[locateCurrentSong] isPlayingCurrentList:", isPlayingCurrentList, "isPlayingDirectly:", isPlayingDirectly);
       if (!isPlayingCurrentList && !isPlayingDirectly) {
         console.warn("[locateCurrentSong] 当前没有播放本列表的歌曲");
         common_vendor.index.showToast({ title: "当前没有播放本列表的歌曲", icon: "none" });
@@ -386,7 +455,7 @@ const _sfc_main = {
         common_vendor.index.showToast({ title: "无法定位当前歌曲", icon: "none" });
         return;
       }
-      console.log("[locateCurrentSong] 目标歌曲索引:", playIndex, "名称:", (_b = songs.value[playIndex]) == null ? void 0 : _b.name);
+      console.log("[locateCurrentSong] 目标歌曲索引:", playIndex, "名称:", (_a = songs.value[playIndex]) == null ? void 0 : _a.name);
       if (virtualListRef.value) {
         console.log("[locateCurrentSong] 使用虚拟列表 scrollToIndex:", playIndex);
         virtualListRef.value.scrollToIndex(playIndex, true);
@@ -675,6 +744,8 @@ const _sfc_main = {
         console.log("[Sharelist] ========== 返回数据结束 ==========");
         listSource.value = result.source;
         listId.value = result.id || options.id || "";
+        currentListId.value = pageLink.value || result.id || options.id || "";
+        console.log("[Sharelist] 设置 currentListId:", currentListId.value);
         console.log("[Sharelist] 开始更新歌单信息...");
         playlistId.value = result.id || options.id || "";
         playlistName.value = ((_f = result.info) == null ? void 0 : _f.name) || "未知歌单";
@@ -872,6 +943,28 @@ const _sfc_main = {
             loadError.value = "歌单暂无歌曲";
           }
         }, 100);
+      } else if (options.mode === "default" && options.fromMyMusic === "true") {
+        console.log("[Sharelist] 进入试听列表模式");
+        isPreviewMode.value = false;
+        showActionBar.value = true;
+        isLoading.value = true;
+        setTimeout(() => {
+          const defaultList = store_modules_list.listStore.state.defaultList.list || [];
+          console.log("[Sharelist] 试听列表数量:", defaultList.length);
+          if (defaultList.length > 0) {
+            songs.value = defaultList;
+            playlistName.value = "试听列表";
+            playlistCover.value = "/static/logo.png";
+            playlistTrackCount.value = defaultList.length;
+            hasMore.value = false;
+            isLoading.value = false;
+            currentListId.value = store_modules_list.LIST_IDS.DEFAULT;
+            listSource.value = "default";
+          } else {
+            isLoading.value = false;
+            loadError.value = "暂无试听歌曲";
+          }
+        }, 100);
       } else if (options.mode === "love" && options.fromMyMusic === "true") {
         console.log("[Sharelist] 进入我喜欢的音乐模式");
         isPreviewMode.value = false;
@@ -1008,88 +1101,106 @@ const _sfc_main = {
     });
     return (_ctx, _cache) => {
       return common_vendor.e({
-        a: common_vendor.unref(utils_imageProxy.proxyImageUrl)(playlistCover.value),
-        b: common_vendor.o(($event) => handleSharelistImageError($event)),
-        c: common_vendor.s(statusBarStyle.value),
-        d: common_vendor.p({
+        a: playlistCover.value && playlistCover.value !== "/static/logo.png"
+      }, playlistCover.value && playlistCover.value !== "/static/logo.png" ? {
+        b: common_vendor.unref(utils_imageProxy.proxyImageUrl)(playlistCover.value),
+        c: common_vendor.o(($event) => handleSharelistImageError($event), "c2")
+      } : {
+        d: generateGradientBackground(playlistName.value || "歌单", "playlist")
+      }, {
+        e: common_vendor.s(statusBarStyle.value),
+        f: common_vendor.p({
           name: "chevron-left",
           size: "24",
           color: "#fff"
         }),
-        e: common_vendor.o(goBack),
-        f: common_vendor.t(isPreviewMode.value ? "歌单预览" : "歌单详情"),
-        g: common_vendor.unref(utils_imageProxy.proxyImageUrl)(playlistCover.value),
-        h: common_vendor.o(($event) => handleSharelistImageError($event)),
-        i: playlistPlayCount.value
+        g: common_vendor.o(goBack, "1d"),
+        h: common_vendor.t(isPreviewMode.value ? "歌单预览" : "歌单详情"),
+        i: playlistCover.value && playlistCover.value !== "/static/logo.png"
+      }, playlistCover.value && playlistCover.value !== "/static/logo.png" ? {
+        j: common_vendor.unref(utils_imageProxy.proxyImageUrl)(playlistCover.value),
+        k: common_vendor.o(($event) => handleSharelistImageError($event), "36"),
+        l: common_vendor.o(previewCoverImage, "88")
+      } : {
+        m: common_vendor.p({
+          name: "music",
+          size: "32",
+          color: "#ffffff"
+        }),
+        n: generateGradientBackground(playlistName.value || "歌单", "playlist")
+      }, {
+        o: playlistPlayCount.value
       }, playlistPlayCount.value ? {
-        j: common_vendor.p({
+        p: common_vendor.p({
           name: "play",
           size: "10",
           color: "#fff"
         }),
-        k: common_vendor.t(playlistPlayCount.value)
+        q: common_vendor.t(playlistPlayCount.value)
       } : {}, {
-        l: common_vendor.t(playlistName.value || "加载中..."),
-        m: playlistAuthor.value
+        r: common_vendor.t(playlistName.value || "加载中..."),
+        s: playlistAuthor.value
       }, playlistAuthor.value ? {
-        n: common_vendor.t(playlistAuthor.value)
+        t: common_vendor.t(playlistAuthor.value)
       } : {}, {
-        o: playlistDesc.value
+        v: playlistDesc.value
       }, playlistDesc.value ? {
-        p: common_vendor.t(playlistDesc.value)
+        w: common_vendor.t(playlistDesc.value)
       } : {}, {
-        q: common_vendor.t(playlistTrackCount.value),
-        r: playlistPlayCount.value
+        x: common_vendor.t(playlistTrackCount.value),
+        y: playlistPlayCount.value
       }, playlistPlayCount.value ? {} : {}, {
-        s: playlistPlayCount.value
+        z: playlistPlayCount.value
       }, playlistPlayCount.value ? {
-        t: common_vendor.t(playlistPlayCount.value)
+        A: common_vendor.t(playlistPlayCount.value)
       } : {}, {
-        v: showActionBar.value
+        B: showActionBar.value
       }, showActionBar.value ? common_vendor.e({
-        w: isPreviewMode.value
+        C: isPreviewMode.value
       }, isPreviewMode.value ? {
-        x: common_vendor.p({
+        D: common_vendor.p({
           name: "heart",
           size: "14",
           color: "#fff"
         }),
-        y: common_vendor.t(fromPage.value === "import" ? "导入歌单" : "收藏歌单"),
-        z: common_vendor.o(handleCollect)
+        E: common_vendor.t(fromPage.value === "import" ? "导入歌单" : "收藏歌单"),
+        F: common_vendor.o(handleCollect, "34")
       } : {}, {
-        A: common_vendor.p({
-          name: "play",
+        G: common_vendor.p({
+          type: "fas",
+          name: "play-circle",
           size: "14",
           color: "#fff"
         }),
-        B: common_vendor.o(playAll)
+        H: common_vendor.o(playAll, "61")
       }) : {}, {
-        C: common_vendor.p({
+        I: common_vendor.p({
+          type: "fas",
           name: "location-crosshairs",
           size: "18",
-          color: "#fff"
+          color: "#ffffff"
         }),
-        D: common_vendor.o(locateCurrentSong),
-        E: isLoading.value && songs.value.length === 0
+        J: common_vendor.o(locateCurrentSong, "9f"),
+        K: isLoading.value && songs.value.length === 0
       }, isLoading.value && songs.value.length === 0 ? {} : {}, {
-        F: loadError.value && !isLoading.value
+        L: loadError.value && !isLoading.value
       }, loadError.value && !isLoading.value ? {
-        G: common_vendor.p({
+        M: common_vendor.p({
           name: "exclamation-circle",
           size: "48",
           color: "#999"
         }),
-        H: common_vendor.t(loadError.value),
-        I: common_vendor.o(retryLoad)
+        N: common_vendor.t(loadError.value),
+        O: common_vendor.o(retryLoad, "8f")
       } : {}, {
-        J: songs.value.length > 0
+        P: songs.value.length > 0
       }, songs.value.length > 0 ? {
-        K: common_vendor.sr(virtualListRef, "b5e5e412-6", {
+        Q: common_vendor.sr(virtualListRef, "8a2a2316-7", {
           "k": "virtualListRef"
         }),
-        L: common_vendor.o(onScrollHandler),
-        M: common_vendor.o(onVirtualItemClick),
-        N: common_vendor.p({
+        R: common_vendor.o(onScrollHandler, "9e"),
+        S: common_vendor.o(onVirtualItemClick, "ff"),
+        T: common_vendor.p({
           items: songs.value,
           ["item-height"]: 60,
           height: "100%",
@@ -1103,24 +1214,24 @@ const _sfc_main = {
           ["show-top-radius"]: true
         })
       } : {}, {
-        O: !isLoading.value && !loadError.value && songs.value.length === 0
+        U: !isLoading.value && !loadError.value && songs.value.length === 0
       }, !isLoading.value && !loadError.value && songs.value.length === 0 ? {
-        P: common_vendor.p({
+        V: common_vendor.p({
           name: "ban",
           size: "64",
           color: "#ccc"
         })
       } : {}, {
-        Q: !isPreviewMode.value
+        W: !isPreviewMode.value
       }, !isPreviewMode.value ? {
-        R: common_vendor.p({
+        X: common_vendor.p({
           ["current-index"]: 2
         })
       } : {}, {
-        S: darkMode.value ? 1 : ""
+        Y: darkMode.value ? 1 : ""
       });
     };
   }
 };
-const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-b5e5e412"]]);
+const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-8a2a2316"]]);
 wx.createPage(MiniProgramPage);

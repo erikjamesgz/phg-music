@@ -1,5 +1,5 @@
 
-.danmaku-container.data-v-79ac768a {
+.danmaku-container.data-v-dce456fb {
   position: absolute;
   top: 0;
   left: 0;
@@ -9,41 +9,53 @@
   pointer-events: none;
   z-index: 100;
 }
-.danmaku-item.data-v-79ac768a {
+.danmaku-item.data-v-dce456fb {
   position: absolute;
   left: 100%;
-  display: inline-flex;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
   align-items: center;
   padding: 6rpx 16rpx;
-  background-color: rgba(0, 0, 0, 0.35);
+  background-color: rgba(0, 0, 0, 0.25);
   border-radius: 20rpx;
   white-space: nowrap;
-  animation: danmaku-move-79ac768a linear forwards;
+  animation: danmaku-move-dce456fb linear forwards;
+  /* Android 兼容性修复 */
+  -webkit-writing-mode: horizontal-tb;
+          writing-mode: horizontal-tb;
+  text-orientation: mixed;
 }
-.danmaku-item.dark-mode.data-v-79ac768a {
-  background-color: rgba(255, 255, 255, 0.1);
+.danmaku-item.dark-mode.data-v-dce456fb {
+  background-color: rgba(255, 255, 255, 0.08);
 }
-.danmaku-item.paused.data-v-79ac768a {
+.danmaku-item.paused.data-v-dce456fb {
   animation-play-state: paused;
 }
-.danmaku-user.data-v-79ac768a {
-  color: #ffd700;
+.danmaku-user.data-v-dce456fb {
+  color: #ff8c00;
   font-size: 24rpx;
   font-weight: 500;
   margin-right: 8rpx;
   flex-shrink: 0;
+  /* Android 兼容性修复 */
+  white-space: nowrap;
+  display: inline-block;
 }
-.dark-mode .danmaku-user.data-v-79ac768a {
-  color: #ffca28;
+.dark-mode .danmaku-user.data-v-dce456fb {
+  color: #ffc107;
 }
-.danmaku-text.data-v-79ac768a {
+.danmaku-text.data-v-dce456fb {
   color: #ffffff;
   font-size: 24rpx;
+  /* Android 兼容性修复 */
+  white-space: nowrap;
+  display: inline-block;
 }
-.dark-mode .danmaku-text.data-v-79ac768a {
+.dark-mode .danmaku-text.data-v-dce456fb {
   color: #ffffff;
 }
-@keyframes danmaku-move-79ac768a {
+@keyframes danmaku-move-dce456fb {
 0% {
     transform: translateX(0);
     opacity: 1;

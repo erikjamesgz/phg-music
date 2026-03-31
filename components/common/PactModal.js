@@ -37,14 +37,15 @@ const _sfc_main = {
   },
   methods: {
     checkDarkMode() {
-      const followSystem = common_vendor.index.getStorageSync("followSystem") !== "false";
-      if (followSystem) {
+      const followSystem = common_vendor.index.getStorageSync("followSystem");
+      const isFollowSystem = followSystem !== "false" && followSystem !== false;
+      if (isFollowSystem) {
         const systemInfo = common_vendor.index.getSystemInfoSync();
         this.isDarkMode = systemInfo.theme === "dark";
       } else {
         this.isDarkMode = common_vendor.index.getStorageSync("darkMode") === "true";
       }
-      console.log("[PactModal] isDarkMode:", this.isDarkMode);
+      console.log("[PactModal] isDarkMode:", this.isDarkMode, "isFollowSystem:", isFollowSystem);
     },
     startCountdown() {
       this.countdown = 20;
@@ -92,13 +93,13 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   }, !$props.isAgreed ? {} : {}, {
     d: !$props.isAgreed
   }, !$props.isAgreed ? {
-    e: common_vendor.o((...args) => $options.handleReject && $options.handleReject(...args))
+    e: common_vendor.o((...args) => $options.handleReject && $options.handleReject(...args), "a0")
   } : {}, {
     f: common_vendor.t($data.countdown > 0 ? `接受（${$data.countdown}）` : "接受"),
     g: $data.countdown > 0 ? 1 : "",
-    h: common_vendor.o((...args) => $options.handleAccept && $options.handleAccept(...args)),
+    h: common_vendor.o((...args) => $options.handleAccept && $options.handleAccept(...args), "90"),
     i: $data.isDarkMode ? 1 : ""
   }) : {});
 }
-const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-dcedfdba"]]);
+const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-d55d5b37"]]);
 wx.createComponent(Component);

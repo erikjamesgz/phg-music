@@ -13,17 +13,17 @@
     "pages/songlist-list/index"
   ],
   "window": {
-    "navigationBarTextStyle": "white",
+    "navigationBarTextStyle": "@navigationBarTextStyle",
     "navigationBarTitleText": "拼好歌",
-    "navigationBarBackgroundColor": "#7b68ee",
-    "backgroundColor": "#F8F8F8"
+    "navigationBarBackgroundColor": "@navigationBarBackgroundColor",
+    "backgroundColor": "@backgroundColor"
   },
   "tabBar": {
     "custom": true,
     "borderStyle": "white",
-    "color": "#8a8a8a",
-    "selectedColor": "#00afff",
-    "backgroundColor": "#ffffff",
+    "color": "@tabBarColor",
+    "selectedColor": "@tabBarSelectedColor",
+    "backgroundColor": "@tabBarBackgroundColor",
     "list": [
       {
         "pagePath": "pages/main/index"

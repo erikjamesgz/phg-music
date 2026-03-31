@@ -23,7 +23,7 @@
 /* 垂直间距 */
 /* 透明度 */
 /* 文章场景相关 */
-@keyframes marquee-6d13b8ba {
+@keyframes marquee-78971899 {
 0% {
     transform: translateX(0);
 }
@@ -31,11 +31,11 @@
     transform: translateX(-50%);
 }
 }
-.mini-player-wrapper.data-v-6d13b8ba {
+.mini-player-wrapper.data-v-78971899 {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: var(--6db3aebe);
+  bottom: var(--b842bbc2);
   /* 动态计算底部位置 */
   display: flex;
   flex-direction: column;
@@ -47,320 +47,374 @@
   pointer-events: auto;
   /* 确保可以点击 */
 }
-.mini-player-mp.data-v-6d13b8ba {
+.mini-player-mp.data-v-78971899 {
   position: static !important;
   /* 覆盖原有的relative定位 */
   width: 85% !important;
   margin: 0 auto !important;
 }
-.mini-player.data-v-6d13b8ba {
+.mini-player.data-v-78971899 {
   pointer-events: auto;
   /* 确保可以点击 */
   width: 85%;
-  height: 140rpx;
-  /* 固定高度使其更协调，对应设计稿中的70px */
-  z-index: 900;
-  /* 确保比底部导航栏的z-index(999)高，但要低于弹窗(1000) */
+  height: 70px;
+  /* 固定高度使其更协调，对应设计稿中的 70px */
+  z-index: 1000;
+  /* 确保比底部导航栏的 z-index(999) 高，显示在 tabBar 上方 */
   background-color: rgba(255, 255, 255, 0.95);
   background-color: rgba(255, 255, 255, 0.98);
-  /* 微信小程序不支持backdrop-filter，使用更不透明的背景 */
-  border: 1rpx solid rgba(0, 0, 0, 0.05);
-  border-radius: 32rpx;
-  box-shadow: 0 8rpx 40rpx rgba(0, 0, 0, 0.05);
+  /* 微信小程序不支持 backdrop-filter，使用更不透明的背景 */
+  border: 0.5px solid rgba(0, 0, 0, 0.05);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   overflow: hidden;
 }
-.mini-player__content.data-v-6d13b8ba {
-  padding: 16rpx 24rpx;
+.mini-player__content.data-v-78971899 {
+  padding: 8px 12px;
   display: flex;
   flex-direction: column;
   height: 100%;
   box-sizing: border-box;
 }
-.mini-player__main.data-v-6d13b8ba {
+.mini-player__main.data-v-78971899 {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex: 1;
 }
-.mini-player__left.data-v-6d13b8ba {
+.mini-player__left.data-v-78971899 {
   display: flex;
   align-items: center;
   flex: 1;
   overflow: hidden;
-  margin-right: 20rpx;
+  margin-right: 10px;
 }
-.mini-player__cover-container.data-v-6d13b8ba {
+.mini-player__cover-container.data-v-78971899 {
   position: relative;
-  width: 80rpx;
-  height: 80rpx;
-  border-radius: 16rpx;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
   overflow: hidden;
-  margin-right: 20rpx;
+  margin-right: 10px;
   flex-shrink: 0;
-  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
-.mini-player__cover.data-v-6d13b8ba {
+.mini-player__cover.data-v-78971899 {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-.mini-player__info.data-v-6d13b8ba {
+.mini-player__info.data-v-78971899 {
   flex: 1;
   overflow: hidden;
 }
-.mini-player__info-row.data-v-6d13b8ba {
+.mini-player__info-row.data-v-78971899 {
   display: flex;
   align-items: center;
   overflow: hidden;
   width: 100%;
 }
-.mini-player__marquee.data-v-6d13b8ba {
+.mini-player__marquee.data-v-78971899 {
   flex: 1;
   overflow: hidden;
   position: relative;
   min-width: 0;
-  height: 36rpx;
+  height: 18px;
   display: flex;
   align-items: center;
 }
-.mini-player__marquee-content.data-v-6d13b8ba {
+.mini-player__marquee-content.data-v-78971899 {
   display: flex;
   align-items: center;
   white-space: nowrap;
   flex-shrink: 0;
 }
-.mini-player__marquee-content.scroll.data-v-6d13b8ba {
-  animation: marquee-6d13b8ba 10s linear infinite;
+.mini-player__marquee-content.scroll.data-v-78971899 {
+  animation: marquee-78971899 10s linear infinite;
 }
-.mini-player__title.data-v-6d13b8ba {
-  font-size: 26rpx;
+.mini-player__title.data-v-78971899 {
+  font-size: 13px;
   color: #333333;
   font-weight: 500;
   flex-shrink: 0;
 }
-.mini-player__separator.data-v-6d13b8ba {
+.mini-player__separator.data-v-78971899 {
   color: #999999;
-  margin: 0 6rpx;
+  margin: 0 3px;
   flex-shrink: 0;
 }
-.mini-player__artist.data-v-6d13b8ba {
-  font-size: 24rpx;
+.mini-player__artist.data-v-78971899 {
+  font-size: 12px;
   color: #999999;
   flex-shrink: 0;
 }
-.mini-player__sq-tag.data-v-6d13b8ba {
+.mini-player__sq-tag.data-v-78971899 {
   flex-shrink: 0;
-  margin-right: 8rpx;
+  margin-right: 4px;
 }
-.mini-player__status-row.data-v-6d13b8ba {
-  margin-top: 4rpx;
+.mini-player__status-row.data-v-78971899 {
+  margin-top: 2px;
   overflow: hidden;
   width: 100%;
 }
-.mini-player__status-marquee.data-v-6d13b8ba {
+.mini-player__status-marquee.data-v-78971899 {
   flex: 1;
   overflow: hidden;
   position: relative;
   min-width: 0;
-  height: 32rpx;
+  height: 16px;
   display: flex;
   align-items: center;
 }
-.mini-player__status-content.data-v-6d13b8ba {
+.mini-player__status-content.data-v-78971899 {
   display: flex;
   align-items: center;
   white-space: nowrap;
   flex-shrink: 0;
 }
-.mini-player__status-content.scroll.data-v-6d13b8ba {
-  animation: marquee-6d13b8ba 8s linear infinite;
+.mini-player__status-content.scroll.data-v-78971899 {
+  animation: marquee-78971899 8s linear infinite;
 }
-.mini-player__status-text.data-v-6d13b8ba {
-  font-size: 22rpx;
+.mini-player__status-text.data-v-78971899 {
+  font-size: 11px;
   color: #00c4b8;
   font-weight: 500;
   flex-shrink: 0;
 }
-.mini-player__status-gap.data-v-6d13b8ba {
+.mini-player__status-gap.data-v-78971899 {
   flex-shrink: 0;
 }
-.mini-player__artist-container.data-v-6d13b8ba {
+.mini-player__artist-container.data-v-78971899 {
   display: flex;
   align-items: center;
-  margin-top: 4rpx;
+  margin-top: 2px;
 }
-.mini-player__artist-row.data-v-6d13b8ba {
+.mini-player__artist-row.data-v-78971899 {
   display: flex;
   align-items: center;
-  margin-top: 4rpx;
+  margin-top: 2px;
 }
-.mini-player__sq-tag.data-v-6d13b8ba {
+.mini-player__sq-tag.data-v-78971899 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 16rpx;
+  font-size: 8px;
   color: #ffffff;
   background-color: #00afff;
-  padding: 0 6rpx;
-  border-radius: 4rpx;
-  margin-right: 8rpx;
-  height: 28rpx;
-  line-height: 28rpx;
+  padding: 0 3px;
+  border-radius: 2px;
+  margin-right: 4px;
+  height: 14px;
+  line-height: 14px;
   font-weight: bold;
   flex-shrink: 0;
 }
-.mini-player__controls.data-v-6d13b8ba {
+.mini-player__controls.data-v-78971899 {
   display: flex;
   align-items: center;
 }
-.mini-player__play-btn.data-v-6d13b8ba {
-  width: 60rpx;
-  height: 60rpx;
+.mini-player__play-btn.data-v-78971899 {
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background: linear-gradient(135deg, #00d7cd 0%, #00afff 100%);
+  box-shadow: 0 3px 6px rgba(0, 175, 255, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 20rpx;
-  box-shadow: 0 6rpx 12rpx rgba(0, 175, 255, 0.3);
+  margin-right: 10px;
 }
-.mini-player__next-btn.data-v-6d13b8ba {
-  width: 60rpx;
-  height: 60rpx;
+.mini-player__play-btn.is-loading.data-v-78971899 {
+  background: transparent;
+  box-shadow: none;
+}
+.mini-player__play-btn .mini-player__loading-spinner.data-v-78971899 {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.mini-player__play-btn .mini-player__loading-spinner .mini-player__loading-circle.data-v-78971899 {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, #00d7cd, #00afff, #00d7cd);
+  animation: spin-78971899 1s linear infinite;
+  position: relative;
+}
+.mini-player__play-btn .mini-player__loading-spinner .mini-player__loading-circle.data-v-78971899::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  border-radius: 50%;
+  background: #ffffff;
+}
+.mini-player__next-btn.data-v-78971899 {
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.mini-player__progress.data-v-6d13b8ba {
-  height: 8rpx;
+.mini-player__progress.data-v-78971899 {
+  height: 4px;
   background-color: rgba(0, 0, 0, 0.1);
-  border-radius: 4rpx;
+  border-radius: 2px;
   position: relative;
   width: 100%;
-  margin-top: 16rpx;
+  margin-top: 8px;
   z-index: 1001;
   /* 确保进度条在最上层 */
   overflow: visible;
   /* 确保在微信小程序中进度点可见 */
 }
-.mini-player__progress-bar.data-v-6d13b8ba {
+.mini-player__progress-bar.data-v-78971899 {
   height: 100%;
   background: linear-gradient(90deg, #00d7cd 0%, #00afff 100%);
-  border-radius: 4rpx;
+  border-radius: 2px;
 }
-.mini-player__progress-dot.data-v-6d13b8ba {
+.mini-player__progress-dot.data-v-78971899 {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 24rpx;
+  width: 12px;
   /* 增加宽度，改为水平长方形 */
-  height: 12rpx;
+  height: 6px;
   /* 减小高度 */
   background-color: #ffffff;
-  border-radius: 6rpx;
+  border-radius: 3px;
   /* 增加圆角 */
-  border: 2rpx solid #00d7cd;
-  box-shadow: 0 0 8rpx rgba(0, 0, 0, 0.2);
-  margin-left: -12rpx;
+  border: 1px solid #00d7cd;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+  margin-left: -6px;
   /* 使长条居中于位置 */
   z-index: 1002;
   /* 确保在微信小程序中进度点在最上层 */
 }
 
 /* 暗黑模式样式 - 基于 class */
-.mini-player.dark-mode.data-v-6d13b8ba {
+.mini-player.dark-mode.data-v-78971899 {
   background-color: rgba(31, 41, 55, 0.95);
-  border: 1rpx solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 8rpx 40rpx rgba(0, 0, 0, 0.2);
+  border: 0.5px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  /* 暗黑模式下的进度条拖动点 - 保持白色背景 */
 }
-.mini-player.dark-mode .mini-player__title.data-v-6d13b8ba {
+.mini-player.dark-mode .mini-player__title.data-v-78971899 {
   color: #ffffff;
 }
-.mini-player.dark-mode .mini-player__sq-tag.data-v-6d13b8ba {
+.mini-player.dark-mode .mini-player__sq-tag.data-v-78971899 {
   background-color: rgba(0, 215, 205, 0.2);
   color: #33dfd8;
 }
-.mini-player.dark-mode .mini-player__artist.data-v-6d13b8ba {
+.mini-player.dark-mode .mini-player__artist.data-v-78971899 {
   color: #9ca3af;
 }
-.mini-player.dark-mode .mini-player__status-row.data-v-6d13b8ba {
+.mini-player.dark-mode .mini-player__status-row.data-v-78971899 {
   margin-top: 2px;
 }
-.mini-player.dark-mode .mini-player__status-text.data-v-6d13b8ba {
+.mini-player.dark-mode .mini-player__status-text.data-v-78971899 {
   font-size: 12px;
   color: #00d0c4;
   font-weight: 500;
 }
-.mini-player.dark-mode .mini-player__artist-row.data-v-6d13b8ba {
+.mini-player.dark-mode .mini-player__play-btn.is-loading .mini-player__loading-circle.data-v-78971899::before {
+  background: #1f2937;
+}
+.mini-player.dark-mode .mini-player__artist-row.data-v-78971899 {
   margin-top: 2px;
 }
-.mini-player.dark-mode .mini-player__progress.data-v-6d13b8ba {
+.mini-player.dark-mode .mini-player__progress.data-v-78971899 {
   background-color: rgba(255, 255, 255, 0.1);
 }
+.mini-player.dark-mode .mini-player__progress-dot.data-v-78971899 {
+  background-color: #ffffff !important;
+  border: 1px solid #00d7cd !important;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.3) !important;
+}
 
-/* 评论弹幕样式 - 绝对定位在MiniPlayer上方，不重叠 */
-.mini-player-danmaku-area.data-v-6d13b8ba {
-  position: absolute;
+/* 评论弹幕样式 - 使用fixed定位确保在屏幕上正确显示 */
+.mini-player-danmaku-area.data-v-78971899 {
+  position: fixed;
   left: 0;
-  width: 100%;
+  right: 0;
+  bottom: calc(var(--b842bbc2) + 75px);
+  /* 在MiniPlayer上方，保持间距 */
   height: 28px;
   overflow: visible;
   pointer-events: none;
-  z-index: 999;
-  /* 相对于wrapper定位，在MiniPlayer上方 */
-  bottom: 100%;
-  margin-bottom: 8px;
+  z-index: 9999;
 }
 
 /* iPhone 12 Pro Max 到 iPhone 15 Pro Max 等中等屏幕尺寸的适配 */
 @media screen and (min-width: 390px) and (max-width: 430px) {
-.mini-player-danmaku-area.data-v-6d13b8ba {
+.mini-player-danmaku-area.data-v-78971899 {
     margin-bottom: 12px;
 }
 }
-.mini-player__danmaku-item.data-v-6d13b8ba {
+.mini-player__danmaku-item.data-v-78971899 {
   position: absolute;
-  display: inline-flex;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
   align-items: center;
-  padding: 2px 8px;
-  background-color: rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
+  padding: 3px 8px;
+  background-color: rgba(0, 0, 0, 0.25);
+  border-radius: 10px;
   white-space: nowrap;
-  animation: mini-danmaku-move-6d13b8ba 15s linear forwards;
+  animation: mini-danmaku-move-78971899 15s linear forwards;
   pointer-events: none;
   /* 确保单行显示，高度固定 */
-  height: 24px;
+  height: 28px;
   line-height: 20px;
   box-sizing: border-box;
+  /* 设置初始位置在屏幕右侧外 */
+  top: 0;
+  right: 0;
+  transform: translateX(100%);
 }
-.mini-player__danmaku-item.dark-mode.data-v-6d13b8ba {
+.mini-player__danmaku-item.dark-mode.data-v-78971899 {
   background-color: rgba(255, 255, 255, 0.08);
 }
-.mini-player__danmaku-item.paused.data-v-6d13b8ba {
+.mini-player__danmaku-item.paused.data-v-78971899 {
   animation-play-state: paused;
 }
-@keyframes mini-danmaku-move-6d13b8ba {
+@keyframes mini-danmaku-move-78971899 {
 0% {
-    transform: translateX(100vw);
+    transform: translateX(100%);
 }
 100% {
-    transform: translateX(-100%);
+    transform: translateX(-100vw);
 }
 }
-.danmaku-user.data-v-6d13b8ba {
-  color: #d4920a;
-  font-size: 20rpx;
+.danmaku-user.data-v-78971899 {
+  color: #ff8c00;
+  font-size: 10px;
   font-weight: 500;
   margin-right: 4px;
   flex-shrink: 0;
+  white-space: nowrap;
 }
-.dark-mode .danmaku-user.data-v-6d13b8ba {
+.dark-mode .danmaku-user.data-v-78971899 {
   color: #ffca28;
 }
-.danmaku-text.data-v-6d13b8ba {
+.danmaku-text.data-v-78971899 {
   color: #ffffff;
-  font-size: 20rpx;
+  font-size: 10px;
+  white-space: nowrap;
 }
-.dark-mode .danmaku-text.data-v-6d13b8ba {
+.dark-mode .danmaku-text.data-v-78971899 {
   color: #ffffff;
+}
+@keyframes spin-78971899 {
+from {
+    transform: rotate(0deg);
+}
+to {
+    transform: rotate(360deg);
+}
 }

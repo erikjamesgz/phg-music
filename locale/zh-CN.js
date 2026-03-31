@@ -2082,6 +2082,16 @@ const zhCN = {
   app: {
     name: "拼好歌",
     slogan: "发现音乐之美"
+  },
+  // 电池优化白名单提示
+  batteryOptimization: {
+    title: "后台运行权限设置提醒",
+    tip: "拼好歌没有在「忽略电池优化」的白名单中，这可能会导致在后台播放音乐时被系统暂停。是否将拼好歌加入该白名单中？",
+    goSettings: "去设置",
+    cancel: "取消",
+    neverShow: "不再显示",
+    neverShowTip: "已关闭此提醒",
+    openFailed: "无法打开设置页面"
   }
 };
 exports.zhCN = zhCN;

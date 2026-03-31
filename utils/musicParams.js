@@ -1,20 +1,44 @@
 "use strict";
+const parseDurationToSeconds = (duration) => {
+  if (!duration) {
+    return 0;
+  }
+  if (typeof duration === "number") {
+    if (duration > 1e3) {
+      return Math.floor(duration / 1e3);
+    }
+    return duration;
+  }
+  if (typeof duration === "string") {
+    if (duration.includes(":")) {
+      const parts = duration.split(":");
+      if (parts.length === 2) {
+        const mins = parseInt(parts[0]) || 0;
+        const secs = parseInt(parts[1]) || 0;
+        return mins * 60 + secs;
+      }
+    }
+    const parsed = parseInt(duration);
+    if (!isNaN(parsed)) {
+      if (parsed > 1e3) {
+        return Math.floor(parsed / 1e3);
+      }
+      return parsed;
+    }
+  }
+  return 0;
+};
 const formatDuration = (duration) => {
   console.log("[formatDuration] 输入:", duration, "类型:", typeof duration);
   if (!duration) {
     console.log("[formatDuration] 返回默认值: 0:00");
     return "0:00";
   }
-  let seconds = 0;
-  if (typeof duration === "string") {
-    if (duration.includes(":")) {
-      console.log("[formatDuration] 已是 mm:ss 格式:", duration);
-      return duration;
-    }
-    seconds = parseInt(duration);
-  } else if (typeof duration === "number") {
-    seconds = Math.floor(duration / 1e3);
+  if (typeof duration === "string" && duration.includes(":")) {
+    console.log("[formatDuration] 已是 mm:ss 格式:", duration);
+    return duration;
   }
+  const seconds = parseDurationToSeconds(duration);
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
   const result = `${mins}:${secs.toString().padStart(2, "0")}`;

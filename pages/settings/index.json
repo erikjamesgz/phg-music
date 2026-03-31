@@ -3,6 +3,7 @@
   "navigationStyle": "custom",
   "launchMode": "singleTask",
   "usingComponents": {
+    "update-modal": "../../components/common/UpdateModal",
     "roc-icon-plus": "../../uni_modules/roc-icon-plus/components/roc-icon-plus/roc-icon-plus"
   }
 }

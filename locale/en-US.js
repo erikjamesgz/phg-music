@@ -1172,6 +1172,16 @@ const enUS = {
     comingSoon: "Coming soon",
     beta: "Beta",
     experimental: "Experimental feature"
+  },
+  // Battery optimization reminder
+  batteryOptimization: {
+    title: "Background Running Permission Reminder",
+    tip: 'PHG Music is not in the "Ignore Battery Optimization" whitelist, which may cause the app to be suspended by the system when playing music in the background. Would you like to add PHG Music to the whitelist?',
+    goSettings: "Go to Settings",
+    cancel: "Cancel",
+    neverShow: "Never Show Again",
+    neverShowTip: "This reminder has been disabled",
+    openFailed: "Unable to open settings page"
   }
 };
 exports.enUS = enUS;

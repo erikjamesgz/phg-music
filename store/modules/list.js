@@ -188,14 +188,37 @@ function getPlayIndex(listId, musicInfo, isTempPlay) {
   console.log("[getPlayIndex] 返回 - playIndex:", playIndex, "playerPlayIndex:", playerPlayIndex);
   return { playIndex, playerPlayIndex };
 }
+const readonlyState = common_vendor.readonly(state);
+const currentTempListId = common_vendor.computed(() => {
+  var _a;
+  if (state.playInfo.playerListId === "temp" && ((_a = state.tempList.meta) == null ? void 0 : _a.id)) {
+    return state.tempList.meta.id;
+  }
+  return "";
+});
+const currentTempListLink = common_vendor.computed(() => {
+  var _a;
+  if (state.playInfo.playerListId === "temp" && ((_a = state.tempList.meta) == null ? void 0 : _a.link)) {
+    return state.tempList.meta.link;
+  }
+  return "";
+});
 const listStore = {
-  // 获取响应式状态
+  // 获取响应式状态（返回缓存的 readonly 对象）
   get state() {
-    return common_vendor.readonly(state);
+    return readonlyState;
   },
   // 获取状态（兼容旧代码）
   getState() {
     return state;
+  },
+  // 获取当前临时列表ID（响应式）
+  getCurrentTempListId() {
+    return currentTempListId.value;
+  },
+  // 获取当前临时列表link（响应式）
+  getCurrentTempListLink() {
+    return currentTempListLink.value;
   },
   /**
    * 获取列表
@@ -340,7 +363,8 @@ const listStore = {
     state.tempList.meta = {
       id: meta.id || listId,
       source: meta.source || "",
-      name: meta.name || "临时列表"
+      name: meta.name || "临时列表",
+      link: meta.link || ""
     };
   },
   /**
@@ -450,12 +474,12 @@ const listStore = {
       isTempPlay
     };
     console.log("[listStore] normalizeMusicInfo后:", JSON.stringify(state.playMusicInfo.musicInfo));
+    state.playInfo.playerListId = listId;
     if (normalizedMusicInfo) {
       const { playIndex, playerPlayIndex } = getPlayIndex(listId, normalizedMusicInfo, isTempPlay);
       console.log("[listStore] 计算播放索引 - playIndex:", playIndex, "playerPlayIndex:", playerPlayIndex);
       state.playInfo.playIndex = playIndex;
       state.playInfo.playerPlayIndex = playerPlayIndex;
-      state.playInfo.playerListId = listId;
     } else {
       state.playInfo.playIndex = -1;
       state.playInfo.playerPlayIndex = -1;

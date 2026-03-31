@@ -37,6 +37,17 @@ const _sfc_main = {
         urls: images
       });
     };
+    const previewAvatar = (avatar) => {
+      if (!avatar || avatar === "") {
+        console.log("[CommentFloor] 没有头像图片，无法预览");
+        return;
+      }
+      console.log("[CommentFloor] 预览头像:", avatar);
+      common_vendor.index.previewImage({
+        current: avatar,
+        urls: [avatar]
+      });
+    };
     common_vendor.watch(() => props.comments, (newVal) => {
       console.log("[CommentFloor] 评论列表更新:", newVal);
       console.log("[CommentFloor] 子评论数量:", newVal.filter((c) => c.reply && c.reply.length > 0).length);
@@ -47,32 +58,33 @@ const _sfc_main = {
           return common_vendor.e({
             a: item.avatar && item.avatar !== "" ? item.avatar : defaultAvatar.value,
             b: common_vendor.o(handleImageError, item.id),
-            c: common_vendor.t(item.userName),
-            d: item.likedCount !== null && item.likedCount !== void 0
+            c: common_vendor.o(($event) => previewAvatar(item.avatar), item.id),
+            d: common_vendor.t(item.userName),
+            e: item.likedCount !== null && item.likedCount !== void 0
           }, item.likedCount !== null && item.likedCount !== void 0 ? {
-            e: "e12ac861-0-" + i0,
-            f: common_vendor.p({
+            f: "77b3e9bf-0-" + i0,
+            g: common_vendor.p({
               type: "far",
               name: "heart",
               size: "12",
               color: darkMode.value ? "#ffffff" : "#999"
             }),
-            g: common_vendor.t(item.likedCount)
+            h: common_vendor.t(item.likedCount)
           } : {}, {
-            h: item.timeStr || item.location
+            i: item.timeStr || item.location
           }, item.timeStr || item.location ? common_vendor.e({
-            i: item.timeStr
+            j: item.timeStr
           }, item.timeStr ? {
-            j: common_vendor.t(item.timeStr)
+            k: common_vendor.t(item.timeStr)
           } : {}, {
-            k: item.location
+            l: item.location
           }, item.location ? {
-            l: common_vendor.t(item.location)
+            m: common_vendor.t(item.location)
           } : {}) : {}, {
-            m: common_vendor.t(item.text),
-            n: item.images && item.images.length
+            n: common_vendor.t(item.text),
+            o: item.images && item.images.length
           }, item.images && item.images.length ? {
-            o: common_vendor.f(item.images, (url, index, i1) => {
+            p: common_vendor.f(item.images, (url, index, i1) => {
               return {
                 a: index,
                 b: url,
@@ -80,40 +92,41 @@ const _sfc_main = {
               };
             })
           } : {}, {
-            p: item.reply && item.reply.length > 0
+            q: item.reply && item.reply.length > 0
           }, item.reply && item.reply.length > 0 ? {
-            q: common_vendor.f(item.reply, (replyItem, replyIndex, i1) => {
+            r: common_vendor.f(item.reply, (replyItem, replyIndex, i1) => {
               return common_vendor.e({
                 a: replyItem.avatar && replyItem.avatar !== "" ? replyItem.avatar : defaultAvatar.value,
                 b: common_vendor.o(handleImageError, replyItem.id),
-                c: common_vendor.t(replyItem.userName),
-                d: replyItem.likedCount !== null && replyItem.likedCount !== void 0
+                c: common_vendor.o(($event) => previewAvatar(replyItem.avatar), replyItem.id),
+                d: common_vendor.t(replyItem.userName),
+                e: replyItem.likedCount !== null && replyItem.likedCount !== void 0
               }, replyItem.likedCount !== null && replyItem.likedCount !== void 0 ? {
-                e: "e12ac861-1-" + i0 + "-" + i1,
-                f: common_vendor.p({
+                f: "77b3e9bf-1-" + i0 + "-" + i1,
+                g: common_vendor.p({
                   type: "far",
                   name: "heart",
                   size: "10",
                   color: darkMode.value ? "#ffffff" : "#999"
                 }),
-                g: common_vendor.t(replyItem.likedCount)
+                h: common_vendor.t(replyItem.likedCount)
               } : {}, {
-                h: replyItem.timeStr || replyItem.location
+                i: replyItem.timeStr || replyItem.location
               }, replyItem.timeStr || replyItem.location ? common_vendor.e({
-                i: replyItem.timeStr
+                j: replyItem.timeStr
               }, replyItem.timeStr ? {
-                j: common_vendor.t(replyItem.timeStr)
+                k: common_vendor.t(replyItem.timeStr)
               } : {}, {
-                k: replyItem.location
+                l: replyItem.location
               }, replyItem.location ? {
-                l: common_vendor.t(replyItem.location)
+                m: common_vendor.t(replyItem.location)
               } : {}) : {}, {
-                m: common_vendor.t(replyItem.text),
-                n: replyItem.id
+                n: common_vendor.t(replyItem.text),
+                o: replyItem.id
               });
             })
           } : {}, {
-            r: item.id
+            s: item.id
           });
         }),
         b: darkMode.value ? 1 : ""
@@ -121,5 +134,5 @@ const _sfc_main = {
     };
   }
 };
-const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-e12ac861"]]);
+const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-77b3e9bf"]]);
 wx.createComponent(Component);

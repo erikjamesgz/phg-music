@@ -23,7 +23,7 @@
 /* 垂直间距 */
 /* 透明度 */
 /* 文章场景相关 */
-.rank-container.data-v-f0791970 {
+.rank-container.data-v-9949ef41 {
   min-height: 100vh;
   background-color: #fff;
   display: flex;
@@ -31,10 +31,10 @@
 }
 
 /* 暗黑模式下的页面背景 - 纯色 */
-.rank-container.dark-mode.data-v-f0791970 {
+.rank-container.dark-mode.data-v-9949ef41 {
   background-color: #1f2937;
 }
-.rank-header.data-v-f0791970 {
+.rank-header.data-v-9949ef41 {
   background: linear-gradient(to bottom, rgba(0, 215, 205, 0.2), rgba(0, 175, 255, 0.1));
   padding: 0 16px;
   padding-bottom: 12px;
@@ -42,41 +42,41 @@
 }
 
 /* 暗黑模式下的头部背景 - 纯色 */
-.rank-container.dark-mode .rank-header.data-v-f0791970 {
+.rank-container.dark-mode .rank-header.data-v-9949ef41 {
   background-color: #1f2937;
 }
-.header-actions.data-v-f0791970 {
+.header-actions.data-v-9949ef41 {
   display: flex;
   align-items: center;
   justify-content: space-between;
   height: 44px;
 }
-.back-btn.data-v-f0791970, .placeholder-btn.data-v-f0791970 {
+.back-btn.data-v-9949ef41, .placeholder-btn.data-v-9949ef41 {
   width: 40px;
   height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.page-title.data-v-f0791970 {
+.page-title.data-v-9949ef41 {
   font-size: 18px;
   font-weight: 600;
   color: #333;
 }
 
 /* 暗黑模式下的页面标题 */
-.rank-container.dark-mode .page-title.data-v-f0791970 {
+.rank-container.dark-mode .page-title.data-v-9949ef41 {
   color: #f3f4f6;
 }
-.source-tabs.data-v-f0791970 {
+.source-tabs.data-v-9949ef41 {
   margin-top: 8px;
 }
-.source-selector.data-v-f0791970 {
+.source-selector.data-v-9949ef41 {
   display: flex;
   align-items: center;
   margin-bottom: 12px;
 }
-.source-selector .source-name.data-v-f0791970 {
+.source-selector .source-name.data-v-9949ef41 {
   font-size: 16px;
   font-weight: 600;
   color: #333;
@@ -84,52 +84,54 @@
 }
 
 /* 暗黑模式下的平台选择器 */
-.rank-container.dark-mode .source-selector .source-name.data-v-f0791970 {
+.rank-container.dark-mode .source-selector .source-name.data-v-9949ef41 {
   color: #f3f4f6;
 }
-.tag-scroll.data-v-f0791970 {
+.tag-scroll.data-v-9949ef41 {
   white-space: nowrap;
 }
-.tag-list.data-v-f0791970 {
+.tag-list.data-v-9949ef41 {
   display: flex;
   padding: 4px 0;
 }
-.tag-item.data-v-f0791970 {
+.tag-item.data-v-9949ef41 {
+  flex-shrink: 0;
   padding: 6px 14px;
   margin-right: 8px;
   background: rgba(255, 255, 255, 0.6);
   border-radius: 16px;
 }
-.tag-item text.data-v-f0791970 {
+.tag-item text.data-v-9949ef41 {
   font-size: 13px;
   color: #666;
+  white-space: nowrap;
 }
-.tag-item.active.data-v-f0791970 {
+.tag-item.active.data-v-9949ef41 {
   background: linear-gradient(135deg, #00d7cd, #00afff);
 }
-.tag-item.active text.data-v-f0791970 {
+.tag-item.active text.data-v-9949ef41 {
   color: #fff;
   font-weight: 500;
 }
 
 /* 暗黑模式下的标签项 */
-.rank-container.dark-mode .tag-item.data-v-f0791970 {
+.rank-container.dark-mode .tag-item.data-v-9949ef41 {
   background-color: #374151;
 }
-.rank-container.dark-mode .tag-item text.data-v-f0791970 {
+.rank-container.dark-mode .tag-item text.data-v-9949ef41 {
   color: #d1d5db;
 }
-.list-wrapper.data-v-f0791970 {
+.list-wrapper.data-v-9949ef41 {
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   padding: 12px 8px;
 }
-.song-list.data-v-f0791970 {
+.song-list.data-v-9949ef41 {
   display: flex;
   flex-direction: column;
 }
-.song-item.data-v-f0791970 {
+.song-item.data-v-9949ef41 {
   display: flex;
   align-items: center;
   padding: 10px 8px;
@@ -139,42 +141,42 @@
   margin-bottom: 8px;
   transition: all 0.2s ease;
 }
-.song-item.data-v-f0791970:active {
+.song-item.data-v-9949ef41:active {
   transform: scale(0.98);
   background: #fafafa;
 }
-.song-item.data-v-f0791970:last-child {
+.song-item.data-v-9949ef41:last-child {
   margin-bottom: 0;
 }
 
 /* 暗黑模式下的歌曲项 - 无边框阴影 */
-.rank-container.dark-mode .song-item.data-v-f0791970 {
+.rank-container.dark-mode .song-item.data-v-9949ef41 {
   background-color: transparent;
   box-shadow: none;
   border-bottom: 1rpx solid #374151;
   border-radius: 0;
 }
-.rank-container.dark-mode .song-item.data-v-f0791970:active {
+.rank-container.dark-mode .song-item.data-v-9949ef41:active {
   background-color: #374151;
 }
-.song-rank.data-v-f0791970 {
+.song-rank.data-v-9949ef41 {
   width: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
-.song-rank.top-three .rank-number.data-v-f0791970 {
+.song-rank.top-three .rank-number.data-v-9949ef41 {
   color: #ff6b6b;
   font-weight: 700;
   font-size: 15px;
 }
-.song-rank .rank-number.data-v-f0791970 {
+.song-rank .rank-number.data-v-9949ef41 {
   font-size: 13px;
   color: #bbb;
   font-weight: 600;
 }
-.cover-wrapper.data-v-f0791970 {
+.cover-wrapper.data-v-9949ef41 {
   position: relative;
   width: 48px;
   height: 48px;
@@ -184,11 +186,11 @@
   flex-shrink: 0;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
-.cover-image.data-v-f0791970 {
+.cover-image.data-v-9949ef41 {
   width: 100%;
   height: 100%;
 }
-.playing-indicator.data-v-f0791970 {
+.playing-indicator.data-v-9949ef41 {
   position: absolute;
   bottom: 4px;
   right: 4px;
@@ -199,14 +201,14 @@
   background: rgba(0, 215, 205, 0.9);
   border-radius: 4px;
 }
-.playing-indicator .playing-bar.data-v-f0791970 {
+.playing-indicator .playing-bar.data-v-9949ef41 {
   width: 3px;
   height: 12px;
   background: #fff;
   border-radius: 2px;
-  animation: playing-f0791970 0.8s ease-in-out infinite;
+  animation: playing-9949ef41 0.8s ease-in-out infinite;
 }
-@keyframes playing-f0791970 {
+@keyframes playing-9949ef41 {
 0%, 100% {
     height: 4px;
 }
@@ -214,7 +216,7 @@
     height: 12px;
 }
 }
-.song-info.data-v-f0791970 {
+.song-info.data-v-9949ef41 {
   flex: 1;
   min-width: 0;
   display: flex;
@@ -222,7 +224,7 @@
   gap: 4px;
   padding-right: 4px;
 }
-.song-name.data-v-f0791970 {
+.song-name.data-v-9949ef41 {
   font-size: 14px;
   color: #333;
   font-weight: 500;
@@ -231,21 +233,21 @@
   white-space: nowrap;
   line-height: 1.3;
 }
-.song-name.current-song.data-v-f0791970 {
+.song-name.current-song.data-v-9949ef41 {
   color: #00d7cd;
 }
 
 /* 暗黑模式下的歌曲名 */
-.rank-container.dark-mode .song-name.data-v-f0791970 {
+.rank-container.dark-mode .song-name.data-v-9949ef41 {
   color: #f3f4f6;
 }
-.song-meta.data-v-f0791970 {
+.song-meta.data-v-9949ef41 {
   display: flex;
   align-items: center;
   gap: 4px;
   overflow: hidden;
 }
-.song-artist.data-v-f0791970 {
+.song-artist.data-v-9949ef41 {
   font-size: 11px;
   color: #666;
   overflow: hidden;
@@ -256,20 +258,20 @@
 }
 
 /* 暗黑模式下的歌手名 */
-.rank-container.dark-mode .song-artist.data-v-f0791970 {
+.rank-container.dark-mode .song-artist.data-v-9949ef41 {
   color: #9ca3af;
 }
-.meta-separator.data-v-f0791970 {
+.meta-separator.data-v-9949ef41 {
   font-size: 10px;
   color: #ccc;
   flex-shrink: 0;
 }
 
 /* 暗黑模式下的分隔符 */
-.rank-container.dark-mode .meta-separator.data-v-f0791970 {
+.rank-container.dark-mode .meta-separator.data-v-9949ef41 {
   color: #6b7280;
 }
-.song-album.data-v-f0791970 {
+.song-album.data-v-9949ef41 {
   font-size: 11px;
   color: #999;
   overflow: hidden;
@@ -280,10 +282,10 @@
 }
 
 /* 暗黑模式下的专辑名 */
-.rank-container.dark-mode .song-album.data-v-f0791970 {
+.rank-container.dark-mode .song-album.data-v-9949ef41 {
   color: #9ca3af;
 }
-.song-duration.data-v-f0791970 {
+.song-duration.data-v-9949ef41 {
   font-size: 11px;
   color: #999;
   padding: 0 4px;
@@ -294,10 +296,10 @@
 }
 
 /* 暗黑模式下的时长 */
-.rank-container.dark-mode .song-duration.data-v-f0791970 {
+.rank-container.dark-mode .song-duration.data-v-9949ef41 {
   color: #9ca3af;
 }
-.song-action.data-v-f0791970 {
+.song-action.data-v-9949ef41 {
   width: 36px;
   height: 36px;
   display: flex;
@@ -305,79 +307,79 @@
   justify-content: center;
   flex-shrink: 0;
 }
-.loading-state.data-v-f0791970, .error-state.data-v-f0791970, .empty-state.data-v-f0791970 {
+.loading-state.data-v-9949ef41, .error-state.data-v-9949ef41, .empty-state.data-v-9949ef41 {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 60px 20px;
 }
-.loading-state text.data-v-f0791970, .error-state text.data-v-f0791970, .empty-state text.data-v-f0791970 {
+.loading-state text.data-v-9949ef41, .error-state text.data-v-9949ef41, .empty-state text.data-v-9949ef41 {
   font-size: 14px;
   color: #999;
   margin-top: 16px;
 }
 
 /* 暗黑模式下的加载状态文字 */
-.rank-container.dark-mode .loading-state text.data-v-f0791970,
-.rank-container.dark-mode .error-state text.data-v-f0791970,
-.rank-container.dark-mode .empty-state text.data-v-f0791970 {
+.rank-container.dark-mode .loading-state text.data-v-9949ef41,
+.rank-container.dark-mode .error-state text.data-v-9949ef41,
+.rank-container.dark-mode .empty-state text.data-v-9949ef41 {
   color: #9ca3af;
 }
-.loading-spinner.data-v-f0791970 {
+.loading-spinner.data-v-9949ef41 {
   width: 40px;
   height: 40px;
   border: 3px solid rgba(0, 215, 205, 0.2);
   border-top-color: #00d7cd;
   border-radius: 50%;
-  animation: spin-f0791970 1s linear infinite;
+  animation: spin-9949ef41 1s linear infinite;
 }
-.loading-spinner-small.data-v-f0791970 {
+.loading-spinner-small.data-v-9949ef41 {
   width: 20px;
   height: 20px;
   border: 2px solid rgba(0, 215, 205, 0.2);
   border-top-color: #00d7cd;
   border-radius: 50%;
-  animation: spin-f0791970 1s linear infinite;
+  animation: spin-9949ef41 1s linear infinite;
   margin-right: 8px;
 }
-@keyframes spin-f0791970 {
+@keyframes spin-9949ef41 {
 to {
     transform: rotate(360deg);
 }
 }
-.retry-btn.data-v-f0791970 {
+.retry-btn.data-v-9949ef41 {
   margin-top: 16px;
   padding: 8px 24px;
   background: linear-gradient(135deg, #00d7cd, #00afff);
   border-radius: 20px;
 }
-.retry-btn text.data-v-f0791970 {
+.retry-btn text.data-v-9949ef41 {
   color: #fff;
   font-size: 14px;
 }
-.load-more-status.data-v-f0791970 {
+.load-more-status.data-v-9949ef41 {
   padding: 20px;
 }
-.load-more-status .loading-more.data-v-f0791970, .load-more-status .no-more.data-v-f0791970 {
+.load-more-status .loading-more.data-v-9949ef41, .load-more-status .no-more.data-v-9949ef41 {
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.load-more-status .loading-more text.data-v-f0791970, .load-more-status .no-more text.data-v-f0791970 {
+.load-more-status .loading-more text.data-v-9949ef41, .load-more-status .no-more text.data-v-9949ef41 {
   font-size: 12px;
   color: #999;
 }
 
 /* 暗黑模式下的加载更多状态 */
-.rank-container.dark-mode .load-more-status .loading-more text.data-v-f0791970,
-.rank-container.dark-mode .load-more-status .no-more text.data-v-f0791970 {
+.rank-container.dark-mode .load-more-status .loading-more text.data-v-9949ef41,
+.rank-container.dark-mode .load-more-status .no-more text.data-v-9949ef41 {
   color: #6b7280;
 }
-.safe-bottom.data-v-f0791970 {
+.safe-bottom.data-v-9949ef41 {
   height: 30px;
 }
-.modal-overlay.data-v-f0791970 {
+.modal-overlay.data-v-9949ef41 {
   position: fixed;
   top: 0;
   left: 0;
@@ -389,7 +391,7 @@ to {
   justify-content: center;
   z-index: 1000;
 }
-.source-picker.data-v-f0791970, .action-modal.data-v-f0791970 {
+.source-picker.data-v-9949ef41, .action-modal.data-v-9949ef41 {
   width: 100%;
   background: #fff;
   border-radius: 20px 20px 0 0;
@@ -399,74 +401,74 @@ to {
 }
 
 /* 暗黑模式下的弹窗 */
-.rank-container.dark-mode .source-picker.data-v-f0791970,
-.rank-container.dark-mode .action-modal.data-v-f0791970 {
+.rank-container.dark-mode .source-picker.data-v-9949ef41,
+.rank-container.dark-mode .action-modal.data-v-9949ef41 {
   background-color: #1f2937;
 }
-.picker-header.data-v-f0791970, .modal-header.data-v-f0791970 {
+.picker-header.data-v-9949ef41, .modal-header.data-v-9949ef41 {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
   border-bottom: 1px solid #f0f0f0;
 }
-.picker-header text.data-v-f0791970, .modal-header text.data-v-f0791970 {
+.picker-header text.data-v-9949ef41, .modal-header text.data-v-9949ef41 {
   font-size: 16px;
   font-weight: 600;
   color: #333;
 }
 
 /* 暗黑模式下的弹窗头部 */
-.rank-container.dark-mode .picker-header.data-v-f0791970,
-.rank-container.dark-mode .modal-header.data-v-f0791970 {
+.rank-container.dark-mode .picker-header.data-v-9949ef41,
+.rank-container.dark-mode .modal-header.data-v-9949ef41 {
   border-bottom: 1px solid #374151;
 }
-.rank-container.dark-mode .picker-header text.data-v-f0791970,
-.rank-container.dark-mode .modal-header text.data-v-f0791970 {
+.rank-container.dark-mode .picker-header text.data-v-9949ef41,
+.rank-container.dark-mode .modal-header text.data-v-9949ef41 {
   color: #f3f4f6;
 }
-.close-btn.data-v-f0791970 {
+.close-btn.data-v-9949ef41 {
   width: 32px;
   height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.source-list.data-v-f0791970 {
+.source-list.data-v-9949ef41 {
   max-height: 50vh;
   overflow-y: auto;
   padding: 8px 0;
 }
-.source-item.data-v-f0791970 {
+.source-item.data-v-9949ef41 {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 14px 20px;
 }
-.source-item text.data-v-f0791970 {
+.source-item text.data-v-9949ef41 {
   font-size: 15px;
   color: #333;
 }
-.source-item.active.data-v-f0791970 {
+.source-item.active.data-v-9949ef41 {
   background: rgba(0, 215, 205, 0.1);
 }
-.source-item.active text.data-v-f0791970 {
+.source-item.active text.data-v-9949ef41 {
   color: #00d7cd;
   font-weight: 500;
 }
 
 /* 暗黑模式下的平台列表项 */
-.rank-container.dark-mode .source-item text.data-v-f0791970 {
+.rank-container.dark-mode .source-item text.data-v-9949ef41 {
   color: #f3f4f6;
 }
-.rank-container.dark-mode .source-item.active.data-v-f0791970 {
+.rank-container.dark-mode .source-item.active.data-v-9949ef41 {
   background: rgba(0, 215, 205, 0.2);
 }
-.modal-header.data-v-f0791970 {
+.modal-header.data-v-9949ef41 {
   flex-direction: column;
   align-items: flex-start;
 }
-.modal-header .modal-title.data-v-f0791970 {
+.modal-header .modal-title.data-v-9949ef41 {
   font-size: 16px;
   font-weight: 600;
   color: #333;
@@ -475,66 +477,66 @@ to {
   white-space: nowrap;
   max-width: 100%;
 }
-.modal-header .modal-subtitle.data-v-f0791970 {
+.modal-header .modal-subtitle.data-v-9949ef41 {
   font-size: 13px;
   color: #999;
   margin-top: 4px;
 }
 
 /* 暗黑模式下的弹窗标题和副标题 */
-.rank-container.dark-mode .modal-header .modal-title.data-v-f0791970 {
+.rank-container.dark-mode .modal-header .modal-title.data-v-9949ef41 {
   color: #f3f4f6;
 }
-.rank-container.dark-mode .modal-header .modal-subtitle.data-v-f0791970 {
+.rank-container.dark-mode .modal-header .modal-subtitle.data-v-9949ef41 {
   color: #9ca3af;
 }
-.modal-body.data-v-f0791970 {
+.modal-body.data-v-9949ef41 {
   padding: 8px 0;
 }
-.action-item.data-v-f0791970 {
+.action-item.data-v-9949ef41 {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 14px 20px;
   border-bottom: 1px solid #f5f5f5;
 }
-.action-item text.data-v-f0791970 {
+.action-item text.data-v-9949ef41 {
   font-size: 15px;
   color: #333;
 }
 
 /* 暗黑模式下的操作项 */
-.rank-container.dark-mode .action-item.data-v-f0791970 {
+.rank-container.dark-mode .action-item.data-v-9949ef41 {
   border-bottom: 1px solid #374151;
 }
-.rank-container.dark-mode .action-item text.data-v-f0791970 {
+.rank-container.dark-mode .action-item text.data-v-9949ef41 {
   color: #f3f4f6;
 }
-.modal-footer.data-v-f0791970 {
+.modal-footer.data-v-9949ef41 {
   padding: 16px 20px;
   border-top: 1px solid #f0f0f0;
 }
 
 /* 暗黑模式下的弹窗底部 */
-.rank-container.dark-mode .modal-footer.data-v-f0791970 {
+.rank-container.dark-mode .modal-footer.data-v-9949ef41 {
   border-top: 1rpx solid #374151;
 }
-.cancel-btn.data-v-f0791970 {
+.cancel-btn.data-v-9949ef41 {
   padding: 12px 24px;
   background: #f5f5f5;
   border-radius: 20px;
   text-align: center;
 }
-.cancel-btn text.data-v-f0791970 {
+.cancel-btn text.data-v-9949ef41 {
   font-size: 15px;
   color: #666;
   font-weight: 500;
 }
 
 /* 暗黑模式下的取消按钮 */
-.rank-container.dark-mode .cancel-btn.data-v-f0791970 {
+.rank-container.dark-mode .cancel-btn.data-v-9949ef41 {
   background-color: #374151;
 }
-.rank-container.dark-mode .cancel-btn text.data-v-f0791970 {
+.rank-container.dark-mode .cancel-btn text.data-v-9949ef41 {
   color: #d1d5db;
 }

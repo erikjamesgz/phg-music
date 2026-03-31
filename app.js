@@ -2,7 +2,9 @@
 Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 const common_vendor = require("./common/vendor.js");
 const store_index = require("./store/index.js");
+const utils_playInfoStorage = require("./utils/playInfoStorage.js");
 const store_modules_player = require("./store/modules/player.js");
+const store_modules_list = require("./store/modules/list.js");
 const store_modules_user = require("./store/modules/user.js");
 if (!Math) {
   "./pages/main/index.js";
@@ -29,10 +31,11 @@ const _sfc_main = {
       sleepTimerEndTime: null,
       sleepTimerInterval: null,
       // 非 iOS 设备快速 onPlay 检测相关
-      lastOnPlayTime: 0,
-      onPlayQuickCallCount: 0,
       isIOS: false,
-      quickPlayCheckTimer: null
+      // 主题监听器初始化标志
+      themeChangeListenerInitialized: false,
+      // 电池优化检查标志（首次播放后10秒检查）
+      hasCheckedBatteryOptimization: false
     };
   },
   onLaunch: async function() {
@@ -54,6 +57,8 @@ const _sfc_main = {
     } catch (error) {
       console.error("[App] 状态管理初始化失败:", error);
     }
+    console.log("[App] 初始化音频上下文");
+    store_modules_player.playerStore.initAudioContext();
     this.isMpWeixin = true;
     console.log("[App] 检测到微信小程序环境");
     this.initBackgroundAudioManager();
@@ -84,19 +89,32 @@ const _sfc_main = {
   },
   // 官方推荐的监听系统主题变化方式
   onThemeChange(res) {
-    console.log("[App] onThemeChange 生命周期触发:", res);
-    const followSystem = common_vendor.index.getStorageSync("followSystem");
-    console.log("[App] onThemeChange - followSystem:", followSystem);
-    if (followSystem !== "false") {
+    console.log("[App] ========== onThemeChange 生命周期触发 ==========");
+    console.log("[App] onThemeChange - res:", JSON.stringify(res));
+    let followSystem = common_vendor.index.getStorageSync("followSystem");
+    console.log("[App] onThemeChange - followSystem 原始值:", followSystem, "类型:", typeof followSystem);
+    if (followSystem === "" || followSystem === null || followSystem === void 0) {
+      followSystem = true;
+      common_vendor.index.setStorageSync("followSystem", "true");
+      console.log("[App] onThemeChange - 首次安装，默认设置 followSystem 为 true");
+    }
+    const isFollowSystem = followSystem !== "false" && followSystem !== false;
+    console.log("[App] onThemeChange - isFollowSystem:", isFollowSystem);
+    if (isFollowSystem) {
       const isDark = res.theme === "dark";
-      console.log("[App] onThemeChange - 系统主题:", res.theme, "isDark:", isDark);
+      console.log("[App] onThemeChange - 跟随系统已开启，系统主题:", res.theme, "isDark:", isDark);
       common_vendor.index.setStorageSync("darkMode", isDark.toString());
       console.log("[App] onThemeChange - darkMode 已更新:", common_vendor.index.getStorageSync("darkMode"));
-      common_vendor.index.$emit("systemThemeChange", { theme: res.theme, isDark });
-      console.log("[App] onThemeChange - 已发送主题变化事件");
+      common_vendor.index.$emit("systemThemeChange", {
+        theme: res.theme,
+        isDark,
+        from: "onThemeChange"
+      });
+      console.log("[App] onThemeChange - 已发送 systemThemeChange 事件");
     } else {
-      console.log("[App] onThemeChange - 跟随系统未开启，跳过更新");
+      console.log("[App] onThemeChange - 跟随系统已关闭，跳过主题更新");
     }
+    console.log("[App] ========== onThemeChange 结束 ==========");
   },
   onShow: function() {
     console.log("[App] 应用显示");
@@ -104,7 +122,41 @@ const _sfc_main = {
     this.checkSystemTheme();
   },
   onHide: function() {
+    var _a, _b;
     console.log("[App] 应用隐藏");
+    const state = store_modules_player.playerStore.getState();
+    const currentPlayerListId = store_modules_list.listStore.state.playInfo.playerListId || "temp";
+    let saveListId = currentPlayerListId;
+    let playlist = null;
+    if (currentPlayerListId === "temp") {
+      const tempListMeta = store_modules_list.listStore.state.tempList.meta;
+      if (tempListMeta && tempListMeta.id) {
+        saveListId = tempListMeta.id;
+        console.log("[App] onHide 临时列表的真实歌单ID:", saveListId);
+      }
+      playlist = store_modules_list.listStore.state.tempList.list;
+    } else {
+      playlist = store_modules_list.listStore.getList(currentPlayerListId);
+    }
+    console.log("[App] onHide 检查播放状态, currentSong:", (_a = state.currentSong) == null ? void 0 : _a.name, "ID:", (_b = state.currentSong) == null ? void 0 : _b.id, "saveListId:", saveListId, "playlist长度:", playlist == null ? void 0 : playlist.length);
+    if (state.currentSong && state.currentSong.id && state.currentSong.id !== 0 && playlist && playlist.length > 0) {
+      console.log("[App] onHide 立即保存播放状态, 歌曲:", state.currentSong.name, "进度:", state.currentTime);
+      utils_playInfoStorage.savePlayState({
+        time: Math.floor(state.currentTime),
+        maxTime: Math.floor(state.duration),
+        listId: saveListId,
+        index: store_modules_list.listStore.state.playInfo.playerPlayIndex ?? 0,
+        currentSong: state.currentSong,
+        originalSong: state.originalSong,
+        playlist,
+        playing: state.playing
+      }, true);
+    } else {
+      console.log("[App] onHide 没有有效的播放歌曲或播放列表为空，跳过保存");
+    }
+  },
+  beforeDestroy() {
+    console.log("[App] App实例销毁前");
   },
   methods: {
     // 初始化背景音频管理器
@@ -134,8 +186,18 @@ const _sfc_main = {
           if (state2)
             state2.isUsingCachedUrl = false;
           this.playStartTime = Date.now();
-          if (!this.isIOS) {
-            this.checkQuickOnPlay();
+          if (state2 && state2._pendingSeekTime > 0 && state2.duration > 0) {
+            console.log("[BackgroundAudio] onPlay - 恢复播放进度:", state2._pendingSeekTime);
+            const seekTime = Math.min(state2._pendingSeekTime, state2.duration - 1);
+            if (seekTime > 0) {
+              setTimeout(() => {
+                console.log("[BackgroundAudio] onPlay - 执行 seek 到:", seekTime);
+                audioManager.seek(seekTime);
+                state2.currentTime = seekTime;
+              }, 500);
+            }
+            state2._pendingSeekTime = 0;
+            state2._pendingSeekDuration = 0;
           }
         });
         audioManager.onPause(() => {
@@ -219,45 +281,6 @@ const _sfc_main = {
         console.log("[App] 播放时长统计: +" + playDuration.toFixed(2) + "分钟, 当前总时长:", store_modules_user.userStore.getState().stats.listenTime.toFixed(2), "分钟");
       }
     },
-    // 非 iOS 设备：检测快速连续 onPlay 调用（模拟通知栏切歌）
-    // 如果 onPlay 在短时间内（3秒内）被快速调用两次，则判断为用户在通知栏点击了切歌
-    checkQuickOnPlay() {
-      const now = Date.now();
-      const timeSinceLastPlay = now - this.lastOnPlayTime;
-      console.log("[checkQuickOnPlay] 距离上次 onPlay:", timeSinceLastPlay, "ms, 计数:", this.onPlayQuickCallCount);
-      const playerState = store_modules_player.playerStore.getState();
-      if (playerState && playerState.isUserSeeking) {
-        console.log("[checkQuickOnPlay] 用户正在快进，忽略此次 onPlay");
-        this.lastOnPlayTime = now;
-        this.onPlayQuickCallCount = 0;
-        return;
-      }
-      if (timeSinceLastPlay < 3e3 && this.lastOnPlayTime > 0) {
-        this.onPlayQuickCallCount++;
-        console.log("[checkQuickOnPlay] 检测到快速 onPlay，计数增加到:", this.onPlayQuickCallCount);
-        if (this.onPlayQuickCallCount >= 2) {
-          console.log("[checkQuickOnPlay] 检测到通知栏切歌操作，自动切换下一首");
-          this.onPlayQuickCallCount = 0;
-          if (this.quickPlayCheckTimer) {
-            clearTimeout(this.quickPlayCheckTimer);
-            this.quickPlayCheckTimer = null;
-          }
-          store_modules_player.playerStore.playNext();
-          return;
-        }
-      } else {
-        this.onPlayQuickCallCount = 1;
-      }
-      this.lastOnPlayTime = now;
-      if (this.quickPlayCheckTimer) {
-        clearTimeout(this.quickPlayCheckTimer);
-      }
-      this.quickPlayCheckTimer = setTimeout(() => {
-        console.log("[checkQuickOnPlay] 超时重置计数");
-        this.onPlayQuickCallCount = 0;
-        this.quickPlayCheckTimer = null;
-      }, 3e3);
-    },
     // 启动定时停止播放
     startSleepTimer(totalSeconds) {
       if (this.sleepTimerInterval) {
@@ -306,57 +329,89 @@ const _sfc_main = {
         return;
       }
       common_vendor.index.onThemeChange((res) => {
-        console.log("[App] uni.onThemeChange 回调触发:", JSON.stringify(res));
-        console.log("[App] res.theme:", res.theme);
+        console.log("[App] ========== uni.onThemeChange 回调触发 ==========");
+        console.log("[App] uni.onThemeChange - res:", JSON.stringify(res));
+        console.log("[App] uni.onThemeChange - res.theme:", res.theme, 'res.theme === "dark":', res.theme === "dark", 'res.theme === "light":', res.theme === "light");
+        console.log("[App] uni.onThemeChange - themeChangeListenerInitialized:", this.themeChangeListenerInitialized);
         if (!res || !res.theme) {
-          console.log("[App] 主题变化回调数据无效");
+          console.log("[App] uni.onThemeChange - 主题变化回调数据无效");
           return;
         }
-        const followSystem = common_vendor.index.getStorageSync("followSystem");
-        console.log("[App] followSystem 当前值:", followSystem);
-        if (followSystem !== "false") {
+        if (!this.themeChangeListenerInitialized) {
+          console.log("[App] uni.onThemeChange - 监听器未初始化完成，跳过此次回调");
+          this.themeChangeListenerInitialized = true;
+          return;
+        }
+        let followSystem = common_vendor.index.getStorageSync("followSystem");
+        console.log("[App] uni.onThemeChange - followSystem 原始值:", followSystem, "类型:", typeof followSystem);
+        if (followSystem === "" || followSystem === null || followSystem === void 0) {
+          followSystem = true;
+          common_vendor.index.setStorageSync("followSystem", "true");
+          console.log("[App] uni.onThemeChange - 首次安装，默认设置 followSystem 为 true");
+        }
+        const isFollowSystem = followSystem !== "false" && followSystem !== false;
+        console.log("[App] uni.onThemeChange - isFollowSystem:", isFollowSystem);
+        if (isFollowSystem) {
           const isDark = res.theme === "dark";
           const oldDarkMode = common_vendor.index.getStorageSync("darkMode");
-          console.log("[App] darkMode 旧值:", oldDarkMode, "-> 新值:", isDark.toString());
+          console.log("[App] uni.onThemeChange - darkMode 旧值:", oldDarkMode, "-> 新值:", isDark.toString());
+          console.log("[App] uni.onThemeChange - isDark:", isDark, "res.theme:", res.theme);
           common_vendor.index.setStorageSync("darkMode", isDark.toString());
-          console.log("[App] darkMode 已更新:", common_vendor.index.getStorageSync("darkMode"));
-          common_vendor.index.$emit("systemThemeChange", { theme: res.theme, isDark });
-          console.log("[App] 已发送主题变化事件");
+          console.log("[App] uni.onThemeChange - darkMode 已更新:", common_vendor.index.getStorageSync("darkMode"));
+          common_vendor.index.$emit("systemThemeChange", {
+            theme: res.theme,
+            isDark,
+            from: "uni.onThemeChange"
+          });
+          console.log("[App] uni.onThemeChange - 已发送 systemThemeChange 事件，isDark:", isDark, "theme:", res.theme);
         } else {
-          console.log("[App] 跟随系统未开启，跳过更新");
+          console.log("[App] uni.onThemeChange - 跟随系统已关闭，跳过更新");
         }
+        console.log("[App] ========== uni.onThemeChange 结束 ==========");
       });
       console.log("[App] 系统主题变化监听初始化完成");
     },
     // 检查系统主题并更新 darkMode（小程序重启时调用）
     async checkSystemTheme() {
       try {
-        console.log("[App] 检查系统主题...");
-        const followSystem = common_vendor.index.getStorageSync("followSystem");
-        console.log("[App] checkSystemTheme - followSystem:", followSystem);
-        if (followSystem !== "false") {
+        console.log("[App] ========== checkSystemTheme 开始 ==========");
+        console.log("[App] checkSystemTheme - 调用时间:", (/* @__PURE__ */ new Date()).toISOString());
+        let followSystem = common_vendor.index.getStorageSync("followSystem");
+        console.log("[App] checkSystemTheme - followSystem 原始值:", followSystem, "类型:", typeof followSystem);
+        if (followSystem === "" || followSystem === null || followSystem === void 0) {
+          followSystem = true;
+          common_vendor.index.setStorageSync("followSystem", "true");
+          console.log("[App] checkSystemTheme - 首次安装，默认设置 followSystem 为 true");
+        }
+        const isFollowSystem = followSystem !== "false" && followSystem !== false;
+        console.log("[App] checkSystemTheme - isFollowSystem:", isFollowSystem);
+        if (isFollowSystem) {
           const systemInfo = await common_vendor.index.getSystemInfo();
           console.log("[App] checkSystemTheme - systemInfo.theme:", systemInfo.theme);
           if (systemInfo.theme) {
             const isDark = systemInfo.theme === "dark";
             const currentDarkMode = common_vendor.index.getStorageSync("darkMode");
             const shouldBeDark = isDark.toString();
-            console.log("[App] checkSystemTheme - 当前 darkMode:", currentDarkMode, "应该更新为:", shouldBeDark);
+            console.log("[App] checkSystemTheme - 当前 darkMode 存储:", currentDarkMode, "应该更新为:", shouldBeDark, "isDark:", isDark);
             if (currentDarkMode !== shouldBeDark) {
               common_vendor.index.setStorageSync("darkMode", shouldBeDark);
               console.log("[App] checkSystemTheme - 已更新 darkMode");
               common_vendor.index.$emit("systemThemeChange", {
                 theme: systemInfo.theme,
-                isDark
+                isDark,
+                from: "checkSystemTheme"
               });
-              console.log("[App] checkSystemTheme - 已发送主题变化事件");
+              console.log("[App] checkSystemTheme - 已发送 systemThemeChange 事件");
             } else {
               console.log("[App] checkSystemTheme - 值相同，无需更新");
             }
+          } else {
+            console.log("[App] checkSystemTheme - systemInfo.theme 为空，跳过");
           }
         } else {
-          console.log("[App] checkSystemTheme - 跟随系统未开启");
+          console.log("[App] checkSystemTheme - 跟随系统已关闭，跳过检查");
         }
+        console.log("[App] ========== checkSystemTheme 结束 ==========");
       } catch (error) {
         console.error("[App] checkSystemTheme 失败:", error);
       }
@@ -364,12 +419,18 @@ const _sfc_main = {
     // App 启动时检查系统主题（更可靠的方案）
     async checkSystemThemeOnLaunch() {
       try {
-        console.log("[App] checkSystemThemeOnLaunch - 开始检查系统主题");
-        const followSystem = common_vendor.index.getStorageSync("followSystem");
-        console.log("[App] checkSystemThemeOnLaunch - followSystem:", followSystem);
-        if (followSystem !== "false") {
+        console.log("[App] ========== checkSystemThemeOnLaunch 开始 ==========");
+        let followSystem = common_vendor.index.getStorageSync("followSystem");
+        console.log("[App] checkSystemThemeOnLaunch - followSystem 原始值:", followSystem, "类型:", typeof followSystem);
+        if (followSystem === "" || followSystem === null || followSystem === void 0) {
+          followSystem = true;
+          common_vendor.index.setStorageSync("followSystem", "true");
+          console.log("[App] checkSystemThemeOnLaunch - 首次安装，默认设置 followSystem 为 true");
+        }
+        const isFollowSystem = followSystem !== "false" && followSystem !== false;
+        console.log("[App] checkSystemThemeOnLaunch - isFollowSystem:", isFollowSystem);
+        if (isFollowSystem) {
           const systemInfo = common_vendor.index.getSystemInfoSync();
-          console.log("[App] checkSystemThemeOnLaunch - systemInfo:", JSON.stringify(systemInfo));
           console.log("[App] checkSystemThemeOnLaunch - systemInfo.theme:", systemInfo.theme);
           if (systemInfo.theme) {
             const isDark = systemInfo.theme === "dark";
@@ -378,18 +439,23 @@ const _sfc_main = {
             console.log("[App] checkSystemThemeOnLaunch - darkMode 已更新为:", shouldBeDark);
             common_vendor.index.$emit("systemThemeChange", {
               theme: systemInfo.theme,
-              isDark
+              isDark,
+              from: "checkSystemThemeOnLaunch"
             });
-            console.log("[App] checkSystemThemeOnLaunch - 已发送主题变化事件");
+            console.log("[App] checkSystemThemeOnLaunch - 已发送 systemThemeChange 事件");
           } else {
             console.log("[App] checkSystemThemeOnLaunch - systemInfo.theme 为空，无法获取系统主题");
           }
         } else {
-          console.log("[App] checkSystemThemeOnLaunch - 跟随系统未开启");
+          console.log("[App] checkSystemThemeOnLaunch - 跟随系统已关闭，跳过检查");
         }
+        console.log("[App] ========== checkSystemThemeOnLaunch 结束 ==========");
       } catch (error) {
         console.error("[App] checkSystemThemeOnLaunch 失败:", error);
       }
+    },
+    // App端初始化系统UI样式
+    initAppUIStyle() {
     }
   }
 };

@@ -39,42 +39,35 @@
 .player-page.dark-mode {
   background-color: #1f2937;
 }
-.status-bar-placeholder {
-  flex-shrink: 0;
-  width: 100%;
-}
 .player-navbar {
-  height: 120rpx;
-  padding-top: var(--status-bar-height, 44rpx);
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
   padding-left: 30rpx;
   padding-right: 30rpx;
+  padding-bottom: 12rpx;
   position: relative;
   /* 平板适配 - 缩小导航栏 */
   /* 中等屏幕手机适配（如 iPhone XR, iPhone 11） */
   /* 小屏幕手机适配（如 iPhone 5, iPhone SE） */
   /* 矮屏设备适配（如折叠屏内屏） */
 }
+.player-navbar__content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
 .player-navbar__left {
-  position: absolute;
-  left: 30rpx;
-  top: var(--status-bar-height, 44rpx);
-  transform: translateY(-50%);
   width: 80rpx;
   height: 80rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  background: #ffffff;
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
   z-index: 10;
+  flex-shrink: 0;
 }
 .player-navbar__right {
-  position: absolute;
-  right: 30rpx;
   width: 80rpx;
   height: 80rpx;
   display: flex;
@@ -82,17 +75,16 @@
   justify-content: center;
   border-radius: 50%;
   z-index: 10;
+  flex-shrink: 0;
 }
 .player-navbar__center {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   max-width: 60%;
-  position: absolute;
-  left: 50%;
-  top: var(--status-bar-height, 44rpx);
-  transform: translate(-50%, -50%);
+  flex: 1;
+  padding: 0 20rpx;
 }
 .player-navbar__subtitle {
   font-size: 28rpx;
@@ -115,12 +107,11 @@
 }
 @media screen and (min-width: 768px) {
 .player-navbar {
-    height: 66rpx;
+    padding-bottom: 10rpx;
 }
 .player-navbar__left {
     width: 50rpx;
     height: 50rpx;
-    top: calc(var(--status-bar-height, 44rpx) + 10rpx);
 }
 .player-navbar__subtitle {
     font-size: 18rpx;
@@ -128,15 +119,8 @@
 .player-navbar__source {
     font-size: 14rpx;
 }
-.player-navbar__center {
-    top: calc(var(--status-bar-height, 44rpx) + 0rpx);
-    transform: translateX(-50%);
-}
 }
 @media screen and (max-height: 896px) and (min-height: 813px) {
-.player-navbar {
-    height: 80rpx;
-}
 .player-navbar__left {
     width: 72rpx;
     height: 72rpx;
@@ -149,9 +133,6 @@
 }
 }
 @media screen and (max-height: 812px) {
-.player-navbar {
-    height: 70rpx;
-}
 .player-navbar__left {
     width: 64rpx;
     height: 64rpx;
@@ -164,9 +145,6 @@
 }
 }
 @media screen and (max-height: 800px) and (min-width: 700px) {
-.player-navbar {
-    height: 60rpx;
-}
 .player-navbar__left {
     width: 56rpx;
     height: 56rpx;
@@ -185,9 +163,6 @@
 }
 .player-page.dark-mode .player-navbar__source {
   color: #9ca3af;
-}
-.player-page.dark-mode .player-navbar__left {
-  background: rgba(255, 255, 255, 0.1);
 }
 
 /* 导航栏跑马灯样式 */
@@ -266,13 +241,9 @@
   justify-content: center;
   align-items: center;
   gap: 16rpx;
-  margin-top: 8rpx;
+  margin-top: 16rpx;
   margin-bottom: 0;
   padding: 0;
-  position: absolute;
-  left: 50%;
-  top: calc(var(--status-bar-height, 44rpx) + 60rpx);
-  transform: translateX(-50%);
   /* 平板适配 - 缩小指示器区域 */
   /* 中等屏幕手机适配（如 iPhone XR, iPhone 11） */
   /* 小屏幕手机适配（如 iPhone 5, iPhone SE） */
@@ -280,30 +251,29 @@
 }
 @media screen and (min-width: 768px) {
 .slide-indicator {
-    margin-top: 4rpx;
+    margin-top: 8rpx;
     margin-bottom: 0;
     padding: 0;
-    top: calc(var(--status-bar-height, 44rpx) + 55rpx);
 }
 }
 @media screen and (max-height: 896px) and (min-height: 813px) {
 .slide-indicator {
-    margin-top: 8rpx;
-    margin-bottom: 8rpx;
+    margin-top: 12rpx;
+    margin-bottom: 0;
     padding: 4rpx 0;
 }
 }
 @media screen and (max-height: 812px) {
 .slide-indicator {
-    margin-top: 6rpx;
-    margin-bottom: 6rpx;
+    margin-top: 10rpx;
+    margin-bottom: 0;
     padding: 3rpx 0;
 }
 }
 @media screen and (max-height: 800px) and (min-width: 700px) {
 .slide-indicator {
-    margin-top: 4rpx;
-    margin-bottom: 4rpx;
+    margin-top: 8rpx;
+    margin-bottom: 0;
     padding: 2rpx 0;
 }
 }
@@ -311,8 +281,6 @@
   position: absolute;
   width: 64rpx;
   height: 64rpx;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -323,7 +291,6 @@
 }
 .slide-arrow:active {
   transform: translateY(-50%) scale(0.95);
-  background: rgba(255, 255, 255, 0.4);
 }
 .slide-arrow--left {
   left: 20rpx;
@@ -333,11 +300,8 @@
 }
 
 /* 暗黑模式下的滑动箭头 */
-.player-page.dark-mode .slide-arrow {
-  background: rgba(255, 255, 255, 0.1);
-}
 .player-page.dark-mode .slide-arrow:active {
-  background: rgba(255, 255, 255, 0.2);
+  opacity: 0.8;
 }
 .indicator-dot {
   width: 24rpx;
@@ -577,6 +541,29 @@ to {
   background: linear-gradient(135deg, #00d7cd 0%, #00afff 100%);
   box-shadow: 0 3rpx 12rpx rgba(0, 215, 205, 0.4), inset 0 1rpx 3rpx rgba(255, 255, 255, 0.6);
   border: 3rpx solid rgba(255, 255, 255, 0.95);
+}
+
+/* 暗黑模式下的转盘样式 - 保持白色背景 */
+.player-page.dark-mode .turntable-metal-ring {
+  background: linear-gradient(145deg, #e5e7eb 0%, #d1d5db 50%, #e5e7eb 100%) !important;
+  box-shadow: 0 12rpx 40rpx rgba(0, 0, 0, 0.15), inset 0 1rpx 2rpx rgba(255, 255, 255, 0.8) !important;
+}
+.player-page.dark-mode .turntable-groove {
+  background: linear-gradient(180deg, #fafafa 0%, #f3f4f6 100%) !important;
+  box-shadow: inset 0 2rpx 8rpx rgba(0, 0, 0, 0.05) !important;
+}
+.player-page.dark-mode .turntable-cover {
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 50%, #e5e7eb 100%) !important;
+  box-shadow: inset 0 2rpx 6rpx rgba(0, 0, 0, 0.06) !important;
+}
+.player-page.dark-mode .turntable-cover__placeholder .placeholder-icon {
+  background: linear-gradient(135deg, rgba(0, 215, 205, 0.08) 0%, rgba(0, 175, 255, 0.08) 100%) !important;
+  border: 1rpx solid rgba(0, 215, 205, 0.15) !important;
+}
+.player-page.dark-mode .turntable-center__dot {
+  background: linear-gradient(135deg, #00d7cd 0%, #00afff 100%) !important;
+  box-shadow: 0 3rpx 12rpx rgba(0, 215, 205, 0.4), inset 0 1rpx 3rpx rgba(255, 255, 255, 0.6) !important;
+  border: 3rpx solid rgba(255, 255, 255, 0.95) !important;
 }
 .tonearm {
   position: absolute;
@@ -1008,7 +995,7 @@ to {
 }
 .lyrics-scroll-wrapper {
   width: 100%;
-  height: var(--5e0eb218);
+  height: var(--42f68f4d);
   overflow: hidden;
 }
 .lyrics-scroll-view {
@@ -1424,6 +1411,42 @@ to {
   border-radius: 50%;
   background: linear-gradient(135deg, #00d7cd 0%, #00afff 100%);
   box-shadow: 0 8rpx 24rpx rgba(0, 215, 205, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.control-btn--primary.is-loading {
+  background: transparent;
+  box-shadow: none;
+}
+.control-btn--primary .loading-spinner {
+  width: 128rpx;
+  height: 128rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.control-btn--primary .loading-spinner__circle {
+  width: 128rpx;
+  height: 128rpx;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, #00d7cd, #00afff, #00d7cd);
+  animation: spin 1s linear infinite;
+  position: relative;
+}
+.control-btn--primary .loading-spinner__circle::before {
+  content: "";
+  position: absolute;
+  top: 4rpx;
+  left: 4rpx;
+  right: 4rpx;
+  bottom: 4rpx;
+  border-radius: 50%;
+  background: #ffffff;
+}
+.player-page.dark-mode .control-btn--primary.is-loading .loading-spinner__circle::before {
+  background: #1f2937;
 }
 .control-btn .comment-count {
   position: absolute;
@@ -1455,6 +1478,14 @@ to {
     width: 104rpx;
     height: 104rpx;
 }
+.control-btn--primary .loading-spinner {
+    width: 104rpx;
+    height: 104rpx;
+}
+.control-btn--primary .loading-spinner__circle {
+    width: 104rpx;
+    height: 104rpx;
+}
 .control-btn .comment-count {
     top: 6rpx;
     right: 6rpx;
@@ -1475,6 +1506,14 @@ to {
     height: 72rpx;
 }
 .control-btn--primary {
+    width: 83rpx;
+    height: 83rpx;
+}
+.control-btn--primary .loading-spinner {
+    width: 83rpx;
+    height: 83rpx;
+}
+.control-btn--primary .loading-spinner__circle {
     width: 83rpx;
     height: 83rpx;
 }
@@ -1501,6 +1540,14 @@ to {
     width: 142rpx;
     height: 142rpx;
 }
+.control-btn--primary .loading-spinner {
+    width: 142rpx;
+    height: 142rpx;
+}
+.control-btn--primary .loading-spinner__circle {
+    width: 142rpx;
+    height: 142rpx;
+}
 }
 @media screen and (max-height: 812px) {
 .control-btn {
@@ -1515,6 +1562,14 @@ to {
     width: 122rpx;
     height: 122rpx;
 }
+.control-btn--primary .loading-spinner {
+    width: 122rpx;
+    height: 122rpx;
+}
+.control-btn--primary .loading-spinner__circle {
+    width: 122rpx;
+    height: 122rpx;
+}
 }
 @media screen and (max-height: 800px) and (min-width: 700px) {
 .control-btn {
@@ -1526,6 +1581,14 @@ to {
     height: 58rpx;
 }
 .control-btn--primary {
+    width: 67rpx;
+    height: 67rpx;
+}
+.control-btn--primary .loading-spinner {
+    width: 67rpx;
+    height: 67rpx;
+}
+.control-btn--primary .loading-spinner__circle {
     width: 67rpx;
     height: 67rpx;
 }
@@ -1608,6 +1671,9 @@ to {
   transform: translateX(-50%);
   margin-bottom: 16rpx;
   animation: bubblePop 0.3s ease-out;
+  -webkit-writing-mode: horizontal-tb;
+          writing-mode: horizontal-tb;
+  text-orientation: mixed;
 }
 .favorite-bubble__arrow {
   position: absolute;
@@ -1625,15 +1691,24 @@ to {
   border-radius: 20rpx;
   padding: 12rpx 20rpx;
   display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 10rpx;
   box-shadow: 0 4rpx 16rpx rgba(0, 215, 205, 0.3);
   white-space: nowrap;
+  -webkit-writing-mode: horizontal-tb;
+          writing-mode: horizontal-tb;
+  text-orientation: mixed;
 }
 .favorite-bubble__text {
   font-size: 22rpx;
   color: #ffffff;
   font-weight: 500;
+  -webkit-writing-mode: horizontal-tb;
+          writing-mode: horizontal-tb;
+  text-orientation: mixed;
+  white-space: nowrap;
 }
 .favorite-bubble__close {
   width: 28rpx;
@@ -1644,6 +1719,9 @@ to {
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.2);
   flex-shrink: 0;
+  -webkit-writing-mode: horizontal-tb;
+          writing-mode: horizontal-tb;
+  text-orientation: mixed;
 }
 .favorite-bubble__close:active {
   background: rgba(255, 255, 255, 0.3);
@@ -1793,6 +1871,13 @@ to {
 /* 暗黑模式下的进度条 */
 .player-page.dark-mode .progress-bar {
   background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* 暗黑模式下的进度条拖动点 - 保持白色背景 */
+.player-page.dark-mode .progress-handle {
+  background-color: #ffffff !important;
+  border: 2rpx solid #00d7cd !important;
+  box-shadow: 0 0 8rpx rgba(0, 0, 0, 0.3) !important;
 }
 .player-page.dark-mode .time-text {
   color: #9ca3af;
@@ -1984,4 +2069,12 @@ to {
 }
 .player-page.dark-mode .picker-item {
   color: #d1d5db;
+}
+@keyframes spin {
+from {
+    transform: rotate(0deg);
+}
+to {
+    transform: rotate(360deg);
+}
 }

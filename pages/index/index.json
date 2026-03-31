@@ -2,7 +2,7 @@
   "navigationBarTitleText": "拼好歌",
   "navigationStyle": "custom",
   "enablePullDownRefresh": true,
-  "backgroundTextStyle": "dark",
+  "backgroundTextStyle": "@backgroundTextStyle",
   "launchMode": "singleTask",
   "usingComponents": {
     "roc-icon-plus": "../../uni_modules/roc-icon-plus/components/roc-icon-plus/roc-icon-plus"
