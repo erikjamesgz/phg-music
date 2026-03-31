@@ -1,6 +1,11 @@
-![拼好歌 Logo](static/logo.png)
-
-# 拼好歌 (PHG Music)
+<div align="center">
+  <img src="static/logo.png" alt="拼好歌 Logo" width="120" height="120"/>
+  
+  # 拼好歌 (PHG Music)
+  
+  一款跨平台音乐播放器工具 · 支持鸿蒙/iPhone/Android
+  
+</div>
 
 ## ✨ 项目简介
 
