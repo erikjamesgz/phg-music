@@ -1214,8 +1214,8 @@ function populateParameters(fromRes, toRes) {
   const parameters = {
     appId: "__UNI__41C20E4",
     appName: "拼好歌",
-    appVersion: "1.0.06",
-    appVersionCode: 1006,
+    appVersion: "1.0.07",
+    appVersionCode: 1007,
     appLanguage: getAppLanguage(hostLanguage),
     uniCompileVersion: "5.03",
     uniCompilerVersion: "5.03",
@@ -1358,8 +1358,8 @@ const getAppBaseInfo = {
     const parameters = {
       appId: "__UNI__41C20E4",
       appName: "拼好歌",
-      appVersion: "1.0.06",
-      appVersionCode: 1006,
+      appVersion: "1.0.07",
+      appVersionCode: 1007,
       appLanguage: getAppLanguage(hostLanguage),
       hostVersion: version2,
       hostLanguage,

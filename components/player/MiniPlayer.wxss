@@ -23,7 +23,7 @@
 /* 垂直间距 */
 /* 透明度 */
 /* 文章场景相关 */
-@keyframes marquee-78971899 {
+@keyframes marquee-a8e7d203 {
 0% {
     transform: translateX(0);
 }
@@ -31,11 +31,11 @@
     transform: translateX(-50%);
 }
 }
-.mini-player-wrapper.data-v-78971899 {
+.mini-player-wrapper.data-v-a8e7d203 {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: var(--b842bbc2);
+  bottom: var(--bd812d5a);
   /* 动态计算底部位置 */
   display: flex;
   flex-direction: column;
@@ -47,13 +47,13 @@
   pointer-events: auto;
   /* 确保可以点击 */
 }
-.mini-player-mp.data-v-78971899 {
+.mini-player-mp.data-v-a8e7d203 {
   position: static !important;
   /* 覆盖原有的relative定位 */
   width: 85% !important;
   margin: 0 auto !important;
 }
-.mini-player.data-v-78971899 {
+.mini-player.data-v-a8e7d203 {
   pointer-events: auto;
   /* 确保可以点击 */
   width: 85%;
@@ -69,27 +69,27 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   overflow: hidden;
 }
-.mini-player__content.data-v-78971899 {
+.mini-player__content.data-v-a8e7d203 {
   padding: 8px 12px;
   display: flex;
   flex-direction: column;
   height: 100%;
   box-sizing: border-box;
 }
-.mini-player__main.data-v-78971899 {
+.mini-player__main.data-v-a8e7d203 {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex: 1;
 }
-.mini-player__left.data-v-78971899 {
+.mini-player__left.data-v-a8e7d203 {
   display: flex;
   align-items: center;
   flex: 1;
   overflow: hidden;
   margin-right: 10px;
 }
-.mini-player__cover-container.data-v-78971899 {
+.mini-player__cover-container.data-v-a8e7d203 {
   position: relative;
   width: 40px;
   height: 40px;
@@ -99,22 +99,22 @@
   flex-shrink: 0;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
-.mini-player__cover.data-v-78971899 {
+.mini-player__cover.data-v-a8e7d203 {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-.mini-player__info.data-v-78971899 {
+.mini-player__info.data-v-a8e7d203 {
   flex: 1;
   overflow: hidden;
 }
-.mini-player__info-row.data-v-78971899 {
+.mini-player__info-row.data-v-a8e7d203 {
   display: flex;
   align-items: center;
   overflow: hidden;
   width: 100%;
 }
-.mini-player__marquee.data-v-78971899 {
+.mini-player__marquee.data-v-a8e7d203 {
   flex: 1;
   overflow: hidden;
   position: relative;
@@ -123,41 +123,41 @@
   display: flex;
   align-items: center;
 }
-.mini-player__marquee-content.data-v-78971899 {
+.mini-player__marquee-content.data-v-a8e7d203 {
   display: flex;
   align-items: center;
   white-space: nowrap;
   flex-shrink: 0;
 }
-.mini-player__marquee-content.scroll.data-v-78971899 {
-  animation: marquee-78971899 10s linear infinite;
+.mini-player__marquee-content.scroll.data-v-a8e7d203 {
+  animation: marquee-a8e7d203 10s linear infinite;
 }
-.mini-player__title.data-v-78971899 {
+.mini-player__title.data-v-a8e7d203 {
   font-size: 13px;
   color: #333333;
   font-weight: 500;
   flex-shrink: 0;
 }
-.mini-player__separator.data-v-78971899 {
+.mini-player__separator.data-v-a8e7d203 {
   color: #999999;
   margin: 0 3px;
   flex-shrink: 0;
 }
-.mini-player__artist.data-v-78971899 {
+.mini-player__artist.data-v-a8e7d203 {
   font-size: 12px;
   color: #999999;
   flex-shrink: 0;
 }
-.mini-player__sq-tag.data-v-78971899 {
+.mini-player__sq-tag.data-v-a8e7d203 {
   flex-shrink: 0;
   margin-right: 4px;
 }
-.mini-player__status-row.data-v-78971899 {
+.mini-player__status-row.data-v-a8e7d203 {
   margin-top: 2px;
   overflow: hidden;
   width: 100%;
 }
-.mini-player__status-marquee.data-v-78971899 {
+.mini-player__status-marquee.data-v-a8e7d203 {
   flex: 1;
   overflow: hidden;
   position: relative;
@@ -166,35 +166,35 @@
   display: flex;
   align-items: center;
 }
-.mini-player__status-content.data-v-78971899 {
+.mini-player__status-content.data-v-a8e7d203 {
   display: flex;
   align-items: center;
   white-space: nowrap;
   flex-shrink: 0;
 }
-.mini-player__status-content.scroll.data-v-78971899 {
-  animation: marquee-78971899 8s linear infinite;
+.mini-player__status-content.scroll.data-v-a8e7d203 {
+  animation: marquee-a8e7d203 8s linear infinite;
 }
-.mini-player__status-text.data-v-78971899 {
+.mini-player__status-text.data-v-a8e7d203 {
   font-size: 11px;
   color: #00c4b8;
   font-weight: 500;
   flex-shrink: 0;
 }
-.mini-player__status-gap.data-v-78971899 {
+.mini-player__status-gap.data-v-a8e7d203 {
   flex-shrink: 0;
 }
-.mini-player__artist-container.data-v-78971899 {
+.mini-player__artist-container.data-v-a8e7d203 {
   display: flex;
   align-items: center;
   margin-top: 2px;
 }
-.mini-player__artist-row.data-v-78971899 {
+.mini-player__artist-row.data-v-a8e7d203 {
   display: flex;
   align-items: center;
   margin-top: 2px;
 }
-.mini-player__sq-tag.data-v-78971899 {
+.mini-player__sq-tag.data-v-a8e7d203 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -209,11 +209,11 @@
   font-weight: bold;
   flex-shrink: 0;
 }
-.mini-player__controls.data-v-78971899 {
+.mini-player__controls.data-v-a8e7d203 {
   display: flex;
   align-items: center;
 }
-.mini-player__play-btn.data-v-78971899 {
+.mini-player__play-btn.data-v-a8e7d203 {
   width: 30px;
   height: 30px;
   border-radius: 50%;
@@ -224,11 +224,11 @@
   justify-content: center;
   margin-right: 10px;
 }
-.mini-player__play-btn.is-loading.data-v-78971899 {
+.mini-player__play-btn.is-loading.data-v-a8e7d203 {
   background: transparent;
   box-shadow: none;
 }
-.mini-player__play-btn .mini-player__loading-spinner.data-v-78971899 {
+.mini-player__play-btn .mini-player__loading-spinner.data-v-a8e7d203 {
   width: 30px;
   height: 30px;
   display: flex;
@@ -236,15 +236,15 @@
   justify-content: center;
   position: relative;
 }
-.mini-player__play-btn .mini-player__loading-spinner .mini-player__loading-circle.data-v-78971899 {
+.mini-player__play-btn .mini-player__loading-spinner .mini-player__loading-circle.data-v-a8e7d203 {
   width: 30px;
   height: 30px;
   border-radius: 50%;
   background: conic-gradient(from 0deg, #00d7cd, #00afff, #00d7cd);
-  animation: spin-78971899 1s linear infinite;
+  animation: spin-a8e7d203 1s linear infinite;
   position: relative;
 }
-.mini-player__play-btn .mini-player__loading-spinner .mini-player__loading-circle.data-v-78971899::before {
+.mini-player__play-btn .mini-player__loading-spinner .mini-player__loading-circle.data-v-a8e7d203::before {
   content: "";
   position: absolute;
   top: 2px;
@@ -254,14 +254,14 @@
   border-radius: 50%;
   background: #ffffff;
 }
-.mini-player__next-btn.data-v-78971899 {
+.mini-player__next-btn.data-v-a8e7d203 {
   width: 30px;
   height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.mini-player__progress.data-v-78971899 {
+.mini-player__progress.data-v-a8e7d203 {
   height: 4px;
   background-color: rgba(0, 0, 0, 0.1);
   border-radius: 2px;
@@ -273,12 +273,12 @@
   overflow: visible;
   /* 确保在微信小程序中进度点可见 */
 }
-.mini-player__progress-bar.data-v-78971899 {
+.mini-player__progress-bar.data-v-a8e7d203 {
   height: 100%;
   background: linear-gradient(90deg, #00d7cd 0%, #00afff 100%);
   border-radius: 2px;
 }
-.mini-player__progress-dot.data-v-78971899 {
+.mini-player__progress-dot.data-v-a8e7d203 {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
@@ -298,51 +298,51 @@
 }
 
 /* 暗黑模式样式 - 基于 class */
-.mini-player.dark-mode.data-v-78971899 {
+.mini-player.dark-mode.data-v-a8e7d203 {
   background-color: rgba(31, 41, 55, 0.95);
   border: 0.5px solid rgba(255, 255, 255, 0.05);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   /* 暗黑模式下的进度条拖动点 - 保持白色背景 */
 }
-.mini-player.dark-mode .mini-player__title.data-v-78971899 {
+.mini-player.dark-mode .mini-player__title.data-v-a8e7d203 {
   color: #ffffff;
 }
-.mini-player.dark-mode .mini-player__sq-tag.data-v-78971899 {
+.mini-player.dark-mode .mini-player__sq-tag.data-v-a8e7d203 {
   background-color: rgba(0, 215, 205, 0.2);
   color: #33dfd8;
 }
-.mini-player.dark-mode .mini-player__artist.data-v-78971899 {
+.mini-player.dark-mode .mini-player__artist.data-v-a8e7d203 {
   color: #9ca3af;
 }
-.mini-player.dark-mode .mini-player__status-row.data-v-78971899 {
+.mini-player.dark-mode .mini-player__status-row.data-v-a8e7d203 {
   margin-top: 2px;
 }
-.mini-player.dark-mode .mini-player__status-text.data-v-78971899 {
+.mini-player.dark-mode .mini-player__status-text.data-v-a8e7d203 {
   font-size: 12px;
   color: #00d0c4;
   font-weight: 500;
 }
-.mini-player.dark-mode .mini-player__play-btn.is-loading .mini-player__loading-circle.data-v-78971899::before {
+.mini-player.dark-mode .mini-player__play-btn.is-loading .mini-player__loading-circle.data-v-a8e7d203::before {
   background: #1f2937;
 }
-.mini-player.dark-mode .mini-player__artist-row.data-v-78971899 {
+.mini-player.dark-mode .mini-player__artist-row.data-v-a8e7d203 {
   margin-top: 2px;
 }
-.mini-player.dark-mode .mini-player__progress.data-v-78971899 {
+.mini-player.dark-mode .mini-player__progress.data-v-a8e7d203 {
   background-color: rgba(255, 255, 255, 0.1);
 }
-.mini-player.dark-mode .mini-player__progress-dot.data-v-78971899 {
+.mini-player.dark-mode .mini-player__progress-dot.data-v-a8e7d203 {
   background-color: #ffffff !important;
   border: 1px solid #00d7cd !important;
   box-shadow: 0 0 4px rgba(0, 0, 0, 0.3) !important;
 }
 
 /* 评论弹幕样式 - 使用fixed定位确保在屏幕上正确显示 */
-.mini-player-danmaku-area.data-v-78971899 {
+.mini-player-danmaku-area.data-v-a8e7d203 {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(var(--b842bbc2) + 75px);
+  bottom: calc(var(--bd812d5a) + 75px);
   /* 在MiniPlayer上方，保持间距 */
   height: 28px;
   overflow: visible;
@@ -352,11 +352,11 @@
 
 /* iPhone 12 Pro Max 到 iPhone 15 Pro Max 等中等屏幕尺寸的适配 */
 @media screen and (min-width: 390px) and (max-width: 430px) {
-.mini-player-danmaku-area.data-v-78971899 {
+.mini-player-danmaku-area.data-v-a8e7d203 {
     margin-bottom: 12px;
 }
 }
-.mini-player__danmaku-item.data-v-78971899 {
+.mini-player__danmaku-item.data-v-a8e7d203 {
   position: absolute;
   display: flex;
   flex-direction: row;
@@ -366,7 +366,7 @@
   background-color: rgba(0, 0, 0, 0.25);
   border-radius: 10px;
   white-space: nowrap;
-  animation: mini-danmaku-move-78971899 15s linear forwards;
+  animation: mini-danmaku-move-a8e7d203 15s linear forwards;
   pointer-events: none;
   /* 确保单行显示，高度固定 */
   height: 28px;
@@ -377,13 +377,13 @@
   right: 0;
   transform: translateX(100%);
 }
-.mini-player__danmaku-item.dark-mode.data-v-78971899 {
+.mini-player__danmaku-item.dark-mode.data-v-a8e7d203 {
   background-color: rgba(255, 255, 255, 0.08);
 }
-.mini-player__danmaku-item.paused.data-v-78971899 {
+.mini-player__danmaku-item.paused.data-v-a8e7d203 {
   animation-play-state: paused;
 }
-@keyframes mini-danmaku-move-78971899 {
+@keyframes mini-danmaku-move-a8e7d203 {
 0% {
     transform: translateX(100%);
 }
@@ -391,7 +391,7 @@
     transform: translateX(-100vw);
 }
 }
-.danmaku-user.data-v-78971899 {
+.danmaku-user.data-v-a8e7d203 {
   color: #ff8c00;
   font-size: 10px;
   font-weight: 500;
@@ -399,18 +399,18 @@
   flex-shrink: 0;
   white-space: nowrap;
 }
-.dark-mode .danmaku-user.data-v-78971899 {
+.dark-mode .danmaku-user.data-v-a8e7d203 {
   color: #ffca28;
 }
-.danmaku-text.data-v-78971899 {
+.danmaku-text.data-v-a8e7d203 {
   color: #ffffff;
   font-size: 10px;
   white-space: nowrap;
 }
-.dark-mode .danmaku-text.data-v-78971899 {
+.dark-mode .danmaku-text.data-v-a8e7d203 {
   color: #ffffff;
 }
-@keyframes spin-78971899 {
+@keyframes spin-a8e7d203 {
 from {
     transform: rotate(0deg);
 }

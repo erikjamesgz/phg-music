@@ -1,12 +1,12 @@
 {
-  "version": "1.0.06",
-  "versionCode": 1006,
-  "desc": "1. 发布 Android独立安装包，有需要的用户可以前往下载安装\n2. 添加记录历史播放功能\n3. 修复歌单的播放数据同步问题\n4.兼容Android系统运行环境\n4.优化平板界面效果提高使用体验\n5.修复若干小bug",
+  "version": "1.0.07",
+  "versionCode": 1007,
+  "desc": "1. Android版修复状态栏不能正常切换歌曲问题\n2. 添加脚本源成功率统计功能\n3. 修复歌单的播放数据同步问题\n4.添加显示当前使用那个脚本源获取的数据的提醒",
   "releaseUrl": "",
   "projectUrl": "https://github.com/erikjamesgz/phg-music",
   "platforms": {
     "android": {
-      "downloadUrl": "https://github.com/erikjamesgz/phg-music/releases/download/phg-music-v1.0.06-release/phg-music-android-v1.0.06-release-20260330.apk"
+      "downloadUrl": "https://github.com/erikjamesgz/phg-music/releases/download/phg-music-v1.0.07-release/phg-music-android-v1.0.07-release-20260404.apk"
     },
     "ios": {
       "downloadUrl": ""

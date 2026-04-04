@@ -58,6 +58,7 @@ const _sfc_main = {
     }));
     const showOnlineImport = common_vendor.ref(false);
     const sources = common_vendor.ref([]);
+    const isLoading = common_vendor.ref(true);
     const activities = common_vendor.ref([]);
     const initDefaultSources = () => {
       const hasInitialized = common_vendor.index.getStorageSync("music_sources_initialized");
@@ -79,6 +80,7 @@ const _sfc_main = {
       common_vendor.index.navigateBack();
     };
     const fetchMusicSources = () => {
+      isLoading.value = true;
       const serverUrl = utils_config.getServerUrl();
       common_vendor.index.request({
         url: `${serverUrl}/api/scripts/loaded`,
@@ -93,19 +95,26 @@ const _sfc_main = {
               version: source.version || "1.0.0",
               developer: source.author || "未知开发者",
               updateDate: source.updateTime || (/* @__PURE__ */ new Date()).toLocaleDateString(),
+              createdAt: source.createdAt || "",
               description: source.description || "远程音源",
               isDefault: source.isDefault || false,
-              selected: source.isDefault || false
+              selected: source.isDefault || false,
+              successRate: source.successRate || 0,
+              isCircuitBroken: source.isCircuitBroken || false,
+              totalRequests: source.totalRequests || 0,
+              failCount: source.failCount || 0
             }));
             utils_musicSourceStorage.saveMusicSources(sources.value);
           } else {
             console.error("[音源管理] 获取音源列表失败:", res.data);
             sources.value = utils_musicSourceStorage.getMusicSources();
           }
+          isLoading.value = false;
         },
         fail: (err) => {
           console.error("[音源管理] 获取音源列表请求失败:", err);
           sources.value = utils_musicSourceStorage.getMusicSources();
+          isLoading.value = false;
         }
       });
     };
@@ -369,93 +378,125 @@ const _sfc_main = {
           color: "#4b5563"
         }),
         c: common_vendor.o(goBack, "4d"),
-        d: sources.value.length === 0
-      }, sources.value.length === 0 ? {
+        d: isLoading.value
+      }, isLoading.value ? {
         e: common_vendor.p({
+          type: "fas",
+          name: "spinner",
+          size: "24",
+          color: "#00d7cd"
+        })
+      } : sources.value.length === 0 ? {
+        g: common_vendor.p({
           type: "fas",
           name: "music",
           size: "48",
           color: "#00d7cd"
         })
       } : {
-        f: common_vendor.f(sources.value, (source, index, i0) => {
+        h: common_vendor.f(sources.value, (source, index, i0) => {
           return common_vendor.e({
-            a: "83a85831-2-" + i0,
+            a: "06660d5b-3-" + i0,
             b: common_vendor.t(source.name),
             c: common_vendor.t(source.version),
-            d: "83a85831-3-" + i0,
-            e: common_vendor.t(source.developer),
-            f: "83a85831-4-" + i0,
-            g: common_vendor.t(source.updateDate),
-            h: "83a85831-5-" + i0,
-            i: common_vendor.t(source.description),
-            j: source.selected
+            d: source.isCircuitBroken
+          }, source.isCircuitBroken ? {} : {}, {
+            e: "06660d5b-4-" + i0,
+            f: common_vendor.t(source.developer || "未知"),
+            g: "06660d5b-5-" + i0,
+            h: common_vendor.t(source.createdAt || source.updateDate),
+            i: source.description
+          }, source.description ? {
+            j: "06660d5b-6-" + i0,
+            k: common_vendor.p({
+              type: "fas",
+              name: "comment-alt",
+              size: "12",
+              color: "#999"
+            }),
+            l: common_vendor.t(source.description)
+          } : {}, {
+            m: "06660d5b-7-" + i0,
+            n: common_vendor.p({
+              type: "fas",
+              name: "chart-line",
+              size: "12",
+              color: source.successRate >= 80 ? "#10b981" : source.successRate >= 50 ? "#f59e0b" : "#ef4444"
+            }),
+            o: common_vendor.t((source.successRate * 100).toFixed(2)),
+            p: "06660d5b-8-" + i0,
+            q: common_vendor.t(source.totalRequests),
+            r: common_vendor.t(source.failCount),
+            s: source.isCircuitBroken
+          }, source.isCircuitBroken ? {} : {}, {
+            t: source.selected
           }, source.selected ? {
-            k: "83a85831-6-" + i0,
-            l: common_vendor.p({
+            v: "06660d5b-9-" + i0,
+            w: common_vendor.p({
               type: "fas",
               name: "check-circle",
               size: "18",
               color: "#6dc380"
             })
           } : {}, {
-            m: common_vendor.o(($event) => openSourceActions(source), source.id),
-            n: source.id,
-            o: source.selected ? 1 : "",
-            p: common_vendor.o(($event) => selectSource(source.id), source.id)
+            x: common_vendor.o(($event) => openSourceActions(source), source.id),
+            y: source.id,
+            z: source.selected ? 1 : "",
+            A: common_vendor.o(($event) => selectSource(source.id), source.id)
           });
         }),
-        g: common_vendor.p({
+        i: common_vendor.p({
           type: "fas",
           name: "music",
           size: "20",
           color: "#00d7cd"
         }),
-        h: common_vendor.p({
+        j: common_vendor.p({
           type: "fas",
           name: "user",
           size: "12",
           color: "#999"
         }),
-        i: common_vendor.p({
+        k: common_vendor.p({
           type: "fas",
           name: "calendar-alt",
           size: "12",
           color: "#999"
         }),
-        j: common_vendor.p({
+        l: common_vendor.p({
           type: "fas",
-          name: "comment-alt",
+          name: "exchange-alt",
           size: "12",
           color: "#999"
         })
       }, {
-        k: common_vendor.p({
+        f: sources.value.length === 0,
+        m: common_vendor.p({
           type: "fas",
           name: "cloud-download-alt",
           size: "20",
           color: "#0084ff"
         }),
-        l: common_vendor.o(importOnline, "df"),
-        m: common_vendor.p({
+        n: common_vendor.o(importOnline, "68"),
+        o: common_vendor.p({
           type: "fas",
           name: "file-import",
           size: "20",
           color: "#00d7cd"
         }),
-        n: common_vendor.o(importLocal, "dd"),
-        o: activities.value.length === 0
+        p: common_vendor.o(importLocal, "ad"),
+        q: activities.value.length === 0
       }, activities.value.length === 0 ? {
-        p: common_vendor.p({
+        r: common_vendor.p({
           type: "fas",
           name: "history",
           size: "48",
           color: "#7b68ee"
         })
       } : {
-        q: common_vendor.f(activities.value, (activity, index, i0) => {
+        s: common_vendor.f(activities.value, (activity, index, i0) => {
           return {
-            a: "83a85831-10-" + i0,
+            a: "06660d5b-13-" + i0,
             b: common_vendor.p({
               type: "fas",
               name: getActivityIcon(activity.type),
@@ -468,39 +509,39 @@ const _sfc_main = {
           };
         })
       }, {
-        r: showOnlineImport.value
+        t: showOnlineImport.value
       }, showOnlineImport.value ? common_vendor.e({
-        s: common_vendor.p({
+        v: common_vendor.p({
           type: "fas",
           name: "times",
           size: "20",
           color: "#999"
         }),
-        t: common_vendor.o(closeOnlineImportPopup, "3e"),
-        v: importing.value,
-        w: importUrl.value,
-        x: common_vendor.o(($event) => importUrl.value = $event.detail.value, "0e"),
-        y: common_vendor.o(closeOnlineImportPopup, "0d"),
-        z: importing.value ? 1 : "",
-        A: importing.value
+        w: common_vendor.o(closeOnlineImportPopup, "5b"),
+        x: importing.value,
+        y: importUrl.value,
+        z: common_vendor.o(($event) => importUrl.value = $event.detail.value, "e5"),
+        A: common_vendor.o(closeOnlineImportPopup, "e9"),
+        B: importing.value ? 1 : "",
+        C: importing.value
       }, importing.value ? {
-        B: common_vendor.p({
+        D: common_vendor.p({
           type: "fas",
           name: "spinner",
           size: "16",
           color: "#fff"
         })
       } : {}, {
-        C: common_vendor.o(startImport, "a3"),
-        D: importing.value || !importUrl.value.trim() ? 1 : "",
-        E: common_vendor.o(() => {
-        }, "7a"),
-        F: common_vendor.o(closeOnlineImportPopup, "5e")
+        E: common_vendor.o(startImport, "e7"),
+        F: importing.value || !importUrl.value.trim() ? 1 : "",
+        G: common_vendor.o(() => {
+        }, "af"),
+        H: common_vendor.o(closeOnlineImportPopup, "fe")
       }) : {}, {
-        G: isDarkMode.value ? 1 : ""
+        I: isDarkMode.value ? 1 : ""
       });
     };
   }
 };
-const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-83a85831"]]);
+const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-06660d5b"]]);
 wx.createPage(MiniProgramPage);

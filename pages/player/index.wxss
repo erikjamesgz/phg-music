@@ -995,7 +995,7 @@ to {
 }
 .lyrics-scroll-wrapper {
   width: 100%;
-  height: var(--42f68f4d);
+  height: var(--f9a32904);
   overflow: hidden;
 }
 .lyrics-scroll-view {

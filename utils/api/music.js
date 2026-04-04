@@ -79,7 +79,7 @@ function getMusicUrl(params, quality = "320k") {
         "Content-Type": "application/json"
       },
       success: async (res) => {
-        var _a3, _b2, _c2, _d, _e;
+        var _a3, _b2, _c2, _d, _e, _f, _g;
         if (lastRequestInfo.requestId !== currentRequestId) {
           console.log("[getMusicUrl] 忽略过期响应:", {
             currentRequestId,
@@ -152,10 +152,16 @@ function getMusicUrl(params, quality = "320k") {
             tlyric: data.tlyric || "",
             rlyric: data.rlyric || "",
             lxlyric: data.lxlyric || "",
-            fallback: data.fallback || null
+            fallback: data.fallback || null,
+            scriptName: ((_e = res.data.data) == null ? void 0 : _e.scriptName) || ""
           });
         } else {
-          reject(new Error(((_e = res.data) == null ? void 0 : _e.msg) || "获取播放URL失败"));
+          resolve({
+            url: null,
+            error: true,
+            errorMsg: ((_f = res.data) == null ? void 0 : _f.msg) || "获取播放URL失败",
+            errorData: ((_g = res.data) == null ? void 0 : _g.data) || null
+          });
         }
       },
       fail: (err) => {

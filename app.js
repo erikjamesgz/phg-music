@@ -33,9 +33,7 @@ const _sfc_main = {
       // 非 iOS 设备快速 onPlay 检测相关
       isIOS: false,
       // 主题监听器初始化标志
-      themeChangeListenerInitialized: false,
-      // 电池优化检查标志（首次播放后10秒检查）
-      hasCheckedBatteryOptimization: false
+      themeChangeListenerInitialized: false
     };
   },
   onLaunch: async function() {
@@ -122,7 +120,7 @@ const _sfc_main = {
     this.checkSystemTheme();
   },
   onHide: function() {
-    var _a, _b;
+    var _a, _b, _c, _d, _e, _f, _g;
     console.log("[App] 应用隐藏");
     const state = store_modules_player.playerStore.getState();
     const currentPlayerListId = store_modules_list.listStore.state.playInfo.playerListId || "temp";
@@ -131,14 +129,36 @@ const _sfc_main = {
     if (currentPlayerListId === "temp") {
       const tempListMeta = store_modules_list.listStore.state.tempList.meta;
       if (tempListMeta && tempListMeta.id) {
-        saveListId = tempListMeta.id;
-        console.log("[App] onHide 临时列表的真实歌单ID:", saveListId);
+        if (tempListMeta.link) {
+          const link = tempListMeta.link;
+          let extractedId = "";
+          if (link.includes("y.qq.com/n/ryqq/playlist/")) {
+            extractedId = ((_a = link.split("playlist/")[1]) == null ? void 0 : _a.split("?")[0]) || link;
+          } else if (link.includes("kuwo.cn/playlist_detail/")) {
+            extractedId = ((_b = link.split("playlist_detail/")[1]) == null ? void 0 : _b.split("?")[0]) || link;
+          } else if (link.includes("digest-")) {
+            extractedId = link;
+          } else if (link.includes("kugou.com/yy/special/single/")) {
+            extractedId = ((_c = link.split("single/")[1]) == null ? void 0 : _c.split(".")[0]) || link;
+          } else if (link.includes("music.163.com/playlist?id=")) {
+            extractedId = ((_d = link.split("id=")[1]) == null ? void 0 : _d.split("&")[0]) || link;
+          } else if (link.includes("music.migu.cn/v3/music/playlist/")) {
+            extractedId = ((_e = link.split("playlist/")[1]) == null ? void 0 : _e.split("?")[0]) || link;
+          } else {
+            extractedId = link;
+          }
+          saveListId = extractedId || tempListMeta.id;
+          console.log("[App] onHide 从 link 提取的歌单ID:", saveListId);
+        } else {
+          saveListId = tempListMeta.id;
+          console.log("[App] onHide 临时列表的真实歌单ID:", saveListId);
+        }
       }
       playlist = store_modules_list.listStore.state.tempList.list;
     } else {
       playlist = store_modules_list.listStore.getList(currentPlayerListId);
     }
-    console.log("[App] onHide 检查播放状态, currentSong:", (_a = state.currentSong) == null ? void 0 : _a.name, "ID:", (_b = state.currentSong) == null ? void 0 : _b.id, "saveListId:", saveListId, "playlist长度:", playlist == null ? void 0 : playlist.length);
+    console.log("[App] onHide 检查播放状态, currentSong:", (_f = state.currentSong) == null ? void 0 : _f.name, "ID:", (_g = state.currentSong) == null ? void 0 : _g.id, "saveListId:", saveListId, "playlist长度:", playlist == null ? void 0 : playlist.length);
     if (state.currentSong && state.currentSong.id && state.currentSong.id !== 0 && playlist && playlist.length > 0) {
       console.log("[App] onHide 立即保存播放状态, 歌曲:", state.currentSong.name, "进度:", state.currentTime);
       utils_playInfoStorage.savePlayState({
@@ -173,6 +193,7 @@ const _sfc_main = {
       }
       if (audioManager) {
         audioManager.onPlay(() => {
+          var _a;
           console.log("[BackgroundAudio] onPlay");
           const state = store_modules_player.playerStore.getState();
           if (state)
@@ -187,17 +208,24 @@ const _sfc_main = {
             state2.isUsingCachedUrl = false;
           this.playStartTime = Date.now();
           if (state2 && state2._pendingSeekTime > 0 && state2.duration > 0) {
-            console.log("[BackgroundAudio] onPlay - 恢复播放进度:", state2._pendingSeekTime);
-            const seekTime = Math.min(state2._pendingSeekTime, state2.duration - 1);
-            if (seekTime > 0) {
-              setTimeout(() => {
-                console.log("[BackgroundAudio] onPlay - 执行 seek 到:", seekTime);
-                audioManager.seek(seekTime);
-                state2.currentTime = seekTime;
-              }, 500);
+            const currentSongId = (_a = state2.currentSong) == null ? void 0 : _a.id;
+            const pendingSongId = state2._pendingSeekSongId;
+            if (pendingSongId && currentSongId === pendingSongId) {
+              console.log("[BackgroundAudio] onPlay - 歌曲ID匹配，恢复播放进度:", state2._pendingSeekTime, "歌曲ID:", currentSongId);
+              const seekTime = Math.min(state2._pendingSeekTime, state2.duration - 1);
+              if (seekTime > 0) {
+                setTimeout(() => {
+                  console.log("[BackgroundAudio] onPlay - 执行 seek 到:", seekTime);
+                  audioManager.seek(seekTime);
+                  state2.currentTime = seekTime;
+                }, 500);
+              }
+            } else {
+              console.log("[BackgroundAudio] onPlay - 歌曲ID不匹配，跳过恢复进度。当前歌曲ID:", currentSongId, "待恢复歌曲ID:", pendingSongId);
             }
             state2._pendingSeekTime = 0;
             state2._pendingSeekDuration = 0;
+            state2._pendingSeekSongId = null;
           }
         });
         audioManager.onPause(() => {

@@ -9,6 +9,7 @@ const utils_lyric = require("../../utils/lyric.js");
 const utils_kgLyricDecoder = require("../../utils/kgLyricDecoder.js");
 const utils_system = require("../../utils/system.js");
 const utils_imageProxy = require("../../utils/imageProxy.js");
+const utils_musicSwitchSourceStorage = require("../../utils/musicSwitchSourceStorage.js");
 if (!Math) {
   (RocIconPlus + DanmakuView + MusicComment + MusicToggleModal)();
 }
@@ -20,7 +21,7 @@ const _sfc_main = {
   __name: "index",
   setup(__props) {
     common_vendor.useCssVars((_ctx) => ({
-      "d99b7768": lyricsContainerHeight.value + "rpx"
+      "c9bd428a": lyricsContainerHeight.value + "rpx"
     }));
     const instance = common_vendor.getCurrentInstance();
     const statusBarHeight = common_vendor.ref(utils_system.getStatusBarHeight());
@@ -732,8 +733,22 @@ const _sfc_main = {
       store_modules_player.playerStore.togglePlay();
     };
     const playNext = async () => {
-      console.log("[Player] 播放下一首");
-      const togglePlayMethod = playMode.value === "random" ? "random" : "listLoop";
+      console.log("[Player] 播放下一首, 当前播放模式:", playMode.value);
+      let togglePlayMethod;
+      switch (playMode.value) {
+        case "random":
+          togglePlayMethod = "random";
+          break;
+        case "singleLoop":
+          togglePlayMethod = "listLoop";
+          break;
+        case "list":
+          togglePlayMethod = "list";
+          break;
+        default:
+          togglePlayMethod = "listLoop";
+      }
+      console.log("[Player] 使用的切换方法:", togglePlayMethod);
       if (store_modules_player.playerStore.getState().isGettingUrl) {
         console.log("[Player] 正在获取播放链接，只更新待播放歌曲");
         const nextSongInfo2 = store_modules_list.listStore.getNextSong(togglePlayMethod, false);
@@ -758,11 +773,25 @@ const _sfc_main = {
       await playSongFromList(nextSongInfo);
     };
     const playPrev = async () => {
-      console.log("[Player] 播放上一首");
+      console.log("[Player] 播放上一首, 当前播放模式:", playMode.value);
+      let togglePlayMethod;
+      switch (playMode.value) {
+        case "random":
+          togglePlayMethod = "random";
+          break;
+        case "singleLoop":
+          togglePlayMethod = "listLoop";
+          break;
+        case "list":
+          togglePlayMethod = "list";
+          break;
+        default:
+          togglePlayMethod = "listLoop";
+      }
+      console.log("[Player] 使用的切换方法:", togglePlayMethod);
       if (store_modules_player.playerStore.getState().isGettingUrl) {
         console.log("[Player] 正在获取播放链接，只更新待播放歌曲");
-        const togglePlayMethod2 = playMode.value === "random" ? "random" : "listLoop";
-        const prevSongInfo2 = store_modules_list.listStore.getPrevSong(togglePlayMethod2);
+        const prevSongInfo2 = store_modules_list.listStore.getPrevSong(togglePlayMethod);
         if (prevSongInfo2 && prevSongInfo2.musicInfo) {
           console.log("[Player] 更新待播放歌曲:", prevSongInfo2.musicInfo.name);
           store_modules_player.playerStore.updatePendingSong(prevSongInfo2.musicInfo);
@@ -770,7 +799,6 @@ const _sfc_main = {
         return;
       }
       store_modules_player.playerStore.setGettingUrl(true);
-      const togglePlayMethod = playMode.value === "random" ? "random" : "listLoop";
       const prevSongInfo = store_modules_list.listStore.getPrevSong(togglePlayMethod);
       if (!prevSongInfo || !prevSongInfo.musicInfo) {
         console.log("[Player] 没有上一首歌曲");
@@ -1174,8 +1202,23 @@ const _sfc_main = {
       const { originalSong: originalSong2, newSong } = data;
       console.log("[Player] 确认换源:", {
         from: originalSong2.name,
-        to: newSong.name
+        to: newSong.name,
+        originalId: originalSong2.id,
+        newId: newSong.id
       });
+      const songIdStr = String(originalSong2.id || "");
+      const songKey = songIdStr.replace(/^(tx|wy|kg|kw|mg)_/, "") || songIdStr;
+      console.log("[Player] 保存换源信息, 原始歌曲ID:", songKey, "原始source:", originalSong2.source, "新source:", newSong.source);
+      utils_musicSwitchSourceStorage.saveMusicSwitchSource(songKey, {
+        originalSource: originalSong2.source,
+        newSource: newSong.source,
+        newSongId: newSong.id,
+        newSongName: newSong.name,
+        newSongSinger: newSong.singer,
+        url: newSong.url || newSong.playUrl || "",
+        quality: newSong.quality || "standard"
+      });
+      console.log("[Player] 已保存换源信息到本地存储, 新歌曲ID:", newSong.id);
       const musicInfo = {
         ...newSong,
         id: newSong.id,

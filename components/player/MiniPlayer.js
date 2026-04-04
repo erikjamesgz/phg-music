@@ -17,7 +17,7 @@ const _sfc_main = {
   __name: "MiniPlayer",
   setup(__props) {
     common_vendor.useCssVars((_ctx) => ({
-      "b842bbc2": miniPlayerBottom.value
+      "bd812d5a": miniPlayerBottom.value
     }));
     let instance = null;
     try {
@@ -26,14 +26,14 @@ const _sfc_main = {
       console.log("[MiniPlayer] getCurrentInstance failed:", e);
     }
     const getInstance = () => instance;
-    const currentSong = common_vendor.computed(() => store_modules_player.playerStore.getState().currentSong);
-    const originalSong = common_vendor.computed(() => store_modules_player.playerStore.getState().originalSong);
-    const playing = common_vendor.computed(() => store_modules_player.playerStore.getState().playing);
-    const playMode = common_vendor.computed(() => store_modules_player.playerStore.getState().playMode);
-    const isLoading = common_vendor.computed(() => store_modules_player.playerStore.getState().isLoading);
-    const playlist = common_vendor.computed(() => store_modules_player.playerStore.getState().playlist);
-    const currentTime = common_vendor.computed(() => store_modules_player.playerStore.getState().currentTime);
-    const duration = common_vendor.computed(() => store_modules_player.playerStore.getState().duration);
+    const currentSong = common_vendor.computed(() => store_modules_player.playerStore.state.currentSong);
+    const originalSong = common_vendor.computed(() => store_modules_player.playerStore.state.originalSong);
+    const playing = common_vendor.computed(() => store_modules_player.playerStore.state.playing);
+    const playMode = common_vendor.computed(() => store_modules_player.playerStore.state.playMode);
+    const isLoading = common_vendor.computed(() => store_modules_player.playerStore.state.isLoading);
+    const playlist = common_vendor.computed(() => store_modules_player.playerStore.state.playlist);
+    const currentTime = common_vendor.computed(() => store_modules_player.playerStore.state.currentTime);
+    const duration = common_vendor.computed(() => store_modules_player.playerStore.state.duration);
     const tabBarBottom = common_vendor.ref(0);
     const tabBarHeight = common_vendor.ref(0);
     const screenWidth = common_vendor.ref(375);
@@ -698,10 +698,10 @@ const _sfc_main = {
       playerStatusText.value = "";
     };
     const statusText = common_vendor.computed(() => playerStatusText.value);
-    common_vendor.watch(() => store_modules_player.playerStore.getState().lyric, updateCachedLyrics, { immediate: true });
-    common_vendor.watch(() => store_modules_player.playerStore.getState().lxlyric, updateCachedLyrics);
-    common_vendor.watch(() => store_modules_player.playerStore.getState().currentTime, updateCurrentLyricText);
-    common_vendor.watch(() => store_modules_player.playerStore.getState().statusText, (newVal, oldVal) => {
+    common_vendor.watch(() => store_modules_player.playerStore.state.lyric, updateCachedLyrics, { immediate: true });
+    common_vendor.watch(() => store_modules_player.playerStore.state.lxlyric, updateCachedLyrics);
+    common_vendor.watch(() => store_modules_player.playerStore.state.currentTime, updateCurrentLyricText);
+    common_vendor.watch(() => store_modules_player.playerStore.state.statusText, (newVal, oldVal) => {
       updateCurrentLyricText();
     }, { immediate: true });
     const isTabPage = common_vendor.computed(() => {
@@ -775,13 +775,25 @@ const _sfc_main = {
       store_modules_player.playerStore.togglePlay();
     };
     const playNext = async () => {
+      console.log("[MiniPlayer] 播放下一首, 当前播放模式:", playMode.value);
+      let togglePlayMethod;
+      switch (playMode.value) {
+        case "random":
+          togglePlayMethod = "random";
+          break;
+        case "singleLoop":
+          togglePlayMethod = "listLoop";
+          break;
+        case "list":
+          togglePlayMethod = "list";
+          break;
+        default:
+          togglePlayMethod = "listLoop";
+      }
+      console.log("[MiniPlayer] 使用的切换方法:", togglePlayMethod);
       if (store_modules_player.playerStore.getState().isGettingUrl) {
         console.log("[MiniPlayer] 正在获取播放链接，只更新待播放歌曲");
-        const togglePlayMethod2 = playMode.value === "random" ? "random" : playMode.value === "singleLoop" ? "singleLoop" : "listLoop";
-        if (playMode.value === "singleLoop") {
-          store_modules_player.playerStore.setPlayMode("listLoop");
-        }
-        const nextSongInfo2 = store_modules_list.listStore.getNextSong(togglePlayMethod2, false);
+        const nextSongInfo2 = store_modules_list.listStore.getNextSong(togglePlayMethod, false);
         if (nextSongInfo2 && nextSongInfo2.musicInfo) {
           console.log("[MiniPlayer] 更新待播放歌曲:", nextSongInfo2.musicInfo.name);
           store_modules_player.playerStore.updatePendingSong(nextSongInfo2.musicInfo);
@@ -789,10 +801,6 @@ const _sfc_main = {
         return;
       }
       store_modules_player.playerStore.setGettingUrl(true);
-      const togglePlayMethod = playMode.value === "random" ? "random" : playMode.value === "singleLoop" ? "singleLoop" : "listLoop";
-      if (playMode.value === "singleLoop") {
-        store_modules_player.playerStore.setPlayMode("listLoop");
-      }
       const nextSongInfo = store_modules_list.listStore.getNextSong(togglePlayMethod, false);
       if (!nextSongInfo || !nextSongInfo.musicInfo) {
         console.log("[MiniPlayer] 没有下一首歌曲");
@@ -1054,5 +1062,5 @@ const _sfc_main = {
     };
   }
 };
-const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-78971899"]]);
+const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-a8e7d203"]]);
 wx.createComponent(Component);
