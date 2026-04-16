@@ -13,7 +13,13 @@
 
 ## 🔗 关联项目
 
-- **拼好歌后端服务器** - [dn-phg-music-server](https://github.com/erikjamesgz/dn-phg-music-server)
+- **拼好歌后端服务器 (Cloudflare 版本)** - [cf_phg_music_server](https://github.com/erikjamesgz/cf_phg_music_server)
+  
+  每天免费调用量大，支持多人同时使用（每天10万次调用量），推荐部署
+
+- **拼好歌后端服务器 (Deno 版本)** - [dn-phg-music-server](https://github.com/erikjamesgz/dn-phg-music-server)
+  
+  免费版调用量有限，适合 1-2 人使用（每月1万次调用量，绑定银行卡后每月10万次调用量）；无需配置自定义域名，默认域名可在中国大陆正常访问
 
 ## 📸 应用截图
 
