@@ -11,15 +11,19 @@
 
 "拼好歌"移动端 是一款基于微信小程序的面向技术爱好者的个人跨平台音乐播放器工具，支持鸿蒙系统、iPhone、Android设备直接使用。项目兼容洛雪音乐音源脚本生态（小部分不兼容）。项目是借鉴洛雪音乐源码编写出来的（抄来的）。应用提供完整的播放控制、歌单同步、定时关闭、后台播放完、暗黑模式等功能，界面简洁无广告。核心优势在于打破了iOS平台App必须上架应用市场的限制、鸿蒙系统无法安装Android App的限制。无需越狱、无需签名、无需TestFlight，微信扫码即可使用。项目代码开源且免费，如你是付费使用本项目，建议申请仅退款
 
-## 🔗 关联项目
+## 🔗 关联项目（服务器二选一）
 
-- **拼好歌后端服务器 (Cloudflare 版本)** - [cf_phg_music_server](https://github.com/erikjamesgz/cf_phg_music_server)
-  
-  每天免费调用量大，支持多人同时使用（每天10万次调用量），推荐部署
+### 服务器环境一：Cloudflare 版本（推荐👍🏻）
+**拼好歌后端服务器** - [cf_phg_music_server](https://github.com/erikjamesgz/cf_phg_music_server)
 
-- **拼好歌后端服务器 (Deno 版本)** - [dn-phg-music-server](https://github.com/erikjamesgz/dn-phg-music-server)
-  
-  免费版调用量有限，适合 1-2 人使用（每月1万次调用量，绑定银行卡后每月10万次调用量）；无需配置自定义域名，默认域名可在中国大陆正常访问
+每天免费调用量 **10万次**，支持多人同时使用
+
+### 服务器环境二：Deno 版本
+**拼好歌后端服务器** - [dn-phg-music-server](https://github.com/erikjamesgz/dn-phg-music-server)
+
+- 免费版：每月 1万次调用量，适合 1-2 人使用
+- 免费版绑定银行卡后：每月 10万次调用量
+- 无需配置自定义域名，默认域名可在中国大陆正常访问
 
 ## 📸 应用截图
 
