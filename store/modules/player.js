@@ -9,6 +9,7 @@ const store_modules_list = require("./list.js");
 const store_modules_user = require("./user.js");
 const store_modules_system = require("./system.js");
 const utils_lyricCache = require("../../utils/lyricCache.js");
+const utils_musicPic = require("../../utils/musicPic.js");
 const PLAY_MODE_ICONS = {
   [store_modules_list.PLAY_MODE.listLoop]: "repeat",
   // 列表循环 - repeat 图标
@@ -84,6 +85,18 @@ const state = common_vendor.reactive({
   retryNum: 0,
   // 播放下一首重试次数（用于自动跳过失败歌曲）
   playNextRetryCount: 0,
+  // 是否已因连续失败而强制停止播放（防止停止后继续处理错误）
+  isPlaybackStopped: false,
+  // 当前失败歌曲的ID（用于同一首歌多次error事件去重）
+  currentFailingSongId: null,
+  // 用户主动操作标志（用户点击上一首/下一首时设为true，自动切歌时为false）
+  isUserManualSwitch: false,
+  // 正在恢复播放中（防止竞态条件导致多次调用）
+  isRecoveringPlayback: false,
+  // NativeAudio是否正在处理协议切换恢复（防止与InnerAudio onError冲突）
+  isNativeAudioRecovering: false,
+  // 当前歌曲的协议切换次数（同一首歌最多尝试1次）
+  protocolSwitchCount: 0,
   // 加载超时定时器
   loadTimeout: null,
   // 快速检测超时定时器（5秒，用于缓存URL的快速检测）
@@ -96,6 +109,8 @@ const state = common_vendor.reactive({
   statusText: "",
   // 是否使用缓存的URL播放
   isUsingCachedUrl: false,
+  // 当前播放是否使用了缓存URL（用于错误处理时判断，不会被onPlay重置）
+  usedCachedUrlForCurrentPlay: false,
   // 是否正在获取播放URL
   isGettingUrl: false,
   // 待播放的歌曲（用于处理快速切换）
@@ -104,16 +119,14 @@ const state = common_vendor.reactive({
   showSourceSwitchHint: false,
   // 用户是否正在拖动进度条或点击歌词快进（用于禁用通知栏切歌误判）
   isUserSeeking: false,
+  // 待恢复播放进度的歌曲ID（用于校验是否是同一首歌）
+  _pendingSeekSongId: null,
   // 用户快进操作的防抖定时器
   seekingDebounceTimer: null,
   // 是否已检查过电池优化（App端）
   hasCheckedBatteryOptimization: false,
-  // 待恢复进度的歌曲ID（用于判断是否应该应用快进）
-  _pendingSeekSongId: null,
-  // 当前播放歌曲的音源名称（用于显示"本歌曲由xxx提供音乐服务"）
-  scriptName: "",
-  // 错误信息（用于显示获取失败时的错误提示）
-  errorMsg: ""
+  // 当前歌曲的音源提供者名称（如 [独家音源]）
+  currentScriptName: ""
 });
 function formatTime(time) {
   time = Math.floor(time);
@@ -199,6 +212,27 @@ const playerStore = {
     state.showSourceSwitchHint = false;
     console.log("[playerStore] 隐藏换源提示");
   },
+  syncElectronMedia(songOverride) {
+    var _a, _b;
+    if (typeof window === "undefined" || !window.electronAPI || !window.electronAPI.updatePlayerInfo)
+      return;
+    const song = songOverride || state.currentSong;
+    const source = (song == null ? void 0 : song.sourceId) || (song == null ? void 0 : song.source);
+    let coverUrl = "";
+    try {
+      coverUrl = utils_musicPic.getSongPicUrl(song, source);
+    } catch (e) {
+    }
+    window.electronAPI.updatePlayerInfo({
+      title: (song == null ? void 0 : song.name) || "",
+      artist: this.formatArtists(song),
+      album: ((_a = song == null ? void 0 : song.al) == null ? void 0 : _a.name) || ((_b = song == null ? void 0 : song.album) == null ? void 0 : _b.name) || "",
+      coverUrl,
+      playing: state.playing,
+      duration: state.duration || 0,
+      currentTime: state.currentTime || 0
+    });
+  },
   // 初始化音频上下文
   initAudioContext() {
     if (!state.audioContext) {
@@ -218,13 +252,20 @@ const playerStore = {
       this.clearLoadTimeout();
       this.clearQuickCheckTimeout();
       this.clearStatusText();
-      state.playNextRetryCount = 0;
       state.isUsingCachedUrl = false;
+      if (state.currentScriptName) {
+        setTimeout(() => {
+          if (state.playing && state.currentScriptName) {
+            this.setStatusText(`此歌曲音乐服务由 ${state.currentScriptName} 提供`, 5e3);
+            console.log("[BackgroundAudio] 显示音源提供者信息:", state.currentScriptName);
+          }
+        }, 1e4);
+      }
       if (state._pendingSeekTime > 0 && state.duration > 0) {
         const currentSongId = (_a = state.currentSong) == null ? void 0 : _a.id;
         const pendingSongId = state._pendingSeekSongId;
-        if (pendingSongId && currentSongId === pendingSongId) {
-          console.log("[BackgroundAudio] onPlay - 歌曲ID匹配，恢复播放进度:", state._pendingSeekTime, "歌曲ID:", currentSongId);
+        if (pendingSongId && currentSongId && pendingSongId === currentSongId) {
+          console.log("[BackgroundAudio] onPlay - 恢复播放进度:", state._pendingSeekTime, "歌曲ID匹配:", currentSongId);
           const seekTime = Math.min(state._pendingSeekTime, state.duration - 1);
           if (seekTime > 0) {
             setTimeout(() => {
@@ -234,7 +275,11 @@ const playerStore = {
             }, 500);
           }
         } else {
-          console.log("[BackgroundAudio] onPlay - 歌曲ID不匹配，跳过恢复进度。当前歌曲ID:", currentSongId, "待恢复歌曲ID:", pendingSongId);
+          console.log("[BackgroundAudio] onPlay - 跳过恢复播放进度，歌曲不匹配或无待恢复进度", {
+            currentSongId,
+            pendingSongId,
+            pendingSeekTime: state._pendingSeekTime
+          });
         }
         state._pendingSeekTime = 0;
         state._pendingSeekDuration = 0;
@@ -260,38 +305,21 @@ const playerStore = {
       }
     });
     audio.onTimeUpdate(() => {
-      var _a, _b, _c, _d, _e, _f;
+      var _a;
       state.currentTime = audio.currentTime;
       state.duration = audio.duration;
+      const now = Date.now();
+      if (!state.lastElectronMediaUpdateTime || now - state.lastElectronMediaUpdateTime > 1e3) {
+        state.lastElectronMediaUpdateTime = now;
+        this.syncElectronMedia();
+      }
       if (!state.lastSaveTime || now - state.lastSaveTime > 5e3) {
         state.lastSaveTime = now;
         if (state.currentSong && state.currentSong.id && state.currentSong.id !== 0) {
           let playerListId = store_modules_list.listStore.state.playInfo.playerListId || store_modules_list.LIST_IDS.TEMP;
           let playIndex = store_modules_list.listStore.state.playInfo.playerPlayIndex ?? 0;
           if (playerListId === store_modules_list.LIST_IDS.TEMP && ((_a = store_modules_list.listStore.state.tempList.meta) == null ? void 0 : _a.id)) {
-            const tempListMeta = store_modules_list.listStore.state.tempList.meta;
-            if (tempListMeta.link) {
-              const link = tempListMeta.link;
-              let extractedId = "";
-              if (link.includes("y.qq.com/n/ryqq/playlist/")) {
-                extractedId = ((_b = link.split("playlist/")[1]) == null ? void 0 : _b.split("?")[0]) || link;
-              } else if (link.includes("kuwo.cn/playlist_detail/")) {
-                extractedId = ((_c = link.split("playlist_detail/")[1]) == null ? void 0 : _c.split("?")[0]) || link;
-              } else if (link.includes("digest-")) {
-                extractedId = link;
-              } else if (link.includes("kugou.com/yy/special/single/")) {
-                extractedId = ((_d = link.split("single/")[1]) == null ? void 0 : _d.split(".")[0]) || link;
-              } else if (link.includes("music.163.com/playlist?id=")) {
-                extractedId = ((_e = link.split("id=")[1]) == null ? void 0 : _e.split("&")[0]) || link;
-              } else if (link.includes("music.migu.cn/v3/music/playlist/")) {
-                extractedId = ((_f = link.split("playlist/")[1]) == null ? void 0 : _f.split("?")[0]) || link;
-              } else {
-                extractedId = link;
-              }
-              playerListId = extractedId || tempListMeta.id;
-            } else {
-              playerListId = tempListMeta.id;
-            }
+            playerListId = store_modules_list.listStore.state.tempList.meta.id;
           }
           const playlist = store_modules_list.listStore.getList(playerListId);
           if (playlist && playlist.length > 0) {
@@ -341,10 +369,12 @@ const playerStore = {
         this.refreshMusicUrl();
       } else {
         common_vendor.index.showToast({
-          title: "播放失败，3秒后切换下一首...",
+          title: "播放失败，正在切换下一首...",
           icon: "none"
         });
-        this.handlePlayEndedWithRetry();
+        setTimeout(() => {
+          this.handlePlayEndedWithRetry();
+        }, 1500);
       }
     });
   },
@@ -361,11 +391,15 @@ const playerStore = {
   },
   // 播放指定歌曲
   async playSong(song) {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _A, _B, _C, _D, _E, _F, _G, _H, _I, _J, _K;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _A, _B, _C, _D, _E, _F;
     console.log("[playSong] ========== playSong 被调用 ==========");
     if (!song) {
       console.error("[playSong] song is null or undefined");
       return;
+    }
+    if (state.isGettingUrl) {
+      console.log("[playSong] ⚠️ 检测到 isGettingUrl=true，立即重置为 false");
+      state.isGettingUrl = false;
     }
     if (state.pendingSong && state.pendingSong.id !== song.id) {
       console.log("[playSong] 发现待播放歌曲，使用待播放歌曲:", state.pendingSong.name);
@@ -375,11 +409,13 @@ const playerStore = {
     console.log("[playSong] ========== 开始播放歌曲 ==========");
     console.log("[playSong] 歌曲ID:", song.id);
     console.log("[playSong] 歌曲名称:", song.name);
-    if (state._pendingSeekSongId && state._pendingSeekSongId !== song.id) {
-      console.log("[playSong] 播放的是不同的歌曲，清除待恢复进度。原歌曲ID:", state._pendingSeekSongId, "新歌曲ID:", song.id);
-      state._pendingSeekTime = 0;
-      state._pendingSeekDuration = 0;
-      state._pendingSeekSongId = null;
+    if (song.url || song.playUrl) {
+      console.log("[playSong] ⚠️ 检测到旧URL属性，立即清除");
+      console.log("[playSong] - url:", song.url ? song.url.substring(0, 60) + "..." : "无");
+      console.log("[playSong] - playUrl:", song.playUrl ? song.playUrl.substring(0, 60) + "..." : "无");
+      delete song.url;
+      delete song.playUrl;
+      console.log("[playSong] ✅ 已清除旧URL，将强制从API获取新URL");
     }
     const currentPlayerListId = store_modules_list.listStore.state.playInfo.playerListId;
     const tempListMeta = store_modules_list.listStore.state.tempList.meta;
@@ -451,7 +487,7 @@ const playerStore = {
       } else {
         console.log("[playSong] 歌曲已在试听列表中:", songToAdd.name);
       }
-      console.log("[playSong] 保持 playerListId 为 temp，切歌时将在临时列表中切换");
+      console.log("[playSong] 保持 playerListId 为 TEMP（预览列表），不切换到试听列表");
     }
     if (!state.originalSong || state.originalSong.id !== song.id) {
       state.originalSong = { ...song };
@@ -492,7 +528,11 @@ const playerStore = {
     state.error = null;
     state.retryNum = 0;
     state.lastRefreshSongId = song.id;
+    state.protocolSwitchCount = 0;
     state.isUsingCachedUrl = false;
+    state.usedCachedUrlForCurrentPlay = false;
+    state.currentFailingSongId = null;
+    state.isUserManualSwitch = false;
     this.clearLoadTimeout();
     this.clearQuickCheckTimeout();
     console.log("[playSong] state.currentSong.id:", (_d = state.currentSong) == null ? void 0 : _d.id);
@@ -548,6 +588,7 @@ const playerStore = {
         await utils_musicUrlCache.setCachedMusicUrl(song.id, actualQuality, playUrl, song.source);
         console.log("[playSong] 已将URL保存到缓存");
         state.isUsingCachedUrl = true;
+        state.usedCachedUrlForCurrentPlay = true;
       }
       if (!playUrl) {
         const cachedUrl = await utils_musicUrlCache.getCachedMusicUrl(song.id, actualQuality, song.source);
@@ -555,6 +596,7 @@ const playerStore = {
           console.log("[playSong] 使用缓存的播放URL:", cachedUrl);
           playUrl = cachedUrl;
           state.isUsingCachedUrl = true;
+          state.usedCachedUrlForCurrentPlay = true;
         }
       }
       if (playUrl) {
@@ -597,17 +639,6 @@ const playerStore = {
         console.log("[playSong] 实际使用的音质:", actualQuality);
         this.setStatusText("正在获取播放链接...", 0);
         const result = await utils_api_music.getMusicUrl(song, actualQuality);
-        if (result.error) {
-          console.log("[playSong] API返回错误:", result.errorMsg);
-          state.errorMsg = result.errorMsg;
-          this.setStatusText(result.errorMsg, 0);
-          state.isGettingUrl = false;
-          state.isLoading = false;
-          setTimeout(() => {
-            this.handlePlayEndedWithRetry();
-          }, 1e3);
-          return;
-        }
         console.log("[playSong] API获取成功");
         console.log("[playSong] URL:", result.url);
         console.log("[playSong] 音质:", result.type);
@@ -618,18 +649,13 @@ const playerStore = {
           hasLxlyric: !!result.lxlyric,
           lyricLength: (_s = result.lyric) == null ? void 0 : _s.length
         });
-        state.scriptName = result.scriptName || "";
-        state.errorMsg = "";
         this.clearStatusText();
         state.isGettingUrl = false;
         if (result.scriptName) {
-          const currentSongId = song.id;
-          setTimeout(() => {
-            var _a2;
-            if (((_a2 = state.currentSong) == null ? void 0 : _a2.id) === currentSongId) {
-              this.setStatusText(`本歌曲由 ${result.scriptName} 提供音乐服务`, 1e4);
-            }
-          }, 5e3);
+          state.currentScriptName = result.scriptName;
+          console.log("[playSong] 保存音源提供者名称:", result.scriptName);
+        } else {
+          state.currentScriptName = "";
         }
         if (result.lyric || result.tlyric || result.rlyric || result.lxlyric) {
           this.setLyrics({
@@ -714,6 +740,7 @@ const playerStore = {
       this.addToHistory(song);
       const singerName = this.formatArtists(song);
       store_modules_user.userStore.increaseListenCount(singerName);
+      this.syncElectronMedia(song);
       state.showMiniPlayer = true;
       state.isLoading = false;
       const currentPlayerListId2 = store_modules_list.listStore.state.playInfo.playerListId || store_modules_list.LIST_IDS.DEFAULT;
@@ -723,30 +750,8 @@ const playerStore = {
       if (currentPlayerListId2 === store_modules_list.LIST_IDS.TEMP) {
         const tempListMeta2 = store_modules_list.listStore.state.tempList.meta;
         if (tempListMeta2 && tempListMeta2.id) {
-          if (tempListMeta2.link) {
-            const link = tempListMeta2.link;
-            let extractedId = "";
-            if (link.includes("y.qq.com/n/ryqq/playlist/")) {
-              extractedId = ((_G = link.split("playlist/")[1]) == null ? void 0 : _G.split("?")[0]) || link;
-            } else if (link.includes("kuwo.cn/playlist_detail/")) {
-              extractedId = ((_H = link.split("playlist_detail/")[1]) == null ? void 0 : _H.split("?")[0]) || link;
-            } else if (link.includes("digest-")) {
-              extractedId = link;
-            } else if (link.includes("kugou.com/yy/special/single/")) {
-              extractedId = ((_I = link.split("single/")[1]) == null ? void 0 : _I.split(".")[0]) || link;
-            } else if (link.includes("music.163.com/playlist?id=")) {
-              extractedId = ((_J = link.split("id=")[1]) == null ? void 0 : _J.split("&")[0]) || link;
-            } else if (link.includes("music.migu.cn/v3/music/playlist/")) {
-              extractedId = ((_K = link.split("playlist/")[1]) == null ? void 0 : _K.split("?")[0]) || link;
-            } else {
-              extractedId = link;
-            }
-            saveListId = extractedId || tempListMeta2.id;
-            console.log("[playSong] 从 link 提取的歌单ID:", saveListId);
-          } else {
-            saveListId = tempListMeta2.id;
-            console.log("[playSong] 临时列表的真实歌单ID:", saveListId);
-          }
+          saveListId = tempListMeta2.id;
+          console.log("[playSong] 临时列表的真实歌单ID:", saveListId);
         }
         playlist = store_modules_list.listStore.state.tempList.list;
       } else {
@@ -776,8 +781,8 @@ const playerStore = {
       state.isGettingUrl = false;
       this.clearLoadTimeout();
       this.clearQuickCheckTimeout();
-      console.log("[playSong] 播放失败，自动切换下一首");
-      this.handlePlayEndedWithRetry();
+      console.log("[playSong] 播放失败，调用 handlePlayErrorFallback 进行失败处理");
+      this.handlePlayErrorFallback();
     }
   },
   // 暂停播放
@@ -788,6 +793,7 @@ const playerStore = {
     }
     state.playing = false;
     state.isPlaying = false;
+    this.syncElectronMedia();
   },
   // 停止播放
   stop() {
@@ -804,7 +810,7 @@ const playerStore = {
   },
   // 继续播放
   resume() {
-    var _a, _b, _c;
+    var _a, _b, _c, _d;
     console.log("[resume] 继续播放, 当前 playing 状态:", state.playing);
     console.log("[resume] 当前歌曲:", (_a = state.currentSong) == null ? void 0 : _a.name, "ID:", (_b = state.currentSong) == null ? void 0 : _b.id);
     console.log("[resume] audioContext:", state.audioContext ? "存在" : "不存在");
@@ -827,7 +833,11 @@ const playerStore = {
       const savedDuration = state.duration || 0;
       state._pendingSeekTime = savedTime;
       state._pendingSeekDuration = savedDuration;
-      this.playSong(state.currentSong).then(() => {
+      state._pendingSeekSongId = ((_d = state.currentSong) == null ? void 0 : _d.id) || null;
+      const songForReload = { ...state.currentSong };
+      delete songForReload.url;
+      delete songForReload.playUrl;
+      this.playSong(songForReload).then(() => {
         console.log("[resume] 歌曲重新加载完成");
       }).catch((err) => {
         console.error("[resume] 歌曲重新加载失败:", err);
@@ -837,6 +847,7 @@ const playerStore = {
     if (!state.playing) {
       state.audioContext.play();
       state.playing = true;
+      this.syncElectronMedia();
     }
   },
   // 切换播放/暂停
@@ -866,6 +877,11 @@ const playerStore = {
     console.log("[playNext] ========== 播放下一首 ==========");
     console.log("[playNext] 播放列表长度:", state.playlist.length);
     console.log("[playNext] 当前歌曲:", (_a = state.currentSong) == null ? void 0 : _a.name, "ID:", (_b = state.currentSong) == null ? void 0 : _b.id);
+    console.log("[playNext] 👆 用户主动操作，重置失败计数");
+    state.isUserManualSwitch = true;
+    state.playNextRetryCount = 0;
+    state.isPlaybackStopped = false;
+    state.currentFailingSongId = null;
     const togglePlayMethod = state.playMode === store_modules_list.PLAY_MODE.random ? "random" : state.playMode === store_modules_list.PLAY_MODE.singleLoop ? "singleLoop" : "listLoop";
     if (state.playlist.length === 0) {
       console.log("[playNext] state.playlist 为空，尝试从 listStore 获取下一首");
@@ -911,6 +927,11 @@ const playerStore = {
     console.log("[playPrev] ========== 播放上一首 ==========");
     console.log("[playPrev] 播放列表长度:", state.playlist.length);
     console.log("[playPrev] 当前歌曲:", (_a = state.currentSong) == null ? void 0 : _a.name, "ID:", (_b = state.currentSong) == null ? void 0 : _b.id);
+    console.log("[playPrev] 👆 用户主动操作，重置失败计数");
+    state.isUserManualSwitch = true;
+    state.playNextRetryCount = 0;
+    state.isPlaybackStopped = false;
+    state.currentFailingSongId = null;
     const togglePlayMethod = state.playMode === store_modules_list.PLAY_MODE.random ? "random" : "listLoop";
     if (state.playlist.length === 0) {
       console.log("[playPrev] state.playlist 为空，尝试从 listStore 获取上一首");
@@ -1045,33 +1066,7 @@ const playerStore = {
           }
           console.log("[playerStore] requestData:", JSON.stringify(requestData));
           const musicUrlData = await utils_api_music.getMusicUrl(requestData);
-          if (musicUrlData.error) {
-            console.log("[playerStore] handlePlayEnded API返回错误:", musicUrlData.errorMsg);
-            state.errorMsg = musicUrlData.errorMsg;
-            this.setStatusText(musicUrlData.errorMsg, 0);
-            state.playNextRetryCount = (state.playNextRetryCount || 0) + 1;
-            if (state.playNextRetryCount >= 5) {
-              console.log("[playerStore] 重试次数已达上限，停止播放");
-              state.playNextRetryCount = 0;
-              state.playing = false;
-              state.isLoading = false;
-              return;
-            }
-            await new Promise((resolve) => setTimeout(resolve, 3e3));
-            return this.handlePlayEnded();
-          }
           playUrl = musicUrlData.url;
-          state.scriptName = musicUrlData.scriptName || "";
-          state.errorMsg = "";
-          if (musicUrlData.scriptName) {
-            const currentSongId = nextSongInfo.musicInfo.id;
-            setTimeout(() => {
-              var _a2;
-              if (((_a2 = state.currentSong) == null ? void 0 : _a2.id) === currentSongId) {
-                this.setStatusText(`本歌曲由 ${musicUrlData.scriptName} 提供音乐服务`, 1e4);
-              }
-            }, 5e3);
-          }
           await utils_musicUrlCache.setCachedMusicUrl(nextSongInfo.musicInfo.id, quality, playUrl, nextSongInfo.musicInfo.source);
           lyricData = {
             lyric: musicUrlData.lyric || "",
@@ -1111,34 +1106,32 @@ const playerStore = {
   },
   // 带重试次数限制的播放结束处理
   async handlePlayEndedWithRetry() {
-    state.playNextRetryCount = (state.playNextRetryCount || 0) + 1;
-    console.log("[playerStore] 播放下一首重试次数:", state.playNextRetryCount);
-    if (state.playNextRetryCount >= 5) {
-      console.log("[playerStore] 重试次数已达上限，停止播放");
-      state.playNextRetryCount = 0;
-      state.playing = false;
-      state.isLoading = false;
-      common_vendor.index.showToast({
-        title: "连续播放失败，已停止",
-        icon: "none"
-      });
+    var _a;
+    if (state.isRecoveringPlayback) {
+      console.log("[playerStore] 正在恢复播放中，跳过此次调用");
       return;
     }
-    console.log("[playerStore] 等待3秒后切换下一首...");
-    await new Promise((resolve) => setTimeout(resolve, 3e3));
-    switch (state.playMode) {
-      case "singleLoop":
-        if (state.audioContext) {
-          state.audioContext.seek(0);
-          state.audioContext.play();
-        }
-        break;
-      case "random":
-        await this.handlePlayEnded();
-        break;
-      default:
-        await this.handlePlayEnded();
+    if (state.isPlaybackStopped) {
+      console.warn("[playerStore] ⚠️ 已因连续失败停止播放，忽略此次调用");
+      return;
     }
+    state.isRecoveringPlayback = true;
+    console.log("[playerStore] 切换下一首，当前全局失败次数:", state.playNextRetryCount);
+    const nextSong = store_modules_list.listStore.getNextSong();
+    if (nextSong && nextSong.musicInfo) {
+      console.log("[playerStore] 播放下一首:", nextSong.musicInfo.name, `(全局失败次数: ${state.playNextRetryCount}/5)`);
+      if (nextSong.listId && ((_a = nextSong.musicInfo) == null ? void 0 : _a.id)) {
+        store_modules_list.listStore.updatePlayIndexByListId(nextSong.listId, nextSong.musicInfo.id);
+        console.log("[playerStore] ✅ 已更新 playIndex 到歌曲:", nextSong.musicInfo.name, "ID:", nextSong.musicInfo.id);
+      }
+      playerStore.playSong(nextSong.musicInfo);
+    } else {
+      console.log("[playerStore] 没有下一首歌曲，停止播放");
+      playerStore.pause();
+    }
+    setTimeout(() => {
+      state.isRecoveringPlayback = false;
+    }, 1e3);
   },
   // 默认播放结束处理（备用）
   handlePlayEndedDefault() {
@@ -1239,6 +1232,98 @@ const playerStore = {
     common_vendor.index.setStorageSync("playListHistory", state.playListHistory);
     console.log("[playerStore] 最近播放歌单已更新，当前数量:", state.playListHistory.length);
   },
+  // 清除音乐URL缓存
+  async clearMusicUrlCache(song) {
+    if (!song || !song.id) {
+      console.warn("[clearMusicUrlCache] 无效的歌曲信息");
+      return;
+    }
+    console.log("[clearMusicUrlCache] 开始清除URL缓存:", song.id, song.name);
+    try {
+      const qualities = ["128k", "320k", "flac"];
+      for (const quality of qualities) {
+        await utils_musicUrlCache.removeCachedMusicUrl(song.id, quality, song.source);
+        console.log(`[clearMusicUrlCache] 已清除 ${quality} 缓存`);
+      }
+      console.log("[clearMusicUrlCache] ✅ URL缓存已全部清除");
+    } catch (error) {
+      console.error("[clearMusicUrlCache] ❌ 清除缓存失败:", error);
+      throw error;
+    }
+  },
+  // 处理播放错误的降级方案（2026-04-30重构）
+  // 核心逻辑：
+  //   - 连续5首不同的歌曲自动切换失败 → 强制停止
+  //   - 同一首歌多次error事件（InnerAudio + NativeAudio）→ 只计1次
+  //   - 用户主动切换歌曲 → 重置计数
+  //   - 播放成功（onTimeUpdate > 3秒）→ 重置计数
+  //   - 强制停止后 → 不再处理任何错误，等待用户手动操作
+  handlePlayErrorFallback() {
+    var _a, _b, _c;
+    console.log("[handlePlayErrorFallback] ════════════════════════════");
+    console.log("[handlePlayErrorFallback] 播放失败处理开始");
+    console.log("[handlePlayErrorFallback] 当前歌曲ID:", (_a = state.currentSong) == null ? void 0 : _a.id);
+    console.log("[handlePlayErrorFallback] 当前歌曲名:", (_b = state.currentSong) == null ? void 0 : _b.name);
+    console.log("[handlePlayErrorFallback] 当前全局连续失败次数:", state.playNextRetryCount);
+    console.log("[handlePlayErrorFallback] 是否已停止:", state.isPlaybackStopped);
+    console.log("[handlePlayErrorFallback] 当前失败歌曲ID:", state.currentFailingSongId);
+    console.log("[handlePlayErrorFallback] 是否用户主动切换:", state.isUserManualSwitch);
+    if (state.isPlaybackStopped) {
+      console.warn("[handlePlayErrorFallback] ⚠️ 已因连续失败停止播放，忽略此错误");
+      console.log("[handlePlayErrorFallback] ════════════════════════════");
+      return;
+    }
+    const currentSongId = (_c = state.currentSong) == null ? void 0 : _c.id;
+    if (state.currentFailingSongId === currentSongId) {
+      console.warn("[handlePlayErrorFallback] ⚠️ 同一首歌的重复error事件，跳过计数");
+      console.log("[handlePlayErrorFallback] ════════════════════════════");
+      return;
+    }
+    state.currentFailingSongId = currentSongId;
+    if (state.isUserManualSwitch) {
+      console.log("[handlePlayErrorFallback] ℹ️ 用户主动切换，不计入连续失败");
+      console.log("[handlePlayErrorFallback] ════════════════════════════");
+      setTimeout(() => {
+        this.handlePlayEndedWithRetry();
+      }, 500);
+      return;
+    }
+    state.playNextRetryCount = (state.playNextRetryCount || 0) + 1;
+    console.log("[handlePlayErrorFallback] 📊 连续失败次数:", state.playNextRetryCount, "/5");
+    if (state.playNextRetryCount >= 5) {
+      console.error("[handlePlayErrorFallback] ⛔ 全局连续失败已达5次，强制停止！");
+      state.isPlaybackStopped = true;
+      state.playNextRetryCount = 0;
+      state.currentFailingSongId = null;
+      state.playing = false;
+      state.isLoading = false;
+      state.isGettingUrl = false;
+      if (state.audioContext) {
+        try {
+          state.audioContext.stop();
+        } catch (e) {
+          console.error("[handlePlayErrorFallback] 停止音频失败:", e);
+        }
+      }
+      common_vendor.index.showToast({
+        title: "连续5首播放失败，已停止",
+        icon: "none",
+        duration: 3e3
+      });
+      console.log("[handlePlayErrorFallback] ════════════════════════════");
+      return;
+    }
+    common_vendor.index.showToast({
+      title: `播放失败 (${state.playNextRetryCount}/5)，切换下一首`,
+      icon: "none",
+      duration: 1500
+    });
+    console.log("[handlePlayErrorFallback] 1.5秒后自动切换下一首...");
+    console.log("[handlePlayErrorFallback] ════════════════════════════");
+    setTimeout(() => {
+      this.handlePlayEndedWithRetry();
+    }, 1500);
+  },
   // 刷新播放URL（参考洛雪音乐桌面版实现）
   // 当播放出错或超时时，尝试重新获取播放链接
   async refreshMusicUrl() {
@@ -1252,18 +1337,11 @@ const playerStore = {
       console.log("[refreshMusicUrl] 正在刷新URL，跳过");
       return;
     }
-    if (state.retryNum >= 2) {
-      console.log("[refreshMusicUrl] 重试次数已达上限（2次），切换到下一首");
+    if (state.retryNum >= 1) {
+      console.log("[refreshMusicUrl] 重试次数已达上限（1次），切换到下一首");
       state.isRefreshingUrl = false;
       state.retryNum = 0;
-      const nextSong = store_modules_list.listStore.getNextSong();
-      if (nextSong && nextSong.musicInfo) {
-        console.log("[refreshMusicUrl] 播放下一首:", nextSong.musicInfo.name);
-        playerStore.playSong(nextSong.musicInfo);
-      } else {
-        console.log("[refreshMusicUrl] 没有下一首歌曲，停止播放");
-        playerStore.pause();
-      }
+      this.handlePlayErrorFallback();
       return;
     }
     if (state.lastRefreshSongId !== song.id) {
@@ -1316,14 +1394,6 @@ const playerStore = {
       }
       console.log("[refreshMusicUrl] 请求参数:", JSON.stringify(requestData));
       const result = await utils_api_music.getMusicUrl(requestData);
-      if (result.error) {
-        console.log("[refreshMusicUrl] API返回错误:", result.errorMsg);
-        state.errorMsg = result.errorMsg;
-        this.setStatusText(result.errorMsg, 0);
-        state.isRefreshingUrl = false;
-        state.isLoading = false;
-        return;
-      }
       console.log("[refreshMusicUrl] 获取新URL成功");
       console.log("[refreshMusicUrl] 返回的歌词信息:", {
         hasLyric: !!result.lyric,
@@ -1332,17 +1402,6 @@ const playerStore = {
         hasLxlyric: !!result.lxlyric,
         lyricLength: (_d = result.lyric) == null ? void 0 : _d.length
       });
-      state.scriptName = result.scriptName || "";
-      state.errorMsg = "";
-      if (result.scriptName) {
-        const currentSongId = song.id;
-        setTimeout(() => {
-          var _a2;
-          if (((_a2 = state.currentSong) == null ? void 0 : _a2.id) === currentSongId) {
-            this.setStatusText(`本歌曲由 ${result.scriptName} 提供音乐服务`, 1e4);
-          }
-        }, 5e3);
-      }
       if (result.lyric || result.tlyric || result.rlyric || result.lxlyric) {
         this.setLyrics({
           lyric: result.lyric || "",
@@ -1418,19 +1477,12 @@ const playerStore = {
     } catch (error) {
       console.error("[refreshMusicUrl] 刷新URL失败:", error);
       state.isRefreshingUrl = false;
-      if (state.retryNum < 2) {
-        console.log("[refreshMusicUrl] 准备再次尝试刷新URL");
-        setTimeout(() => {
-          this.refreshMusicUrl();
-        }, 1e3);
-      } else {
-        console.log("[refreshMusicUrl] 重试次数用完，自动切换下一首");
-        common_vendor.index.showToast({
-          title: "播放失败，切换下一首",
-          icon: "none"
-        });
-        this.handlePlayEndedWithRetry();
-      }
+      console.log("[refreshMusicUrl] 刷新URL失败，切换下一首");
+      common_vendor.index.showToast({
+        title: "播放失败，切换下一首",
+        icon: "none"
+      });
+      this.handlePlayErrorFallback();
     }
   },
   // 清除音乐URL缓存
@@ -1452,13 +1504,13 @@ const playerStore = {
       clearTimeout(state.loadTimeout);
     }
     state.loadTimeout = setTimeout(() => {
-      console.log("[startLoadTimeout] 加载超时，准备刷新URL");
+      console.log("[startLoadTimeout] 加载超时，刷新URL");
       this.setStatusText("播放加载超时，正在重试...", 0);
-      if (state.retryNum < 2) {
+      if (state.retryNum < 1) {
         this.refreshMusicUrl();
       } else {
-        console.log("[startLoadTimeout] 重试次数用完，切到下一首");
-        this.handlePlayEndedWithRetry();
+        console.log("[startLoadTimeout] 重试次数用完，切换下一首");
+        this.handlePlayErrorFallback();
       }
     }, 1e4);
     console.log("[startLoadTimeout] 已启动加载超时定时器（10秒）");
@@ -1843,6 +1895,14 @@ const playerStore = {
       });
       if (playState.currentSong) {
         state.currentSong = playState.currentSong;
+        if (state.currentSong.url) {
+          console.log("[playerStore] 恢复状态时清除旧URL");
+          delete state.currentSong.url;
+        }
+        if (state.currentSong.playUrl) {
+          console.log("[playerStore] 恢复状态时清除旧playUrl");
+          delete state.currentSong.playUrl;
+        }
         console.log("[playerStore] 已恢复当前歌曲:", state.currentSong.name, "ID:", state.currentSong.id);
       }
       if (playState.originalSong) {

@@ -1,6 +1,9 @@
 "use strict";
 const common_vendor = require("../common/vendor.js");
 const utils_cache = require("./cache.js");
+function filterHeadersForPlatform(headers) {
+  return headers;
+}
 const pendingPicRequests = /* @__PURE__ */ new Map();
 const picApis = {
   // 网易云音乐 - 从歌曲详情获取
@@ -76,12 +79,12 @@ const picApis = {
         common_vendor.index.request({
           url: "http://media.store.kugou.com/v1/get_res_privilege",
           method: "POST",
-          header: {
+          header: filterHeadersForPlatform({
             "KG-RC": 1,
             "KG-THash": "expand_search_manager.cpp:852736169:451",
             "User-Agent": "KuGou2012-9020-ExpandSearchManager",
             "Content-Type": "application/json"
-          },
+          }),
           data: requestData,
           success: (res) => {
             var _a2;
@@ -164,9 +167,9 @@ const picApis = {
         }
         common_vendor.index.request({
           url: `http://music.migu.cn/v3/api/music/audioPlayer/getSongPic?songId=${songId}`,
-          header: {
+          header: filterHeadersForPlatform({
             Referer: "http://music.migu.cn/v3/music/player/audio?from=migu"
-          },
+          }),
           success: (res) => {
             if (res.data && res.data.returnCode === "000000") {
               let url = res.data.largePic || res.data.mediumPic || res.data.smallPic;

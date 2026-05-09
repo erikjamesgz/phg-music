@@ -62,7 +62,7 @@ const _sfc_main = {
             d: common_vendor.t(item.userName),
             e: item.likedCount !== null && item.likedCount !== void 0
           }, item.likedCount !== null && item.likedCount !== void 0 ? {
-            f: "77b3e9bf-0-" + i0,
+            f: "cd5dace9-0-" + i0,
             g: common_vendor.p({
               type: "far",
               name: "heart",
@@ -102,7 +102,7 @@ const _sfc_main = {
                 d: common_vendor.t(replyItem.userName),
                 e: replyItem.likedCount !== null && replyItem.likedCount !== void 0
               }, replyItem.likedCount !== null && replyItem.likedCount !== void 0 ? {
-                f: "77b3e9bf-1-" + i0 + "-" + i1,
+                f: "cd5dace9-1-" + i0 + "-" + i1,
                 g: common_vendor.p({
                   type: "far",
                   name: "heart",
@@ -134,5 +134,5 @@ const _sfc_main = {
     };
   }
 };
-const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-77b3e9bf"]]);
+const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-cd5dace9"]]);
 wx.createComponent(Component);

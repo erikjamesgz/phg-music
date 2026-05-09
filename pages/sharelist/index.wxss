@@ -23,7 +23,7 @@
 /* 垂直间距 */
 /* 透明度 */
 /* 文章场景相关 */
-.playlist-page.data-v-8a2a2316 {
+.playlist-page.data-v-e99d8857 {
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -32,14 +32,15 @@
 }
 
 /* 固定头部区域 */
-.header-fixed.data-v-8a2a2316 {
+.header-fixed.data-v-e99d8857 {
   flex-shrink: 0;
   position: relative;
   z-index: 10;
+  background: transparent;
 }
 
 /* 背景图 */
-.background-wrapper.data-v-8a2a2316 {
+.background-wrapper.data-v-e99d8857 {
   position: fixed;
   top: 0;
   left: 0;
@@ -48,16 +49,17 @@
   z-index: 0;
   overflow: hidden;
 }
-.background-image.data-v-8a2a2316 {
+.background-image.data-v-e99d8857 {
   width: 100%;
   height: 100%;
+  object-fit: cover;
   filter: blur(15px) brightness(0.7);
   transform: scale(1.2);
 }
-.background-image.gradient-background.data-v-8a2a2316 {
+.background-image.gradient-background.data-v-e99d8857 {
   filter: brightness(0.7);
 }
-.background-overlay.data-v-8a2a2316 {
+.background-overlay.data-v-e99d8857 {
   position: absolute;
   top: 0;
   left: 0;
@@ -66,30 +68,34 @@
   background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.5) 50%, #f8f9fa 100%);
 }
 
-/* 状态栏占位 */
-.status-bar-placeholder.data-v-8a2a2316 {
+/* 状态栏占位 - 完全透明，让背景图透过来 */
+.status-bar-placeholder.data-v-e99d8857 {
   flex-shrink: 0;
   width: 100%;
   position: relative;
   z-index: 10;
+  background: transparent !important;
 }
 
-/* 歌单头部 - 固定不滚动 */
-.playlist-header.data-v-8a2a2316 {
+/* 歌单头部 - 固定不滚动，包含安全高度 */
+.playlist-header.data-v-e99d8857 {
   padding: 0 15px 15px;
   position: relative;
   z-index: 10;
   flex-shrink: 0;
+  width: 100%;
+  box-sizing: border-box;
+  background: transparent;
 }
 
 /* 头部操作区 */
-.header-actions.data-v-8a2a2316 {
+.header-actions.data-v-e99d8857 {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 15px;
 }
-.back-btn.data-v-8a2a2316 {
+.back-btn.data-v-e99d8857 {
   width: 32px;
   height: 32px;
   display: flex;
@@ -98,55 +104,63 @@
   background-color: transparent;
   color: #fff;
 }
-.back-btn roc-icon-plus.data-v-8a2a2316 {
+.back-btn roc-icon-plus.data-v-e99d8857 {
   color: #fff !important;
 }
-.page-title.data-v-8a2a2316 {
+.page-title.data-v-e99d8857 {
   font-size: 16px;
   font-weight: 600;
   color: #fff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
-.placeholder.data-v-8a2a2316 {
+.placeholder.data-v-e99d8857 {
   width: 32px;
 }
 
-/* 歌单信息 */
-.playlist-info.data-v-8a2a2316 {
+/* 歌单信息 - 确保flex布局不影响子元素尺寸 */
+.playlist-info.data-v-e99d8857 {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  width: 100%;
+  box-sizing: border-box;
 }
-.playlist-cover-wrapper.data-v-8a2a2316 {
+
+/* 歌单封面 - 使用背景图方式，最可靠的尺寸控制 */
+.playlist-cover-bg.data-v-e99d8857 {
   width: 120px;
   height: 120px;
+  min-width: 120px;
+  max-width: 120px;
+  flex-shrink: 0;
+  flex-grow: 0;
+  flex-basis: 120px;
   border-radius: 8px;
   overflow: hidden;
   position: relative;
   margin-right: 15px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  flex-shrink: 0;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  box-sizing: border-box;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
 }
-.playlist-cover.data-v-8a2a2316 {
-  width: 100%;
-  height: 100%;
-}
-.playlist-cover.gradient-cover.data-v-8a2a2316 {
+.playlist-cover-bg.gradient-cover.data-v-e99d8857 {
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.gradient-content.data-v-8a2a2316 {
+.gradient-content.data-v-e99d8857 {
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.gradient-background.data-v-8a2a2316 {
+.gradient-background.data-v-e99d8857 {
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.play-count-tag.data-v-8a2a2316 {
+.play-count-tag.data-v-e99d8857 {
   position: absolute;
   bottom: 0;
   left: 0;
@@ -156,27 +170,33 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 2px;
 }
-.play-count-tag.data-v-8a2a2316 roc-icon-plus {
+.play-count-tag > view.data-v-e99d8857 {
+  margin-right: 2px;
+}
+.play-count-tag > view.data-v-e99d8857:last-child {
+  margin-right: 0;
+}
+.play-count-tag.data-v-e99d8857 roc-icon-plus {
   flex-shrink: 0;
   line-height: 1;
   display: flex;
   align-items: center;
 }
-.play-count-tag text.data-v-8a2a2316 {
+.play-count-tag text.data-v-e99d8857 {
   color: #fff;
   font-size: 10px;
   white-space: nowrap;
   line-height: 1;
 }
-.playlist-details.data-v-8a2a2316 {
+.playlist-details.data-v-e99d8857 {
   flex: 1;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
-.playlist-title.data-v-8a2a2316 {
+.playlist-title.data-v-e99d8857 {
   font-size: 17px;
   font-weight: bold;
   color: #fff;
@@ -184,77 +204,98 @@
   line-height: 1.3;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
-.creator-info.data-v-8a2a2316 {
+.creator-info.data-v-e99d8857 {
   display: flex;
   align-items: center;
   margin-bottom: 5px;
 }
-.creator-name.data-v-8a2a2316 {
+.creator-name.data-v-e99d8857 {
   font-size: 12px;
   color: rgba(255, 255, 255, 0.9);
 }
-.playlist-desc-wrapper.data-v-8a2a2316 {
+.playlist-desc-wrapper.data-v-e99d8857 {
   max-height: 50px;
   margin-bottom: 5px;
 }
-.playlist-desc.data-v-8a2a2316 {
+.playlist-desc.data-v-e99d8857 {
   font-size: 11px;
   color: rgba(255, 255, 255, 0.7);
   line-height: 1.5;
 }
-.playlist-stats.data-v-8a2a2316 {
+.playlist-stats.data-v-e99d8857 {
   display: flex;
   align-items: center;
   font-size: 11px;
   color: rgba(255, 255, 255, 0.8);
   margin-bottom: 8px;
 }
-.separator.data-v-8a2a2316 {
+.separator.data-v-e99d8857 {
   margin: 0 4px;
 }
 
 /* 操作按钮栏 - 集成到歌单信息区域 */
-.action-bar.data-v-8a2a2316 {
+.action-bar.data-v-e99d8857 {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  flex-direction: row;
   margin-top: auto;
 }
-.action-btn.data-v-8a2a2316 {
+.action-btn.data-v-e99d8857 {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 7px 12px;
+  padding: 6px 10px;
   border-radius: 15px;
-  gap: 4px;
+  gap: 3px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
-.action-btn text.data-v-8a2a2316 {
+.action-btn + .action-btn.data-v-e99d8857 {
+  margin-left: 8px;
+}
+.action-btn text.data-v-e99d8857 {
   font-size: 12px;
   font-weight: 500;
 }
-.action-btn.data-v-8a2a2316 roc-icon-plus {
+
+/* 小屏幕适配 */
+@media (max-width: 400px) {
+.action-btn.data-v-e99d8857 {
+    flex: 1;
+    min-width: 0;
+    padding: 5px 8px;
+}
+.action-btn + .action-btn.data-v-e99d8857 {
+    margin-left: 6px;
+}
+.action-btn text.data-v-e99d8857 {
+    font-size: 11px;
+}
+}
+.action-btn.data-v-e99d8857 roc-icon-plus {
   flex-shrink: 0;
   line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.collect-btn.data-v-8a2a2316 {
+.collect-btn.data-v-e99d8857 {
   background: transparent;
   border: 1px solid #ffffff;
 }
-.collect-btn text.data-v-8a2a2316 {
+.collect-btn text.data-v-e99d8857 {
   color: #fff;
 }
-.play-btn.data-v-8a2a2316 {
+.play-btn.data-v-e99d8857 {
   background: transparent;
   border: 1px solid #ffffff;
 }
-.play-btn text.data-v-8a2a2316 {
+.play-btn text.data-v-e99d8857 {
   color: #fff;
 }
 
 /* 歌曲列表容器 */
-.song-list-container.data-v-8a2a2316 {
+.song-list-container.data-v-e99d8857 {
   flex: 1;
   position: relative;
   z-index: 15;
@@ -263,7 +304,7 @@
 }
 
 /* 定位当前歌曲按钮 */
-.locate-song-btn.data-v-8a2a2316 {
+.locate-song-btn.data-v-e99d8857 {
   position: fixed;
   bottom: 140px;
   right: 15px;
@@ -278,13 +319,13 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
   z-index: 999;
   opacity: 0.7;
-  animation: pulse-8a2a2316 2s infinite;
+  animation: pulse-e99d8857 2s infinite;
 }
-.locate-song-btn.data-v-8a2a2316:active {
+.locate-song-btn.data-v-e99d8857:active {
   opacity: 1;
   transform: scale(0.95);
 }
-.btn-tooltip.data-v-8a2a2316 {
+.btn-tooltip.data-v-e99d8857 {
   position: absolute;
   top: -35px;
   right: 0;
@@ -297,10 +338,10 @@
   opacity: 0;
   pointer-events: none;
 }
-.locate-song-btn:hover .btn-tooltip.data-v-8a2a2316 {
+.locate-song-btn:hover .btn-tooltip.data-v-e99d8857 {
   opacity: 1;
 }
-@keyframes pulse-8a2a2316 {
+@keyframes pulse-e99d8857 {
 0% {
     transform: scale(1);
     box-shadow: 0 2px 10px rgba(0, 175, 255, 0.2);
@@ -315,7 +356,7 @@
 }
 }
 /* 歌曲列表容器 */
-.song-list-container.data-v-8a2a2316 {
+.song-list-container.data-v-e99d8857 {
   flex: 1;
   position: relative;
   z-index: 15;
@@ -326,57 +367,62 @@
   flex-direction: column;
 }
 
+/* 平板模式下移除列表圆角 */
+.tablet-mode .song-list-container.data-v-e99d8857 {
+  border-radius: 0;
+}
+
 /* 虚拟列表 */
-.song-list-scroll.data-v-8a2a2316 {
+.song-list-scroll.data-v-e99d8857 {
   flex: 1;
   height: 100%;
 }
 
 /* 加载状态 */
-.loading-state.data-v-8a2a2316 {
+.loading-state.data-v-e99d8857 {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 50px 0;
 }
-.loading-spinner.data-v-8a2a2316 {
+.loading-spinner.data-v-e99d8857 {
   width: 30px;
   height: 30px;
   border: 2px solid #f0f0f0;
   border-top-color: #00d7cd;
   border-radius: 50%;
-  animation: spin-8a2a2316 1s linear infinite;
+  animation: spin-e99d8857 1s linear infinite;
   margin-bottom: 10px;
 }
-@keyframes spin-8a2a2316 {
+@keyframes spin-e99d8857 {
 to {
     transform: rotate(360deg);
 }
 }
-.loading-state text.data-v-8a2a2316 {
+.loading-state text.data-v-e99d8857 {
   font-size: 14px;
   color: #999;
 }
 
 /* 错误状态 */
-.error-state.data-v-8a2a2316 {
+.error-state.data-v-e99d8857 {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 50px 20px;
 }
-.error-state.data-v-8a2a2316 roc-icon-plus {
+.error-state.data-v-e99d8857 roc-icon-plus {
   margin-bottom: 10px;
 }
-.error-state text.data-v-8a2a2316 {
+.error-state text.data-v-e99d8857 {
   font-size: 14px;
   color: #999;
   margin-bottom: 15px;
   text-align: center;
 }
-.retry-btn.data-v-8a2a2316 {
+.retry-btn.data-v-e99d8857 {
   padding: 8px 20px;
   background: linear-gradient(90deg, #00d7cd, #00afff);
   border-radius: 15px;
@@ -385,63 +431,63 @@ to {
 }
 
 /* 空状态 */
-.empty-state.data-v-8a2a2316 {
+.empty-state.data-v-e99d8857 {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 75px 0;
 }
-.empty-state.data-v-8a2a2316 roc-icon-plus {
+.empty-state.data-v-e99d8857 roc-icon-plus {
   margin-bottom: 10px;
 }
-.empty-state text.data-v-8a2a2316 {
+.empty-state text.data-v-e99d8857 {
   font-size: 14px;
   color: #999;
 }
 
 /* 歌曲列表 */
-.song-list.data-v-8a2a2316 {
+.song-list.data-v-e99d8857 {
   padding: 0 15px;
   padding-bottom: calc(100px + env(safe-area-inset-bottom));
   background-color: #f8f9fa;
 }
-.song-item.data-v-8a2a2316 {
+.song-item.data-v-e99d8857 {
   display: flex;
   align-items: center;
   padding: 12px 0;
   border-bottom: 1px solid #f0f0f0;
 }
-.song-item.playing.data-v-8a2a2316 {
+.song-item.playing.data-v-e99d8857 {
   background: linear-gradient(to right, rgba(0, 215, 205, 0.05), transparent);
   margin: 0 -15px;
   padding-left: 15px;
   padding-right: 15px;
 }
-.song-index.data-v-8a2a2316 {
+.song-index.data-v-e99d8857 {
   width: 30px;
   font-size: 14px;
   color: #999;
   text-align: center;
   flex-shrink: 0;
 }
-.song-item.playing .song-index.data-v-8a2a2316 {
+.song-item.playing .song-index.data-v-e99d8857 {
   color: #00d7cd;
   font-weight: bold;
 }
-.song-info.data-v-8a2a2316 {
+.song-info.data-v-e99d8857 {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
   overflow: hidden;
 }
-.song-main-info.data-v-8a2a2316 {
+.song-main-info.data-v-e99d8857 {
   flex: 1;
   overflow: hidden;
   margin-right: 10px;
 }
-.song-name.data-v-8a2a2316 {
+.song-name.data-v-e99d8857 {
   font-size: 15px;
   color: #333;
   margin-bottom: 4px;
@@ -449,17 +495,17 @@ to {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.song-item.playing .song-name.data-v-8a2a2316 {
+.song-item.playing .song-name.data-v-e99d8857 {
   color: #00d7cd;
 }
-.song-artist.data-v-8a2a2316 {
+.song-artist.data-v-e99d8857 {
   display: flex;
   align-items: center;
   font-size: 12px;
   color: #999;
   overflow: hidden;
 }
-.quality-tag.data-v-8a2a2316 {
+.quality-tag.data-v-e99d8857 {
   padding: 1px 4px;
   background: linear-gradient(90deg, #00d7cd, #00afff);
   border-radius: 2px;
@@ -468,150 +514,160 @@ to {
   margin-right: 5px;
   flex-shrink: 0;
 }
-.singer-name.data-v-8a2a2316 {
+.singer-name.data-v-e99d8857 {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.album-name.data-v-8a2a2316 {
+.album-name.data-v-e99d8857 {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.song-actions.data-v-8a2a2316 {
+.song-actions.data-v-e99d8857 {
   display: flex;
   align-items: center;
-  gap: 10px;
   flex-shrink: 0;
 }
-.play-icon.data-v-8a2a2316, .pause-icon.data-v-8a2a2316 {
+.song-actions > view.data-v-e99d8857 {
+  margin-right: 10px;
+}
+.song-actions > view.data-v-e99d8857:last-child {
+  margin-right: 0;
+}
+.play-icon.data-v-e99d8857, .pause-icon.data-v-e99d8857 {
   color: #ccc;
 }
-.song-item.playing .play-icon.data-v-8a2a2316,
-.song-item.playing .pause-icon.data-v-8a2a2316 {
+.song-item.playing .play-icon.data-v-e99d8857,
+.song-item.playing .pause-icon.data-v-e99d8857 {
   color: #00d7cd;
 }
-.song-duration.data-v-8a2a2316 {
+.song-duration.data-v-e99d8857 {
   font-size: 12px;
   color: #999;
   min-width: 40px;
   text-align: right;
 }
-.loading-more.data-v-8a2a2316 {
+.loading-more.data-v-e99d8857 {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 15px 0;
-  gap: 5px;
 }
-.loading-more text.data-v-8a2a2316 {
+.loading-more > view.data-v-e99d8857 {
+  margin-bottom: 5px;
+}
+.loading-more > view.data-v-e99d8857:last-child {
+  margin-bottom: 0;
+}
+.loading-more text.data-v-e99d8857 {
   font-size: 12px;
   color: #999;
 }
-.loading-spinner-small.data-v-8a2a2316 {
+.loading-spinner-small.data-v-e99d8857 {
   width: 15px;
   height: 15px;
   border: 2px solid #f0f0f0;
   border-top-color: #00d7cd;
   border-radius: 50%;
-  animation: spin-8a2a2316 1s linear infinite;
+  animation: spin-e99d8857 1s linear infinite;
 }
-.no-more.data-v-8a2a2316 {
+.no-more.data-v-e99d8857 {
   text-align: center;
   padding: 15px 0;
 }
-.no-more text.data-v-8a2a2316 {
+.no-more text.data-v-e99d8857 {
   font-size: 12px;
   color: #999;
 }
-.safe-bottom.data-v-8a2a2316 {
+.safe-bottom.data-v-e99d8857 {
   height: 20px;
 }
 
 /* ==================== 暗黑模式适配 ==================== */
 /* 页面背景 */
-.playlist-page.dark-mode.data-v-8a2a2316 {
+.playlist-page.dark-mode.data-v-e99d8857 {
   background-color: #1f2937;
 }
 
 /* 歌曲列表容器 */
-.playlist-page.dark-mode .song-list-container.data-v-8a2a2316 {
+.playlist-page.dark-mode .song-list-container.data-v-e99d8857 {
   background-color: #1f2937;
 }
 
 /* 顶部圆角装饰 */
-.playlist-page.dark-mode .list-header-decoration.data-v-8a2a2316 {
+.playlist-page.dark-mode .list-header-decoration.data-v-e99d8857 {
   background-color: #1f2937;
 }
 
 /* 加载状态文字 */
-.playlist-page.dark-mode .loading-state text.data-v-8a2a2316 {
+.playlist-page.dark-mode .loading-state text.data-v-e99d8857 {
   color: #9ca3af;
 }
 
 /* 错误状态 */
-.playlist-page.dark-mode .error-state text.data-v-8a2a2316 {
+.playlist-page.dark-mode .error-state text.data-v-e99d8857 {
   color: #9ca3af;
 }
-.playlist-page.dark-mode .retry-btn.data-v-8a2a2316 {
+.playlist-page.dark-mode .retry-btn.data-v-e99d8857 {
   background-color: #374151;
   color: #e5e7eb;
 }
 
 /* 歌曲列表 */
-.playlist-page.dark-mode .song-list.data-v-8a2a2316 {
+.playlist-page.dark-mode .song-list.data-v-e99d8857 {
   background-color: #1f2937;
 }
 
 /* 歌曲项 */
-.playlist-page.dark-mode .song-item.data-v-8a2a2316 {
+.playlist-page.dark-mode .song-item.data-v-e99d8857 {
   border-bottom-color: #374151;
 }
-.playlist-page.dark-mode .song-item.data-v-8a2a2316:active {
+.playlist-page.dark-mode .song-item.data-v-e99d8857:active {
   background-color: #374151;
 }
 
 /* 歌曲序号 */
-.playlist-page.dark-mode .song-index.data-v-8a2a2316 {
+.playlist-page.dark-mode .song-index.data-v-e99d8857 {
   color: #6b7280;
 }
 
 /* 歌曲名称 */
-.playlist-page.dark-mode .song-name.data-v-8a2a2316 {
+.playlist-page.dark-mode .song-name.data-v-e99d8857 {
   color: #f3f4f6;
 }
 
 /* 歌手名称 */
-.playlist-page.dark-mode .singer-name.data-v-8a2a2316 {
+.playlist-page.dark-mode .singer-name.data-v-e99d8857 {
   color: #9ca3af;
 }
 
 /* 专辑名称 */
-.playlist-page.dark-mode .album-name.data-v-8a2a2316 {
+.playlist-page.dark-mode .album-name.data-v-e99d8857 {
   color: #6b7280;
 }
 
 /* 时长 */
-.playlist-page.dark-mode .song-duration.data-v-8a2a2316 {
+.playlist-page.dark-mode .song-duration.data-v-e99d8857 {
   color: #6b7280;
 }
 
 /* 加载更多 */
-.playlist-page.dark-mode .loading-more text.data-v-8a2a2316 {
+.playlist-page.dark-mode .loading-more text.data-v-e99d8857 {
   color: #9ca3af;
 }
-.playlist-page.dark-mode .loading-spinner-small.data-v-8a2a2316 {
+.playlist-page.dark-mode .loading-spinner-small.data-v-e99d8857 {
   border-color: #374151;
   border-top-color: #00d7cd;
 }
 
 /* 没有更多 */
-.playlist-page.dark-mode .no-more text.data-v-8a2a2316 {
+.playlist-page.dark-mode .no-more text.data-v-e99d8857 {
   color: #6b7280;
 }
 
 /* 空状态 */
-.playlist-page.dark-mode .empty-state text.data-v-8a2a2316 {
+.playlist-page.dark-mode .empty-state text.data-v-e99d8857 {
   color: #6b7280;
 }

@@ -45,6 +45,11 @@ const _sfc_main = {
         paddingBottom: `${totalBottomHeight.value}px`
       };
     });
+    const tabletModalSafeTop = common_vendor.computed(() => {
+      if (!isTablet.value)
+        return "0px";
+      return `${utils_system.getNavbarHeight()}px`;
+    });
     const trialListCount = common_vendor.computed(() => store_modules_list.listStore.state.defaultList.list.length);
     const favoriteListCount = common_vendor.computed(() => store_modules_list.listStore.state.loveList.list.length);
     const showImportModal = common_vendor.ref(false);
@@ -72,6 +77,27 @@ const _sfc_main = {
     const customPlaylists = common_vendor.ref([]);
     const autoUpdatedPlaylists = common_vendor.ref(/* @__PURE__ */ new Set());
     const darkMode = common_vendor.ref(false);
+    const isTablet = common_vendor.ref(false);
+    const checkIsTablet = () => {
+      try {
+        const systemInfo = common_vendor.index.getSystemInfoSync();
+        const width = systemInfo.windowWidth || systemInfo.screenWidth || 0;
+        const height = systemInfo.windowHeight || systemInfo.screenHeight || 0;
+        const TABLET_ASPECT_RATIO = 0.85;
+        const TABLET_MIN_WIDTH = 400;
+        const aspectRatio = width / height;
+        isTablet.value = aspectRatio >= TABLET_ASPECT_RATIO && width >= TABLET_MIN_WIDTH;
+      } catch (e) {
+        isTablet.value = false;
+      }
+    };
+    const handleTabletModeChanged = (newIsTablet) => {
+      console.log("[Playlist] 收到平板模式变化事件:", newIsTablet, "当前值:", isTablet.value);
+      if (isTablet.value !== newIsTablet) {
+        isTablet.value = newIsTablet;
+        console.log("[Playlist] 平板模式已更新为:", newIsTablet);
+      }
+    };
     const isDataLoaded = common_vendor.ref(false);
     const showSidebarTip = common_vendor.ref(false);
     const recordSidebarSwitch = () => {
@@ -141,6 +167,7 @@ const _sfc_main = {
         onInit: () => {
           console.log("[Playlist] 页面初始化");
           initDarkMode();
+          checkIsTablet();
           refreshCustomPlaylists();
           checkSidebarTip();
           if (typeof requestAnimationFrame !== "undefined") {
@@ -158,6 +185,7 @@ const _sfc_main = {
         onActivated: () => {
           console.log("[Playlist] 页面激活");
           initDarkMode();
+          checkIsTablet();
           refreshCustomPlaylists();
           console.log("[Playlist] 刷新自定义歌单:", customPlaylists.value.length, "个");
           if (isDataLoaded.value) {
@@ -187,14 +215,14 @@ const _sfc_main = {
     common_vendor.onMounted(() => {
       common_vendor.index.$on("themeChanged", handleThemeChanged);
       common_vendor.index.$on("imported-playlists-changed", handleImportedPlaylistsChanged);
-      console.log("[Playlist] 已注册主题变化监听");
-      console.log("[Playlist] 已注册已导入歌单变化监听");
+      common_vendor.index.$on("tabletModeChanged", handleTabletModeChanged);
+      console.log("[Playlist] 已注册监听: themeChanged, imported-playlists-changed, tabletModeChanged");
     });
     common_vendor.onUnmounted(() => {
       common_vendor.index.$off("themeChanged", handleThemeChanged);
       common_vendor.index.$off("imported-playlists-changed", handleImportedPlaylistsChanged);
-      console.log("[Playlist] 已移除主题变化监听");
-      console.log("[Playlist] 已移除已导入歌单变化监听");
+      common_vendor.index.$off("tabletModeChanged", handleTabletModeChanged);
+      console.log("[Playlist] 已移除监听: themeChanged, imported-playlists-changed, tabletModeChanged");
     });
     const currentPlaylistId = common_vendor.ref("trial");
     const currentPlaylist = common_vendor.reactive({
@@ -1276,9 +1304,12 @@ const _sfc_main = {
         return;
       }
       showImportModal.value = false;
-      common_vendor.index.navigateTo({
-        url: `/pages/sharelist/index?source=${currentImportSource.value}&link=${encodeURIComponent(link)}&platform=${encodeURIComponent(currentImportPlatform.value)}&preview=true&from=import`
-      });
+      const url = `/pages/sharelist/index?source=${currentImportSource.value}&link=${encodeURIComponent(link)}&platform=${encodeURIComponent(currentImportPlatform.value)}&preview=true&from=import`;
+      if (isTablet.value) {
+        common_vendor.index.$emit("playlist-navigate", { url });
+      } else {
+        common_vendor.index.navigateTo({ url });
+      }
     };
     const loadPlaylistData = async () => {
       console.log("[Playlist] ====== loadPlaylistData 开始 ======");
@@ -1585,15 +1616,15 @@ const _sfc_main = {
           size: "16",
           color: darkMode.value ? "#fff" : "#666"
         }),
-        c: common_vendor.o(toggleSidebar, "4d"),
+        c: common_vendor.o(toggleSidebar, "21"),
         d: showSidebarTip.value
       }, showSidebarTip.value ? {
-        e: common_vendor.o(hideSidebarTip, "ef")
+        e: common_vendor.o(hideSidebarTip, "a8")
       } : {}, {
         f: common_vendor.s(headerStyle.value),
         g: showSidebar.value
       }, showSidebar.value ? {
-        h: common_vendor.o(closeSidebar, "01")
+        h: common_vendor.o(closeSidebar, "39")
       } : {}, {
         i: common_vendor.p({
           name: "music",
@@ -1602,7 +1633,7 @@ const _sfc_main = {
         }),
         j: common_vendor.t(trialListCount.value),
         k: currentPlaylistId.value === "trial" ? 1 : "",
-        l: common_vendor.o(($event) => selectPlaylist("trial"), "ac"),
+        l: common_vendor.o(($event) => selectPlaylist("trial"), "4c"),
         m: common_vendor.p({
           name: "heart",
           size: "20",
@@ -1610,7 +1641,7 @@ const _sfc_main = {
         }),
         n: common_vendor.t(favoriteListCount.value),
         o: currentPlaylistId.value === "favorite" ? 1 : "",
-        p: common_vendor.o(($event) => selectPlaylist("favorite"), "73"),
+        p: common_vendor.o(($event) => selectPlaylist("favorite"), "cc"),
         q: importedPlaylists.value.length > 0
       }, importedPlaylists.value.length > 0 ? {
         r: common_vendor.f(importedPlaylists.value, (playlist, index, i0) => {
@@ -1620,7 +1651,7 @@ const _sfc_main = {
             c: common_vendor.t(playlist.name),
             d: common_vendor.t(playlist.trackCount || 0),
             e: common_vendor.t(playlist.platform),
-            f: "0755d4e3-3-" + i0,
+            f: "6c9974e0-3-" + i0,
             g: common_vendor.o(($event) => showPlaylistContextMenu(playlist, index, "imported"), playlist.id),
             h: playlist.id,
             i: currentPlaylistId.value === playlist.id ? 1 : "",
@@ -1640,7 +1671,7 @@ const _sfc_main = {
             b: common_vendor.o(($event) => handlePlaylistImageError($event, playlist), playlist.id),
             c: common_vendor.t(playlist.name),
             d: common_vendor.t(playlist.trackCount || 0),
-            e: "0755d4e3-4-" + i0,
+            e: "6c9974e0-4-" + i0,
             f: common_vendor.o(($event) => showPlaylistContextMenu(playlist, index, "custom"), playlist.id),
             g: playlist.id,
             h: currentPlaylistId.value === playlist.id ? 1 : "",
@@ -1652,8 +1683,8 @@ const _sfc_main = {
           size: "18"
         })
       } : {}, {
-        x: common_vendor.o(createNewPlaylist, "a5"),
-        y: common_vendor.o(importPlaylist, "a3"),
+        x: common_vendor.o(createNewPlaylist, "13"),
+        y: common_vendor.o(importPlaylist, "ce"),
         z: showSidebar.value ? 1 : "",
         A: common_vendor.s(sidebarStyle.value),
         B: common_vendor.p({
@@ -1663,14 +1694,14 @@ const _sfc_main = {
           color: "#ffffff"
         }),
         C: common_vendor.unref(totalBottomHeight) + 20 + "px",
-        D: common_vendor.o(locateCurrentSong, "9b"),
-        E: common_vendor.sr(virtualListRef, "0755d4e3-6", {
+        D: common_vendor.o(locateCurrentSong, "ef"),
+        E: common_vendor.sr(virtualListRef, "6c9974e0-6", {
           "k": "virtualListRef"
         }),
-        F: common_vendor.o(onScrollToLower, "20"),
-        G: common_vendor.o(onScrollHandler, "b8"),
-        H: common_vendor.o(onVirtualItemClick, "9e"),
-        I: common_vendor.o(onVirtualMoreClick, "e2"),
+        F: common_vendor.o(onScrollToLower, "b4"),
+        G: common_vendor.o(onScrollHandler, "ef"),
+        H: common_vendor.o(onVirtualItemClick, "1a"),
+        I: common_vendor.o(onVirtualMoreClick, "21"),
         J: common_vendor.p({
           items: songs.value,
           ["item-height"]: 60,
@@ -1691,113 +1722,119 @@ const _sfc_main = {
           size: "20",
           color: "#999999"
         }),
-        N: common_vendor.o(closeImportModal, "4f"),
+        N: common_vendor.o(closeImportModal, "97"),
         O: importLink.value,
-        P: common_vendor.o(($event) => importLink.value = $event.detail.value, "bb"),
-        Q: common_vendor.o(closeImportModal, "47"),
-        R: common_vendor.o(confirmImport, "ed"),
-        S: common_vendor.o(() => {
-        }, "f4"),
-        T: common_vendor.o(closeImportModal, "61")
+        P: common_vendor.o(($event) => importLink.value = $event.detail.value, "0e"),
+        Q: common_vendor.o(closeImportModal, "35"),
+        R: common_vendor.o(confirmImport, "c7"),
+        S: isTablet.value ? tabletModalSafeTop.value : "",
+        T: common_vendor.o(() => {
+        }, "79"),
+        U: common_vendor.o(closeImportModal, "fa")
       } : {}, {
-        U: showSongMenuFlag.value
+        V: showSongMenuFlag.value
       }, showSongMenuFlag.value ? common_vendor.e({
-        V: selectedSong.value
+        W: selectedSong.value
       }, selectedSong.value ? {
-        W: common_vendor.t(selectedSong.value.name),
-        X: common_vendor.t(formatSingerName(selectedSong.value.ar || selectedSong.value.singer))
+        X: common_vendor.t(selectedSong.value.name),
+        Y: common_vendor.t(formatSingerName(selectedSong.value.ar || selectedSong.value.singer))
       } : {}, {
-        Y: common_vendor.p({
+        Z: common_vendor.p({
           type: "fas",
           name: "clone",
           size: "20",
           color: "#3b82f6"
         }),
-        Z: common_vendor.o(toggleMusicSource, "6e"),
-        aa: common_vendor.p({
+        aa: common_vendor.o(toggleMusicSource, "89"),
+        ab: common_vendor.p({
           type: "fas",
           name: "trash",
           size: "20",
           color: "#ef4444"
         }),
-        ab: common_vendor.t(currentPlaylistId.value.value === "favorite" || currentPlaylistId.value.value === common_vendor.unref(store_modules_list.LIST_IDS).LOVE ? "取消收藏并移除" : "从列表中移除"),
-        ac: common_vendor.o(removeSongFromList, "2c"),
-        ad: common_vendor.o(() => {
+        ac: common_vendor.t(currentPlaylistId.value.value === "favorite" || currentPlaylistId.value.value === common_vendor.unref(store_modules_list.LIST_IDS).LOVE ? "取消收藏并移除" : "从列表中移除"),
+        ad: common_vendor.o(removeSongFromList, "d7"),
+        ae: common_vendor.o(() => {
         }, "da"),
-        ae: common_vendor.unref(totalBottomHeight) + "px",
-        af: common_vendor.o(closeSongMenu, "d4")
+        af: isTablet.value ? tabletModalSafeTop.value : "",
+        ag: common_vendor.unref(totalBottomHeight) + "px",
+        ah: common_vendor.o(closeSongMenu, "f4")
       }) : {}, {
-        ag: showPlaylistMenu.value
+        ai: showPlaylistMenu.value
       }, showPlaylistMenu.value ? common_vendor.e({
-        ah: menuPlaylistInfo.value
+        aj: menuPlaylistInfo.value
       }, menuPlaylistInfo.value ? {
-        ai: common_vendor.t(menuPlaylistInfo.value.name),
-        aj: common_vendor.t(menuPlaylistType.value === "imported" ? `从${menuPlaylistInfo.value.platform || ""}导入` : "自定义歌单")
+        ak: common_vendor.t(menuPlaylistInfo.value.name),
+        al: common_vendor.t(menuPlaylistType.value === "imported" ? `从${menuPlaylistInfo.value.platform || ""}导入` : "自定义歌单")
       } : {}, {
-        ak: common_vendor.p({
+        am: common_vendor.p({
           type: "fas",
           name: "pen",
           size: "20",
           color: "#3b82f6"
         }),
-        al: common_vendor.o(renamePlaylist, "44"),
-        am: menuPlaylistType.value === "imported" && ((_a = menuPlaylistInfo.value) == null ? void 0 : _a.canAutoUpdate) && ((_b = menuPlaylistInfo.value) == null ? void 0 : _b.isFromImport)
+        an: common_vendor.o(renamePlaylist, "3b"),
+        ao: menuPlaylistType.value === "imported" && ((_a = menuPlaylistInfo.value) == null ? void 0 : _a.canAutoUpdate) && ((_b = menuPlaylistInfo.value) == null ? void 0 : _b.isFromImport)
       }, menuPlaylistType.value === "imported" && ((_c = menuPlaylistInfo.value) == null ? void 0 : _c.canAutoUpdate) && ((_d = menuPlaylistInfo.value) == null ? void 0 : _d.isFromImport) ? {
-        an: common_vendor.p({
+        ap: common_vendor.p({
           type: "fas",
           name: ((_e = menuPlaylistInfo.value) == null ? void 0 : _e.autoUpdate) ? "check-circle" : "clock-rotate-left",
           size: "20",
           color: ((_f = menuPlaylistInfo.value) == null ? void 0 : _f.autoUpdate) ? "#10b981" : "#999"
         }),
-        ao: common_vendor.t(((_g = menuPlaylistInfo.value) == null ? void 0 : _g.autoUpdate) ? "已开启自动更新" : "开启自动更新"),
-        ap: ((_h = menuPlaylistInfo.value) == null ? void 0 : _h.autoUpdate) ? "#10b981" : "#999",
-        aq: common_vendor.o(toggleAutoUpdate, "6b")
+        aq: common_vendor.t(((_g = menuPlaylistInfo.value) == null ? void 0 : _g.autoUpdate) ? "已开启自动更新" : "开启自动更新"),
+        ar: ((_h = menuPlaylistInfo.value) == null ? void 0 : _h.autoUpdate) ? "#10b981" : "#999",
+        as: common_vendor.o(toggleAutoUpdate, "03")
       } : {}, {
-        ar: menuPlaylistType.value === "imported" && ((_i = menuPlaylistInfo.value) == null ? void 0 : _i.canAutoUpdate) && ((_j = menuPlaylistInfo.value) == null ? void 0 : _j.isFromImport)
+        at: menuPlaylistType.value === "imported" && ((_i = menuPlaylistInfo.value) == null ? void 0 : _i.canAutoUpdate) && ((_j = menuPlaylistInfo.value) == null ? void 0 : _j.isFromImport)
       }, menuPlaylistType.value === "imported" && ((_k = menuPlaylistInfo.value) == null ? void 0 : _k.canAutoUpdate) && ((_l = menuPlaylistInfo.value) == null ? void 0 : _l.isFromImport) ? {
-        as: common_vendor.p({
+        av: common_vendor.p({
           type: "fas",
           name: "rotate",
           size: "20",
           color: "#10b981"
         }),
-        at: common_vendor.o(syncPlaylist, "c6")
+        aw: common_vendor.o(syncPlaylist, "00")
       } : {}, {
-        av: common_vendor.p({
+        ax: common_vendor.p({
           type: "fas",
           name: "trash",
           size: "20",
           color: "#ef4444"
         }),
-        aw: common_vendor.o(removePlaylist, "48"),
-        ax: common_vendor.o(() => {
-        }, "a1"),
-        ay: common_vendor.unref(totalBottomHeight) + "px",
-        az: common_vendor.o(closePlaylistMenu, "64")
+        ay: common_vendor.o(removePlaylist, "1f"),
+        az: common_vendor.o(() => {
+        }, "d6"),
+        aA: isTablet.value ? tabletModalSafeTop.value : "",
+        aB: common_vendor.unref(totalBottomHeight) + "px",
+        aC: common_vendor.o(closePlaylistMenu, "e1")
       }) : {}, {
-        aA: common_vendor.o(closeMusicToggleModal, "46"),
-        aB: common_vendor.o(handleToggleConfirm, "dd"),
-        aC: common_vendor.o(handleTogglePreview, "8a"),
-        aD: common_vendor.p({
+        aD: common_vendor.o(closeMusicToggleModal, "1b"),
+        aE: common_vendor.o(handleToggleConfirm, "51"),
+        aF: common_vendor.o(handleTogglePreview, "c2"),
+        aG: common_vendor.p({
           visible: showMusicToggleModal.value,
           ["original-song"]: toggleOriginalSong.value,
           ["list-id"]: currentPlaylistId.value,
           ["dark-mode"]: darkMode.value,
-          ["bottom-safe-height"]: common_vendor.unref(totalBottomHeight)
+          ["bottom-safe-height"]: common_vendor.unref(totalBottomHeight),
+          ["is-tablet"]: isTablet.value,
+          ["enable-top-safe-area"]: true
         }),
-        aE: common_vendor.p({
+        aH: common_vendor.p({
           visible: showAutoUpdateToast.value,
           ["playlist-name"]: autoUpdatePlaylistName.value
         }),
-        aF: common_vendor.p({
+        aI: common_vendor.p({
           visible: showLoadingToast.value,
           title: loadingToastTitle.value,
           subtitle: loadingToastSubtitle.value
         }),
-        aG: darkMode.value ? 1 : ""
+        aJ: darkMode.value ? 1 : "",
+        aK: isTablet.value ? 1 : ""
       });
     };
   }
 };
-const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-0755d4e3"]]);
+const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-6c9974e0"]]);
 exports.MiniProgramPage = MiniProgramPage;

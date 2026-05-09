@@ -293,10 +293,91 @@ swiper-item.swiper-item-active {
   font-weight: 600;
   letter-spacing: 0.5px;
 }
+
+/* Banner导航按钮 */
+.banner-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.5);
+  -webkit-backdrop-filter: blur(4px);
+          backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 100;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+}
+.banner-container:hover .banner-nav-btn {
+  opacity: 1;
+}
+.banner-nav-btn:hover {
+  background-color: rgba(0, 0, 0, 0.7);
+  transform: translateY(-50%) scale(1.1);
+}
+.banner-nav-btn:active {
+  transform: translateY(-50%) scale(0.95);
+}
+.banner-nav-left {
+  left: 10px;
+}
+.banner-nav-right {
+  right: 10px;
+}
+
+/* 滚动容器 */
+.scroll-container {
+  position: relative;
+  width: 100%;
+}
+
+/* 滚动导航按钮 - 和Banner风格统一 */
+.scroll-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.5);
+  -webkit-backdrop-filter: blur(4px);
+          backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 100;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+}
+.scroll-container:hover .scroll-nav-btn {
+  opacity: 1;
+}
+.scroll-nav-btn:hover {
+  background-color: rgba(0, 0, 0, 0.7);
+  transform: translateY(-50%) scale(1.1);
+}
+.scroll-nav-btn:active {
+  transform: translateY(-50%) scale(0.95);
+}
+.scroll-nav-left {
+  left: -10px;
+}
+.scroll-nav-right {
+  right: -10px;
+}
 .nav-section {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  /* gap替换为grid-gap兼容老设备 */
+  grid-gap: 16px;
   padding: 16px;
   margin-bottom: 20px;
 }
@@ -402,6 +483,8 @@ swiper-item.swiper-item-active {
 .playlist-scroll {
   width: 100%;
   white-space: nowrap;
+  padding: 0 20px;
+  box-sizing: border-box;
 }
 .discover-container.dark-mode .playlist-scroll {
   background-color: #1f2937;
@@ -420,7 +503,8 @@ swiper-item.swiper-item-active {
 .playlist-cover-wrapper {
   position: relative;
   width: 100%;
-  aspect-ratio: 1/1;
+  padding-bottom: 100%;
+  height: 0;
   border-radius: 12px;
   overflow: hidden;
   margin-bottom: 8px;
@@ -432,6 +516,9 @@ swiper-item.swiper-item-active {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 .playlist-cover {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -554,9 +641,10 @@ swiper-item.swiper-item-active {
 .artist-scroll {
   display: flex;
   overflow-x: auto;
-  padding: 8px 0;
+  padding: 8px 20px;
   scrollbar-width: none;
   white-space: nowrap;
+  box-sizing: border-box;
 }
 .artist-scroll::-webkit-scrollbar {
   display: none;
@@ -601,4 +689,56 @@ swiper-item.swiper-item-active {
 }
 .safe-bottom {
   height: 0;
+}
+
+/* 悬浮刷新按钮样式 - 仅Web端 */
+.float-refresh-btn {
+  position: fixed;
+  right: 30px;
+  bottom: 100px;
+  width: 50px;
+  height: 50px;
+  border-radius: 25px;
+  background: linear-gradient(135deg, #00d7cd 0%, #00afff 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(0, 215, 205, 0.4);
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.3s ease;
+  pointer-events: none;
+  z-index: 999;
+}
+.float-refresh-btn.visible {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+.float-refresh-btn.visible:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(0, 215, 205, 0.6);
+}
+.float-refresh-btn.visible:active {
+  transform: scale(0.95);
+}
+.float-refresh-btn.refreshing {
+  animation: floatRefreshSpin 1s linear infinite;
+  pointer-events: none;
+}
+.float-refresh-btn.dark-mode {
+  background: linear-gradient(135deg, #00e5d4 0%, #33c3ff 100%);
+  box-shadow: 0 4px 15px rgba(0, 229, 212, 0.3);
+}
+.float-refresh-btn.dark-mode:hover {
+  box-shadow: 0 6px 20px rgba(0, 229, 212, 0.5);
+}
+@keyframes floatRefreshSpin {
+from {
+    transform: rotate(0deg);
+}
+to {
+    transform: rotate(360deg);
+}
 }

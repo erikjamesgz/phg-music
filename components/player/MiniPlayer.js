@@ -9,15 +9,16 @@ const utils_kgLyricDecoder = require("../../utils/kgLyricDecoder.js");
 const utils_musicPic = require("../../utils/musicPic.js");
 const utils_imageProxy = require("../../utils/imageProxy.js");
 if (!Math) {
-  RocIconPlus();
+  (RocIconPlus + FavoritePopup)();
 }
 const RocIconPlus = () => "../../uni_modules/roc-icon-plus/components/roc-icon-plus/roc-icon-plus.js";
+const FavoritePopup = () => "../common/FavoritePopup.js";
 const maxTextLength = 30;
 const _sfc_main = {
   __name: "MiniPlayer",
   setup(__props) {
     common_vendor.useCssVars((_ctx) => ({
-      "bd812d5a": miniPlayerBottom.value
+      "4f45f390": miniPlayerBottom.value
     }));
     let instance = null;
     try {
@@ -38,6 +39,113 @@ const _sfc_main = {
     const tabBarHeight = common_vendor.ref(0);
     const screenWidth = common_vendor.ref(375);
     const darkMode = common_vendor.ref(false);
+    const isTablet = common_vendor.ref(false);
+    try {
+      const injectedIsTablet = common_vendor.inject("isTablet", false);
+      console.log("[MiniPlayer] 注入的平板模式值:", injectedIsTablet, "类型:", typeof injectedIsTablet);
+      if (injectedIsTablet !== void 0 && injectedIsTablet !== null) {
+        isTablet.value = typeof injectedIsTablet === "boolean" ? injectedIsTablet : false;
+      }
+    } catch (e) {
+      console.log("[MiniPlayer] 获取平板模式状态失败:", e);
+    }
+    const checkIsTabletMode = () => {
+      try {
+        const systemInfo = common_vendor.index.getSystemInfoSync();
+        const width = systemInfo.windowWidth || systemInfo.screenWidth || 0;
+        const height = systemInfo.windowHeight || systemInfo.screenHeight || 0;
+        const TABLET_ASPECT_RATIO = 0.85;
+        const TABLET_MIN_WIDTH = 400;
+        const aspectRatio = width / height;
+        const newIsTablet = aspectRatio >= TABLET_ASPECT_RATIO && width >= TABLET_MIN_WIDTH;
+        console.log("[MiniPlayer] 检测平板模式 - 尺寸:", width, "x", height, "宽高比:", aspectRatio.toFixed(2), "结果:", newIsTablet);
+        if (isTablet.value !== newIsTablet) {
+          isTablet.value = newIsTablet;
+          console.log("[MiniPlayer] 平板模式状态更新为:", newIsTablet);
+        }
+      } catch (e) {
+        console.log("[MiniPlayer] 检测平板模式失败:", e);
+      }
+    };
+    const showFavoritePopup = common_vendor.ref(false);
+    const isCurrentSongFavorite = common_vendor.computed(() => {
+      if (!currentSong.value)
+        return false;
+      return store_modules_list.listStore.isInLoveList(currentSong.value.id);
+    });
+    const playModeIcon = common_vendor.computed(() => {
+      const modeIcons = {
+        "listLoop": "repeat",
+        "random": "shuffle",
+        "list": "arrow-right-arrow-left",
+        "singleLoop": "rotate-right",
+        "none": "ban"
+      };
+      return modeIcons[playMode.value] || "repeat";
+    });
+    const playModeTooltip = common_vendor.computed(() => {
+      const modeTexts = {
+        "listLoop": "列表循环",
+        "random": "随机播放",
+        "list": "顺序播放",
+        "singleLoop": "单曲循环",
+        "none": "不循环"
+      };
+      return modeTexts[playMode.value] || "列表循环";
+    });
+    const favoriteTooltip = common_vendor.computed(() => {
+      return isCurrentSongFavorite.value ? "取消收藏" : "收藏歌曲";
+    });
+    const playTooltip = common_vendor.computed(() => {
+      return playing.value ? "暂停" : "播放";
+    });
+    const formatTime = (time) => {
+      if (!time || time <= 0)
+        return "00:00";
+      const minutes = Math.floor(time / 60);
+      const seconds = Math.floor(time % 60);
+      return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+    };
+    const handleFavorite = () => {
+      if (!currentSong.value) {
+        common_vendor.index.showToast({ title: "没有正在播放的歌曲", icon: "none" });
+        return;
+      }
+      const lists = store_modules_list.listStore.getAllAvailableLists();
+      if (lists.length === 1 && lists[0].type === "love") {
+        toggleLove();
+        return;
+      }
+      showFavoritePopup.value = true;
+    };
+    const toggleLove = () => {
+      if (!currentSong.value)
+        return;
+      const isInLove = store_modules_list.listStore.isInLoveList(currentSong.value.id);
+      if (isInLove) {
+        store_modules_list.listStore.removeFromLoveList(currentSong.value.id);
+        common_vendor.index.showToast({ title: "已取消喜欢", icon: "none" });
+      } else {
+        store_modules_list.listStore.addListMusics("love", currentSong.value, "top");
+        common_vendor.index.showToast({ title: "已添加到我喜欢的音乐", icon: "success" });
+      }
+    };
+    const togglePlayMode = () => {
+      const modes = ["listLoop", "random", "list", "singleLoop"];
+      const currentIndex = modes.indexOf(playMode.value);
+      const nextIndex = (currentIndex + 1) % modes.length;
+      store_modules_player.playerStore.setPlayMode(modes[nextIndex]);
+      const modeNames = {
+        "listLoop": "列表循环",
+        "random": "随机播放",
+        "list": "顺序播放",
+        "singleLoop": "单曲循环"
+      };
+      common_vendor.index.showToast({
+        title: modeNames[modes[nextIndex]],
+        icon: "none"
+      });
+    };
     common_vendor.ref(null);
     const marqueeScroll = common_vendor.ref(false);
     common_vendor.ref(null);
@@ -147,20 +255,25 @@ const _sfc_main = {
     const checkDarkMode = () => {
       const followSystem = common_vendor.index.getStorageSync("followSystem");
       const isFollowSystem = followSystem !== "false" && followSystem !== false;
+      const storedDarkMode = common_vendor.index.getStorageSync("darkMode");
       if (isFollowSystem) {
         const systemInfo = common_vendor.index.getSystemInfoSync();
-        darkMode.value = systemInfo.theme === "dark";
+        if (systemInfo && systemInfo.theme) {
+          darkMode.value = systemInfo.theme === "dark";
+        } else {
+          darkMode.value = storedDarkMode === "true";
+        }
       } else {
-        darkMode.value = common_vendor.index.getStorageSync("darkMode") === "true";
+        darkMode.value = storedDarkMode === "true";
       }
-      console.log("[MiniPlayer] checkDarkMode - isFollowSystem:", isFollowSystem, "darkMode:", darkMode.value);
+      console.log("[MiniPlayer] checkDarkMode - isFollowSystem:", isFollowSystem, "darkMode:", darkMode.value, "storedDarkMode:", storedDarkMode);
     };
     const initDanmaku = () => {
       const storedDanmaku = common_vendor.index.getStorageSync("showMiniPlayerDanmaku");
       showDanmaku.value = storedDanmaku === "true";
       console.log("[MiniPlayer] 初始化弹幕设置:", showDanmaku.value, "storage:", storedDanmaku);
       if (common_vendor.index && common_vendor.index.$on) {
-        common_vendor.index.$on("miniPlayerDanmakuChanged", (show) => {
+        common_vendor.index.$on("miniPlayerDanmakuChanged", async (show) => {
           showDanmaku.value = show;
           if (!show) {
             danmakuList.value = [];
@@ -169,6 +282,10 @@ const _sfc_main = {
               clearInterval(danmakuTimer);
               danmakuTimer = null;
             }
+          } else {
+            console.log("[MiniPlayer] 弹幕已开启，主动获取弹幕数据");
+            await fetchDanmakuComments();
+            startDanmaku();
           }
           console.log("[MiniPlayer] 弹幕设置变化:", show);
         });
@@ -561,6 +678,9 @@ const _sfc_main = {
     };
     const showMiniPlayer = common_vendor.computed(() => {
       var _a;
+      if (isTablet.value) {
+        return true;
+      }
       return !!((_a = currentSong.value) == null ? void 0 : _a.id);
     });
     let danmakuLoadedForSong = null;
@@ -776,6 +896,13 @@ const _sfc_main = {
     };
     const playNext = async () => {
       console.log("[MiniPlayer] 播放下一首, 当前播放模式:", playMode.value);
+      console.log("[MiniPlayer] 👆 用户主动操作（下一首），重置失败计数");
+      store_modules_player.playerStore.setState({
+        isUserManualSwitch: true,
+        playNextRetryCount: 0,
+        isPlaybackStopped: false,
+        currentFailingSongId: null
+      });
       let togglePlayMethod;
       switch (playMode.value) {
         case "random":
@@ -813,6 +940,52 @@ const _sfc_main = {
       }
       await playSongFromList(nextSongInfo);
     };
+    const playPrev = async () => {
+      console.log("[MiniPlayer] 播放上一首, 当前播放模式:", playMode.value);
+      console.log("[MiniPlayer] 👆 用户主动操作（上一首），重置失败计数");
+      store_modules_player.playerStore.setState({
+        isUserManualSwitch: true,
+        playNextRetryCount: 0,
+        isPlaybackStopped: false,
+        currentFailingSongId: null
+      });
+      let togglePlayMethod;
+      switch (playMode.value) {
+        case "random":
+          togglePlayMethod = "random";
+          break;
+        case "singleLoop":
+          togglePlayMethod = "listLoop";
+          break;
+        case "list":
+          togglePlayMethod = "list";
+          break;
+        default:
+          togglePlayMethod = "listLoop";
+      }
+      console.log("[MiniPlayer] 使用的切换方法:", togglePlayMethod);
+      if (store_modules_player.playerStore.getState().isGettingUrl) {
+        console.log("[MiniPlayer] 正在获取播放链接，只更新待播放歌曲");
+        const prevSongInfo2 = store_modules_list.listStore.getPrevSong(togglePlayMethod);
+        if (prevSongInfo2 && prevSongInfo2.musicInfo) {
+          console.log("[MiniPlayer] 更新待播放歌曲:", prevSongInfo2.musicInfo.name);
+          store_modules_player.playerStore.updatePendingSong(prevSongInfo2.musicInfo);
+        }
+        return;
+      }
+      store_modules_player.playerStore.setGettingUrl(true);
+      const prevSongInfo = store_modules_list.listStore.getPrevSong(togglePlayMethod);
+      if (!prevSongInfo || !prevSongInfo.musicInfo) {
+        console.log("[MiniPlayer] 没有上一首歌曲");
+        store_modules_player.playerStore.setGettingUrl(false);
+        common_vendor.index.showToast({
+          title: "已经是第一首了",
+          icon: "none"
+        });
+        return;
+      }
+      await playSongFromList(prevSongInfo);
+    };
     const playSongFromList = async (playMusicInfo) => {
       const song = playMusicInfo.musicInfo;
       const listId = playMusicInfo.listId;
@@ -834,6 +1007,7 @@ const _sfc_main = {
         });
       }
     };
+    common_vendor.ref(0);
     const openFullPlayer = () => {
       common_vendor.index.navigateTo({
         url: "/pages/player/index"
@@ -932,9 +1106,8 @@ const _sfc_main = {
     };
     const handleThemeChange = (data) => {
       console.log("[MiniPlayer] 收到 themeChanged 事件:", data);
-      if (data && typeof data.isDark === "boolean") {
-        darkMode.value = data.isDark;
-      }
+      common_vendor.index.$emit("themeLogAdded", { log: `[${(/* @__PURE__ */ new Date()).toLocaleTimeString()}] [MiniPlayer] 收到主题变化: ${JSON.stringify(data)}` });
+      checkDarkMode();
     };
     const handleSystemThemeChange = (data) => {
       console.log("[MiniPlayer] 收到 systemThemeChange 事件:", data);
@@ -943,6 +1116,7 @@ const _sfc_main = {
       if (isFollowSystem && data && typeof data.isDark === "boolean") {
         darkMode.value = data.isDark;
         console.log("[MiniPlayer] handleSystemThemeChange - isFollowSystem:", isFollowSystem, "darkMode:", darkMode.value);
+        common_vendor.index.$emit("themeLogAdded", { log: `[${(/* @__PURE__ */ new Date()).toLocaleTimeString()}] [MiniPlayer] 系统主题变化, darkMode: ${darkMode.value}` });
       }
     };
     common_vendor.onMounted(() => {
@@ -953,6 +1127,15 @@ const _sfc_main = {
       updateMiniPlayerBottom();
       setTimeout(checkMarquee, 300);
       setTimeout(checkStatusMarquee, 350);
+      checkIsTabletMode();
+      common_vendor.index.onWindowResize(() => {
+        checkIsTabletMode();
+      });
+      console.log("[MiniPlayer] 已注册窗口大小变化监听");
+      common_vendor.index.$on("tabletModeChanged", (newIsTablet) => {
+        console.log("[MiniPlayer] 收到平板模式变化事件:", newIsTablet);
+        isTablet.value = newIsTablet;
+      });
       if (playing.value && ((_a = currentSong.value) == null ? void 0 : _a.id) && showDanmaku.value) {
         console.log("[MiniPlayer] 组件挂载时恢复弹幕, 歌曲ID:", currentSong.value.id);
         setTimeout(() => {
@@ -979,73 +1162,161 @@ const _sfc_main = {
       common_vendor.index.$on("themeChanged", handleThemeChange);
       common_vendor.index.$on("systemThemeChange", handleSystemThemeChange);
       console.log("[MiniPlayer] 已注册主题变化监听");
+      checkDarkMode();
     });
     common_vendor.onUnmounted(() => {
       common_vendor.index.$off("themeChanged", handleThemeChange);
       common_vendor.index.$off("systemThemeChange", handleSystemThemeChange);
-      console.log("[MiniPlayer] 已移除主题变化监听");
+      common_vendor.index.$off("tabletModeChanged");
+      console.log("[MiniPlayer] 已移除所有事件监听");
     });
     return (_ctx, _cache) => {
-      var _a, _b, _c, _d, _e, _f;
+      var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l;
       return common_vendor.e({
         a: showMiniPlayer.value
       }, showMiniPlayer.value ? common_vendor.e({
-        b: coverUrl.value,
-        c: common_vendor.o(handleCoverImageError, "88"),
-        d: common_vendor.t(((_a = currentSong.value) == null ? void 0 : _a.name) || "夏日微风"),
-        e: common_vendor.t(((_b = currentSong.value) == null ? void 0 : _b.ar) ? currentSong.value.ar.map((a) => a.name).join("/") : ((_c = currentSong.value) == null ? void 0 : _c.artists) ? currentSong.value.artists.map((a) => a.name).join("/") : "海洋之声"),
-        f: marqueeScroll.value
-      }, marqueeScroll.value ? {} : {}, {
+        b: !isTablet.value
+      }, !isTablet.value ? common_vendor.e({
+        c: coverUrl.value,
+        d: common_vendor.o(handleCoverImageError, "22"),
+        e: common_vendor.t(((_a = currentSong.value) == null ? void 0 : _a.name) || "夏日微风"),
+        f: common_vendor.t(((_b = currentSong.value) == null ? void 0 : _b.ar) ? currentSong.value.ar.map((a) => a.name).join("/") : ((_c = currentSong.value) == null ? void 0 : _c.artists) ? currentSong.value.artists.map((a) => a.name).join("/") : "海洋之声"),
         g: marqueeScroll.value
-      }, marqueeScroll.value ? {
-        h: common_vendor.t(((_d = currentSong.value) == null ? void 0 : _d.name) || "夏日微风")
-      } : {}, {
-        i: marqueeScroll.value
       }, marqueeScroll.value ? {} : {}, {
-        j: marqueeScroll.value
+        h: marqueeScroll.value
       }, marqueeScroll.value ? {
-        k: common_vendor.t(((_e = currentSong.value) == null ? void 0 : _e.ar) ? currentSong.value.ar.map((a) => a.name).join("/") : ((_f = currentSong.value) == null ? void 0 : _f.artists) ? currentSong.value.artists.map((a) => a.name).join("/") : "海洋之声")
+        i: common_vendor.t(((_d = currentSong.value) == null ? void 0 : _d.name) || "夏日微风")
       } : {}, {
-        l: marqueeScroll.value ? 1 : "",
-        m: statusText.value
+        j: marqueeScroll.value
+      }, marqueeScroll.value ? {} : {}, {
+        k: marqueeScroll.value
+      }, marqueeScroll.value ? {
+        l: common_vendor.t(((_e = currentSong.value) == null ? void 0 : _e.ar) ? currentSong.value.ar.map((a) => a.name).join("/") : ((_f = currentSong.value) == null ? void 0 : _f.artists) ? currentSong.value.artists.map((a) => a.name).join("/") : "海洋之声")
+      } : {}, {
+        m: marqueeScroll.value ? 1 : "",
+        n: statusText.value
       }, statusText.value ? common_vendor.e({
-        n: common_vendor.t(statusText.value),
-        o: statusMarqueeScroll.value
-      }, statusMarqueeScroll.value ? {} : {}, {
+        o: common_vendor.t(statusText.value),
         p: statusMarqueeScroll.value
+      }, statusMarqueeScroll.value ? {} : {}, {
+        q: statusMarqueeScroll.value
       }, statusMarqueeScroll.value ? {
-        q: common_vendor.t(statusText.value)
+        r: common_vendor.t(statusText.value)
       } : {}, {
-        r: statusMarqueeScroll.value ? 1 : ""
+        s: statusMarqueeScroll.value ? 1 : ""
       }) : {}, {
-        s: isLoading.value
+        t: isLoading.value
       }, isLoading.value ? {} : {
-        t: common_vendor.p({
+        v: common_vendor.p({
           name: playing.value ? "pause" : "play",
           size: "16",
           color: "#ffffff"
         })
       }, {
-        v: isLoading.value ? 1 : "",
-        w: common_vendor.o(togglePlay, "f4"),
-        x: common_vendor.p({
+        w: isLoading.value ? 1 : "",
+        x: playTooltip.value,
+        y: common_vendor.o(togglePlay, "07"),
+        z: common_vendor.p({
           name: "forward-step",
           size: "16",
           color: "#999999"
         }),
-        y: common_vendor.o(playNext, "69"),
-        z: isDragging.value ? dragPercent.value + "%" : progressPercent.value + "%",
-        A: isDragging.value ? dragPercent.value + "%" : progressPercent.value + "%",
-        B: common_vendor.o(onProgressTouchStart, "8e"),
-        C: common_vendor.o(onProgressTouchMove, "e9"),
-        D: common_vendor.o(onProgressTouchEnd, "88"),
-        E: common_vendor.o(() => {
-        }, "5f"),
-        F: darkMode.value ? 1 : "",
-        G: common_vendor.o(openFullPlayer, "cd"),
-        H: showDanmaku.value && activeDanmaku.value.length > 0
+        A: common_vendor.o(playNext, "fe"),
+        B: isDragging.value ? dragPercent.value + "%" : progressPercent.value + "%",
+        C: isDragging.value ? dragPercent.value + "%" : progressPercent.value + "%",
+        D: common_vendor.o(onProgressTouchStart, "22"),
+        E: common_vendor.o(onProgressTouchMove, "e3"),
+        F: common_vendor.o(onProgressTouchEnd, "13")
+      }) : common_vendor.e({
+        G: coverUrl.value,
+        H: common_vendor.o(handleCoverImageError, "3d"),
+        I: common_vendor.t(((_g = currentSong.value) == null ? void 0 : _g.name) || "夏日微风"),
+        J: common_vendor.t(((_h = currentSong.value) == null ? void 0 : _h.ar) ? currentSong.value.ar.map((a) => a.name).join("/") : ((_i = currentSong.value) == null ? void 0 : _i.artists) ? currentSong.value.artists.map((a) => a.name).join("/") : "海洋之声"),
+        K: marqueeScroll.value
+      }, marqueeScroll.value ? {} : {}, {
+        L: marqueeScroll.value
+      }, marqueeScroll.value ? {
+        M: common_vendor.t(((_j = currentSong.value) == null ? void 0 : _j.name) || "夏日微风")
+      } : {}, {
+        N: marqueeScroll.value
+      }, marqueeScroll.value ? {} : {}, {
+        O: marqueeScroll.value
+      }, marqueeScroll.value ? {
+        P: common_vendor.t(((_k = currentSong.value) == null ? void 0 : _k.ar) ? currentSong.value.ar.map((a) => a.name).join("/") : ((_l = currentSong.value) == null ? void 0 : _l.artists) ? currentSong.value.artists.map((a) => a.name).join("/") : "海洋之声")
+      } : {}, {
+        Q: marqueeScroll.value ? 1 : "",
+        R: statusText.value
+      }, statusText.value ? common_vendor.e({
+        S: common_vendor.t(statusText.value),
+        T: statusMarqueeScroll.value
+      }, statusMarqueeScroll.value ? {} : {}, {
+        U: statusMarqueeScroll.value
+      }, statusMarqueeScroll.value ? {
+        V: common_vendor.t(statusText.value)
+      } : {}, {
+        W: statusMarqueeScroll.value ? 1 : ""
+      }) : {}, {
+        X: common_vendor.p({
+          name: "heart",
+          size: "16",
+          color: isCurrentSongFavorite.value ? "#ff6b6b" : darkMode.value ? "#ffffff" : "#999999"
+        }),
+        Y: favoriteTooltip.value,
+        Z: common_vendor.o(handleFavorite, "4d"),
+        aa: playMode.value === "singleLoop"
+      }, playMode.value === "singleLoop" ? {
+        ab: common_vendor.p({
+          name: "rotate-right",
+          size: "16",
+          color: darkMode.value ? "#ffffff" : "#999999"
+        }),
+        ac: darkMode.value ? "#ffffff" : "#999999"
+      } : {
+        ad: common_vendor.p({
+          name: playModeIcon.value,
+          size: "16",
+          color: darkMode.value ? "#ffffff" : "#999999"
+        })
+      }, {
+        ae: playModeTooltip.value,
+        af: common_vendor.o(togglePlayMode, "1b"),
+        ag: common_vendor.p({
+          name: "backward-step",
+          size: "16",
+          color: "#999999"
+        }),
+        ah: common_vendor.o(playPrev, "f0"),
+        ai: isLoading.value
+      }, isLoading.value ? {} : {
+        aj: common_vendor.p({
+          name: playing.value ? "pause" : "play",
+          size: "16",
+          color: "#ffffff"
+        })
+      }, {
+        ak: isLoading.value ? 1 : "",
+        al: playTooltip.value,
+        am: common_vendor.o(togglePlay, "e9"),
+        an: common_vendor.p({
+          name: "forward-step",
+          size: "16",
+          color: "#999999"
+        }),
+        ao: common_vendor.o(playNext, "8c"),
+        ap: common_vendor.t(formatTime(currentTime.value)),
+        aq: isDragging.value ? dragPercent.value + "%" : progressPercent.value + "%",
+        ar: isDragging.value ? dragPercent.value + "%" : progressPercent.value + "%",
+        as: common_vendor.t(formatTime(duration.value)),
+        at: common_vendor.o(onProgressTouchStart, "ba"),
+        av: common_vendor.o(onProgressTouchMove, "a8"),
+        aw: common_vendor.o(onProgressTouchEnd, "9f")
+      }), {
+        ax: darkMode.value ? 1 : "",
+        ay: isTablet.value ? 1 : "",
+        az: common_vendor.o(openFullPlayer, "3c"),
+        aA: showDanmaku.value && activeDanmaku.value.length > 0
       }, showDanmaku.value && activeDanmaku.value.length > 0 ? {
-        I: common_vendor.f(activeDanmaku.value, (item, index, i0) => {
+        aB: common_vendor.f(activeDanmaku.value, (item, index, i0) => {
           return {
             a: common_vendor.t(item.userName),
             b: common_vendor.t(item.text),
@@ -1054,13 +1325,23 @@ const _sfc_main = {
             e: common_vendor.o(($event) => onDanmakuEnd($event), item.uniqueId)
           };
         }),
-        J: darkMode.value ? 1 : "",
-        K: !playing.value ? 1 : ""
+        aC: darkMode.value ? 1 : "",
+        aD: !playing.value ? 1 : ""
       } : {}, {
-        L: common_vendor.s(_ctx.__cssVars())
-      }) : {});
+        aE: isTablet.value ? 1 : "",
+        aF: common_vendor.s(_ctx.__cssVars())
+      }) : {}, {
+        aG: common_vendor.o(($event) => showFavoritePopup.value = $event, "a2"),
+        aH: common_vendor.o(($event) => showFavoritePopup.value = false, "01"),
+        aI: common_vendor.s(_ctx.__cssVars()),
+        aJ: common_vendor.p({
+          visible: showFavoritePopup.value,
+          ["dark-mode"]: darkMode.value,
+          ["is-tablet"]: isTablet.value
+        })
+      });
     };
   }
 };
-const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-a8e7d203"]]);
+const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-9050df25"]]);
 wx.createComponent(Component);

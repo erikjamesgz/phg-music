@@ -29,7 +29,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 1000;
+  z-index: 100;
   display: flex;
   flex-direction: column;
   background-color: #ffffff;
@@ -240,10 +240,17 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 16rpx;
   margin-top: 16rpx;
   margin-bottom: 0;
   padding: 0;
+}
+.music-source-tabs > view {
+  margin-right: 16rpx;
+}
+.music-source-tabs > view:last-child {
+  margin-right: 0;
+}
+.slide-indicator {
   /* 平板适配 - 缩小指示器区域 */
   /* 中等屏幕手机适配（如 iPhone XR, iPhone 11） */
   /* 小屏幕手机适配（如 iPhone 5, iPhone SE） */
@@ -309,6 +316,10 @@
   border-radius: 4rpx;
   background: #9ca3af;
   transition: all 0.3s ease;
+  margin-right: 12rpx;
+}
+.indicator-dot:last-child {
+  margin-right: 0;
 }
 .indicator-dot.active {
   width: 48rpx;
@@ -855,7 +866,6 @@ to {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6rpx;
   height: 60rpx;
   margin-top: 16rpx;
   /* 平板适配 - 转盘420rpx，按比例缩小 */
@@ -864,42 +874,73 @@ to {
   /* 小屏幕手机适配（如 iPhone 5, SE, 6, 7, 8, X）- 转盘494rpx，按比例调整 */
   /* 矮屏设备适配（如折叠屏内屏）- 转盘272rpx，按比例缩小 */
 }
+.wave-container .wave-bar {
+  margin-right: 6rpx;
+}
+.wave-container .wave-bar:last-child {
+  margin-right: 0;
+}
 .wave-container.paused .wave-bar {
   animation-play-state: paused;
 }
 @media screen and (min-width: 768px) {
 .wave-container {
     height: 48rpx;
-    gap: 5rpx;
     margin-top: 12rpx;
+}
+.wave-container .wave-bar {
+    margin-right: 5rpx;
+}
+.wave-container .wave-bar:last-child {
+    margin-right: 0;
 }
 }
 @media screen and (min-width: 768px) and (min-height: 1024px) {
 .wave-container {
     height: 38rpx;
-    gap: 4rpx;
     margin-top: 10rpx;
+}
+.wave-container .wave-bar {
+    margin-right: 4rpx;
+}
+.wave-container .wave-bar:last-child {
+    margin-right: 0;
 }
 }
 @media screen and (max-height: 896px) and (min-height: 813px) {
 .wave-container {
     height: 66rpx;
-    gap: 7rpx;
     margin-top: 18rpx;
+}
+.wave-container .wave-bar {
+    margin-right: 7rpx;
+}
+.wave-container .wave-bar:last-child {
+    margin-right: 0;
 }
 }
 @media screen and (max-height: 812px) {
 .wave-container {
     height: 56rpx;
-    gap: 6rpx;
     margin-top: 14rpx;
+}
+.wave-container .wave-bar {
+    margin-right: 6rpx;
+}
+.wave-container .wave-bar:last-child {
+    margin-right: 0;
 }
 }
 @media screen and (max-height: 800px) and (min-width: 700px) {
 .wave-container {
     height: 30rpx;
-    gap: 3rpx;
     margin-top: 8rpx;
+}
+.wave-container .wave-bar {
+    margin-right: 3rpx;
+}
+.wave-container .wave-bar:last-child {
+    margin-right: 0;
 }
 }
 .wave-bar {
@@ -995,7 +1036,7 @@ to {
 }
 .lyrics-scroll-wrapper {
   width: 100%;
-  height: var(--f9a32904);
+  height: var(--14f32965);
   overflow: hidden;
 }
 .lyrics-scroll-view {
@@ -1348,6 +1389,23 @@ to {
     font-size: 12rpx;
 }
 }
+.single-loop-icon-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.single-loop-icon-wrapper .single-loop-number {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-top: -7px;
+  margin-left: -4px;
+  font-size: 14px;
+  font-weight: bold;
+  line-height: 1;
+  z-index: 10;
+}
 .control-buttons {
   display: flex;
   align-items: center;
@@ -1694,12 +1752,17 @@ to {
   flex-direction: row;
   flex-wrap: nowrap;
   align-items: center;
-  gap: 10rpx;
   box-shadow: 0 4rpx 16rpx rgba(0, 215, 205, 0.3);
   white-space: nowrap;
   -webkit-writing-mode: horizontal-tb;
           writing-mode: horizontal-tb;
   text-orientation: mixed;
+}
+.favorite-bubble .favorite-bubble__content > view {
+  margin-right: 10rpx;
+}
+.favorite-bubble .favorite-bubble__content > view:last-child {
+  margin-right: 0;
 }
 .favorite-bubble__text {
   font-size: 22rpx;
@@ -1736,138 +1799,6 @@ to {
     transform: translateX(-50%) scale(1) translateY(0);
 }
 }
-.add-to-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  z-index: 1000;
-}
-.add-to-modal {
-  width: 100%;
-  max-height: 70vh;
-  background: #ffffff;
-  border-radius: 32rpx 32rpx 0 0;
-  display: flex;
-  flex-direction: column;
-}
-.add-to-modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 32rpx;
-  border-bottom: 1rpx solid #f3f4f6;
-}
-.add-to-modal-title {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #1f2937;
-}
-.add-to-modal-close {
-  width: 64rpx;
-  height: 64rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.add-to-modal-content {
-  max-height: 60vh;
-  padding: 16rpx 0;
-}
-.add-to-item {
-  display: flex;
-  align-items: center;
-  padding: 24rpx 32rpx;
-  transition: all 0.2s ease;
-}
-.add-to-item:active {
-  background: #f9fafb;
-}
-.add-to-item.create-new {
-  border-bottom: 1rpx solid #f3f4f6;
-  margin-bottom: 8rpx;
-}
-.add-to-item.create-new .add-to-name {
-  color: #00d7cd;
-  font-weight: 500;
-}
-.add-to-item--disabled {
-  opacity: 0.6;
-}
-.add-to-item--disabled:active {
-  background: transparent;
-}
-.add-to-name {
-  font-size: 28rpx;
-  color: #374151;
-  font-weight: 500;
-  transition: color 0.2s ease;
-}
-.add-to-name--disabled {
-  color: #9ca3af;
-}
-.add-to-count {
-  font-size: 24rpx;
-  color: #6b7280;
-  margin-top: 4rpx;
-  transition: color 0.2s ease;
-}
-.add-to-count--disabled {
-  color: #9ca3af;
-}
-.add-to-icon {
-  width: 72rpx;
-  height: 72rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 16rpx;
-  background: #f3f4f6;
-  margin-right: 24rpx;
-}
-.add-to-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-/* 暗黑模式下的弹窗 */
-.player-page.dark-mode .add-to-modal {
-  background: #1f2937;
-}
-.player-page.dark-mode .add-to-modal-header {
-  border-bottom: 1rpx solid rgba(255, 255, 255, 0.1);
-}
-.player-page.dark-mode .add-to-modal-title {
-  color: #f3f4f6;
-}
-.player-page.dark-mode .add-to-item:active {
-  background: rgba(255, 255, 255, 0.05);
-}
-.player-page.dark-mode .add-to-item.create-new {
-  border-bottom: 1rpx solid rgba(255, 255, 255, 0.1);
-}
-.player-page.dark-mode .add-to-name {
-  color: #f3f4f6;
-}
-.player-page.dark-mode .add-to-name--disabled {
-  color: #6b7280;
-}
-.player-page.dark-mode .add-to-count {
-  color: #9ca3af;
-}
-.player-page.dark-mode .add-to-count--disabled {
-  color: #6b7280;
-}
-.player-page.dark-mode .add-to-icon {
-  background: rgba(255, 255, 255, 0.1);
-}
-
 /* 暗黑模式下的进度条 */
 .player-page.dark-mode .progress-bar {
   background-color: rgba(255, 255, 255, 0.1);
@@ -1949,66 +1880,68 @@ to {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 5000;
 }
 .sleep-timer-modal {
-  width: 600rpx;
+  width: 85%;
+  max-width: 320px;
+  max-height: 80vh;
   background: #ffffff;
-  border-radius: 24rpx;
+  border-radius: 16px;
   overflow: hidden;
 }
 .sleep-timer-modal__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 32rpx;
-  border-bottom: 1rpx solid #f3f4f6;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f3f4f6;
 }
 .sleep-timer-modal__title {
-  font-size: 32rpx;
+  font-size: 15px;
   font-weight: 600;
   color: #1f2937;
 }
 .sleep-timer-modal__close {
-  width: 64rpx;
-  height: 64rpx;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .sleep-timer-modal__body {
-  padding: 32rpx;
+  padding: 20px;
 }
 .sleep-timer-status {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 24rpx;
+  padding: 16px;
   background: linear-gradient(135deg, rgba(0, 215, 205, 0.1) 0%, rgba(0, 175, 255, 0.1) 100%);
-  border-radius: 16rpx;
-  margin-bottom: 24rpx;
+  border-radius: 12px;
+  margin-bottom: 16px;
 }
 .sleep-timer-status__label {
-  font-size: 24rpx;
+  font-size: 12px;
   color: #6b7280;
-  margin-bottom: 8rpx;
+  margin-bottom: 6px;
 }
 .sleep-timer-status__value {
-  font-size: 40rpx;
+  font-size: 24px;
   font-weight: 600;
   color: #00d7cd;
-  margin-bottom: 16rpx;
+  margin-bottom: 12px;
 }
 .sleep-timer-status__btn {
-  padding: 12rpx 32rpx;
+  padding: 8px 20px;
   background: #ef4444;
   color: #ffffff;
-  font-size: 24rpx;
-  border-radius: 20rpx;
+  font-size: 13px;
+  border-radius: 16px;
 }
 .sleep-timer-picker {
-  height: 400rpx;
-  margin-bottom: 24rpx;
+  height: 220px;
+  margin-bottom: 16px;
 }
 .sleep-timer-picker__view {
   height: 100%;
@@ -2017,28 +1950,33 @@ to {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32rpx;
+  font-size: 15px;
   color: #374151;
 }
 .sleep-timer-tip {
   text-align: center;
-  font-size: 24rpx;
+  font-size: 12px;
   color: #9ca3af;
 }
 .sleep-timer-modal__footer {
   display: flex;
-  padding: 24rpx 32rpx;
-  gap: 24rpx;
-  border-top: 1rpx solid #f3f4f6;
+  padding: 14px 20px;
+  border-top: 1px solid #f3f4f6;
+}
+.sleep-timer-modal__footer .sleep-timer-btn {
+  margin-right: 12px;
+}
+.sleep-timer-modal__footer .sleep-timer-btn:last-child {
+  margin-right: 0;
 }
 .sleep-timer-btn {
   flex: 1;
-  height: 80rpx;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 40rpx;
-  font-size: 28rpx;
+  border-radius: 20px;
+  font-size: 14px;
   font-weight: 500;
 }
 .sleep-timer-btn--secondary {
@@ -2055,13 +1993,13 @@ to {
   background: #1f2937;
 }
 .player-page.dark-mode .sleep-timer-modal__header {
-  border-bottom: 1rpx solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 .player-page.dark-mode .sleep-timer-modal__title {
   color: #f3f4f6;
 }
 .player-page.dark-mode .sleep-timer-modal__footer {
-  border-top: 1rpx solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 .player-page.dark-mode .sleep-timer-btn--secondary {
   background: rgba(255, 255, 255, 0.1);
@@ -2077,4 +2015,411 @@ from {
 to {
     transform: rotate(360deg);
 }
+}
+/* ========== 平板横屏布局（横屏 + 宽度>=600px）========== */
+.player-page--tablet {
+  /* 平板模式全屏弹幕容器（仅布局） */
+  /* ===== 左侧面板：转盘 + 歌曲信息 + 控制栏 ===== */
+  /* ===== 右侧面板：纯歌词 ===== */
+}
+.player-page--tablet .player-navbar {
+  padding-left: 24px;
+  padding-right: 24px;
+  padding-top: 36px;
+  z-index: 3000;
+}
+.player-page--tablet .player-navbar__left {
+  width: 44px;
+  height: 44px;
+}
+.player-page--tablet .player-navbar__right {
+  width: 44px;
+  height: 44px;
+}
+.player-page--tablet .player-navbar__subtitle {
+  font-size: 15px;
+}
+.player-page--tablet .player-navbar__source {
+  font-size: 12px;
+}
+.player-page--tablet .player-swiper {
+  display: none;
+}
+.player-page--tablet .slide-indicator {
+  display: none;
+}
+.player-page--tablet .slide-arrow {
+  display: none;
+}
+.player-page--tablet .tablet-content {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+.player-page--tablet .tablet-danmaku-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 200px;
+  z-index: 10;
+  pointer-events: none;
+  overflow: hidden;
+}
+.player-page--tablet .tablet-left {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 20px 16px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  /* 歌曲名称 */
+  /* 波形动画 */
+  /* 平板模式下的控制区域 */
+  /* 收藏提示气泡 - 平板模式优化 */
+  /* 换源提示 - 平板模式优化 */
+}
+.player-page--tablet .tablet-left .album-cover-wrapper {
+  width: 260px !important;
+  height: 260px !important;
+  flex: none !important;
+  margin-bottom: 4px;
+}
+.player-page--tablet .tablet-left .turntable {
+  max-width: 260px !important;
+  max-height: 260px !important;
+}
+.player-page--tablet .tablet-left .turntable-metal-ring,
+.player-page--tablet .tablet-left .turntable-border,
+.player-page--tablet .tablet-left .turntable-groove,
+.player-page--tablet .tablet-left .turntable-cover {
+  width: calc(100% - 8px) !important;
+  padding-bottom: calc(100% - 8px) !important;
+}
+.player-page--tablet .tablet-left .turntable-cover {
+  width: calc(100% - 52px) !important;
+  padding-bottom: calc(100% - 52px) !important;
+}
+.player-page--tablet .tablet-left .tonearm {
+  width: 48px !important;
+  height: 105px !important;
+  transform-origin: 24px 14px;
+  right: 6%;
+}
+.player-page--tablet .tablet-left .tonearm__pivot {
+  width: 30px;
+  height: 30px;
+}
+.player-page--tablet .tablet-left .tonearm__pivot-inner {
+  width: 12px;
+  height: 12px;
+}
+.player-page--tablet .tablet-left .tonearm__rod {
+  top: 14px;
+  width: 4px;
+  height: 80px;
+}
+.player-page--tablet .tablet-left .tonearm__cartridge {
+  bottom: 6px;
+  width: 17px;
+  height: 25px;
+}
+.player-page--tablet .tablet-left .tablet-song-info {
+  text-align: center;
+  width: 100%;
+  margin-top: 4px;
+}
+.player-page--tablet .tablet-left .tablet-song-info .song-name {
+  font-size: 17px !important;
+  font-weight: 700;
+  color: #1f2937;
+  display: block;
+}
+.player-page--tablet .tablet-left .tablet-song-info__status-text {
+  font-size: 13px;
+  color: #00c4b8;
+  font-weight: 500;
+  display: block;
+  margin-top: 4px;
+}
+.player-page--tablet .tablet-left .wave-container {
+  height: 32px !important;
+  margin-top: 6px !important;
+}
+.player-page--tablet .tablet-left .wave-container .wave-bar {
+  margin-right: 4px !important;
+}
+.player-page--tablet .tablet-left .wave-container .wave-bar:last-child {
+  margin-right: 0 !important;
+}
+.player-page--tablet .tablet-left .wave-bar {
+  width: 4px;
+  border-radius: 2px;
+}
+.player-page--tablet .tablet-left .tablet-controls {
+  width: 100%;
+  margin-top: auto;
+  padding: 10px 0 0;
+}
+.player-page--tablet .tablet-left .progress-section {
+  margin-bottom: 10px;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+.player-page--tablet .tablet-left .progress-bar-wrapper {
+  padding: 10px 0;
+  margin: -10px 0;
+}
+.player-page--tablet .tablet-left .progress-bar {
+  height: 5px;
+  border-radius: 3px;
+}
+.player-page--tablet .tablet-left .progress-fill {
+  border-radius: 3px;
+}
+.player-page--tablet .tablet-left .progress-handle {
+  width: 16px;
+  height: 9px;
+  border-radius: 4.5px;
+  border-width: 1.5px;
+}
+.player-page--tablet .tablet-left .progress-time {
+  margin-top: 8px;
+}
+.player-page--tablet .tablet-left .progress-time .time-text {
+  font-size: 13px;
+}
+.player-page--tablet .tablet-left .control-buttons {
+  margin-bottom: 8px;
+  gap: 0;
+  justify-content: center;
+}
+.player-page--tablet .tablet-left .control-btn {
+  width: 5.5vw;
+  height: 5.5vw;
+  min-width: 48px;
+  min-height: 48px;
+  max-width: 64px;
+  max-height: 64px;
+}
+.player-page--tablet .tablet-left .control-btn--large {
+  width: 6.2vw;
+  height: 6.2vw;
+  min-width: 54px;
+  max-width: 76px;
+}
+.player-page--tablet .tablet-left .control-btn--primary {
+  width: 6.8vw;
+  height: 6.8vw;
+  min-width: 56px;
+  min-height: 56px;
+  max-width: 76px;
+  max-height: 76px;
+  border-radius: 50% !important;
+  background: linear-gradient(135deg, #00d7cd 0%, #00afff 100%);
+  box-shadow: 0 4px 16px rgba(0, 215, 205, 0.35);
+}
+.player-page--tablet .tablet-left .control-btn--primary .loading-spinner {
+  width: 100%;
+  height: 100%;
+}
+.player-page--tablet .tablet-left .control-btn--primary .loading-spinner__circle {
+  width: 100%;
+  height: 100%;
+}
+.player-page--tablet .tablet-left .control-btn--primary .loading-spinner__circle::before {
+  top: 3px;
+  left: 3px;
+  right: 3px;
+  bottom: 3px;
+}
+.player-page--tablet .tablet-left .control-btn .comment-count {
+  top: 2px;
+  right: 2px;
+  min-width: 18px;
+  height: 18px;
+  font-size: 11px;
+  border-radius: 9px;
+}
+.player-page--tablet .tablet-left .extra-buttons .extra-btn {
+  margin-right: 6px;
+}
+.player-page--tablet .tablet-left .extra-buttons .extra-btn:last-child {
+  margin-right: 0;
+}
+.player-page--tablet .tablet-left .extra-btn {
+  width: 44px;
+  height: 44px;
+}
+.player-page--tablet .tablet-left .sleep-timer-badge {
+  font-size: 10px;
+  padding: 1px 4px;
+  border-radius: 6px;
+}
+.player-page--tablet .tablet-left .favorite-bubble {
+  margin-bottom: 8px;
+}
+.player-page--tablet .tablet-left .favorite-bubble__arrow {
+  bottom: -8px;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid #00d7cd;
+}
+.player-page--tablet .tablet-left .favorite-bubble__content {
+  border-radius: 14px;
+  padding: 8px 14px;
+  box-shadow: 0 3px 12px rgba(0, 215, 205, 0.25);
+}
+.player-page--tablet .tablet-left .favorite-bubble__text {
+  font-size: 12px;
+}
+.player-page--tablet .tablet-left .favorite-bubble__close {
+  width: 18px;
+  height: 18px;
+}
+.player-page--tablet .tablet-left .source-switch-hint {
+  top: auto;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+  min-width: 120px;
+  max-width: none;
+  white-space: nowrap;
+  text-align: center;
+  line-height: 1.4;
+}
+.player-page--tablet .tablet-left .extra-btn.has-switched-source {
+  overflow: visible !important;
+}
+.player-page--tablet .tablet-right {
+  width: 50%;
+  min-height: 0;
+  box-sizing: border-box;
+  padding: 28px 36px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  cursor: grab;
+  -webkit-user-select: none;
+          user-select: none;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.player-page--tablet .tablet-right::-webkit-scrollbar {
+  display: none;
+}
+.player-page--tablet .tablet-right:active {
+  cursor: grabbing;
+}
+.player-page--tablet .tablet-right .lyrics-empty {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.player-page--tablet .tablet-right .lyrics-empty__text {
+  font-size: 16px;
+  color: #9ca3af;
+}
+.player-page--tablet .tablet-lyrics-list {
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 30px;
+  padding-bottom: 60px;
+  transition: transform 0.3s ease-out;
+}
+.player-page--tablet .tablet-lyrics-list .lyric-line-item {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 5px 0;
+}
+.player-page--tablet .tablet-lyrics-list .lyric-line-content {
+  padding: 8px 20px;
+  opacity: 0.45;
+  transition: all 0.25s ease;
+  border-radius: 6px;
+  text-align: center;
+}
+.player-page--tablet .tablet-lyrics-list .lyric-line-content .lyric-text {
+  font-size: 15px;
+  line-height: 1.65;
+  color: #9ca3af;
+  transition: all 0.25s ease;
+}
+.player-page--tablet .tablet-lyrics-list .lyric-line-content .lyric-translation {
+  font-size: 13px;
+  color: #b0b5ba;
+  line-height: 1.5;
+  margin-top: 2px;
+}
+.player-page--tablet .tablet-lyrics-list .lyric-line-content.lyric-line--active {
+  opacity: 1;
+  transform: scale(1.02);
+}
+.player-page--tablet .tablet-lyrics-list .lyric-line-content.lyric-line--active .lyric-text {
+  font-weight: 700;
+  color: #00b4a8;
+  font-size: 18px;
+}
+.player-page--tablet .tablet-lyrics-list .lyric-line-content.lyric-line--active .lyric-translation {
+  color: #00b4a8;
+  opacity: 0.9;
+}
+.player-page--tablet .music-toggle-modal-overlay {
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+.player-page--tablet .music-toggle-modal {
+  width: 50% !important;
+  max-width: 500px !important;
+  max-height: 100vh !important;
+  height: 100vh !important;
+  border-radius: 16px 0 0 16px !important;
+}
+.player-page--tablet .sleep-timer-modal-overlay {
+  align-items: stretch;
+  justify-content: flex-end;
+}
+.player-page--tablet .sleep-timer-modal {
+  width: 50%;
+  max-width: 400px;
+  max-height: 100vh;
+  height: 100vh;
+  border-radius: 16px 0 0 16px;
+}
+
+/* 平板暗黑模式 */
+.player-page.dark-mode.player-page--tablet .tablet-left .tablet-song-info .song-name {
+  color: #f3f4f6;
+}
+.player-page.dark-mode.player-page--tablet .tablet-lyrics-list .lyric-line-content .lyric-text {
+  color: #d1d5db;
+}
+.player-page.dark-mode.player-page--tablet .tablet-lyrics-list .lyric-line-content .lyric-translation {
+  color: #9ca3af;
+}
+.player-page.dark-mode.player-page--tablet .danmaku-container .danmaku-item {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+.player-page.dark-mode.player-page--tablet .danmaku-container .danmaku-item.dark-mode {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+.player-page.dark-mode.player-page--tablet .danmaku-container .danmaku-item .danmaku-user,
+.player-page.dark-mode.player-page--tablet .danmaku-container .danmaku-item .danmaku-text {
+  color: #e5e7eb;
 }

@@ -437,7 +437,7 @@ const languagePacks = {
     // 应用信息
     app: {
       name: "拼好歌",
-      slogan: "发现音乐之美"
+      slogan: "让好音乐无处不在"
     },
     // 个人资料
     profile: {

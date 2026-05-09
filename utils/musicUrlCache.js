@@ -40,6 +40,16 @@ async function isMusicUrlCached(songId, quality = "128k", source = "kg") {
     return false;
   }
 }
+async function removeCachedMusicUrl(songId, quality = "128k", source = "kg") {
+  try {
+    const key = getCacheKey(songId, quality, source);
+    common_vendor.index.removeStorageSync(key);
+    console.log("[MusicUrlCache] 已删除缓存:", key);
+  } catch (e) {
+    console.error("[MusicUrlCache] 删除缓存失败:", e);
+    throw e;
+  }
+}
 async function preloadNextMusic(nextSong, getMusicUrlFn, quality = "128k") {
   if (!nextSong || !nextSong.id)
     return;
@@ -69,4 +79,5 @@ async function preloadNextMusic(nextSong, getMusicUrlFn, quality = "128k") {
 exports.getCachedMusicUrl = getCachedMusicUrl;
 exports.isMusicUrlCached = isMusicUrlCached;
 exports.preloadNextMusic = preloadNextMusic;
+exports.removeCachedMusicUrl = removeCachedMusicUrl;
 exports.setCachedMusicUrl = setCachedMusicUrl;

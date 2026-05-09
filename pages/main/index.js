@@ -10,26 +10,41 @@ if (!Array) {
 }
 const _easycom_roc_icon_plus = () => "../../uni_modules/roc-icon-plus/components/roc-icon-plus/roc-icon-plus.js";
 if (!Math) {
-  (PactModal + UpdateModal + _easycom_roc_icon_plus + IndexPage + SearchPage + PlaylistPage + MyPage + MiniPlayer + CustomTabBar)();
+  (PactModal + UpdateModal + _easycom_roc_icon_plus + IndexPage + SearchPage + PlaylistPage + MyPage + SettingsPage + ShareListPage + RankPage + SonglistListPage + MusicSourcesPage + MiniPlayer + CustomTabBar)();
 }
 const IndexPage = () => "../index/index2.js";
 const SearchPage = () => "../search/index2.js";
 const PlaylistPage = () => "../playlist/index2.js";
 const MyPage = () => "../my/index2.js";
+const SettingsPage = () => "../settings/index2.js";
+const ShareListPage = () => "../sharelist/index2.js";
+const RankPage = () => "../rank/index2.js";
+const SonglistListPage = () => "../songlist-list/index2.js";
+const MusicSourcesPage = () => "../music-sources/index2.js";
 const MiniPlayer = () => "../../components/player/MiniPlayer.js";
 const CustomTabBar = () => "../../components/common/CustomTabBar.js";
 const PactModal = () => "../../components/common/PactModal.js";
 const UpdateModal = () => "../../components/common/UpdateModal.js";
+const TABLET_ASPECT_RATIO = 0.85;
+const TABLET_MIN_WIDTH = 400;
 const _sfc_main = {
   __name: "index",
   setup(__props) {
     const currentTab = common_vendor.ref(0);
     const loadedTabs = common_vendor.ref([0]);
     const darkMode = common_vendor.ref(false);
+    const isTablet = common_vendor.ref(false);
+    const subPageStack = common_vendor.ref([]);
+    const showSubPage = common_vendor.computed(() => subPageStack.value.length > 0);
+    const currentSubPageUrl = common_vendor.computed(() => {
+      const stack = subPageStack.value;
+      return stack.length > 0 ? stack[stack.length - 1] : "";
+    });
     const showPactModal = common_vendor.ref(false);
     const showUpdatePopup = common_vendor.ref(false);
     const updateInfo = common_vendor.ref(null);
     const pactAgreed = common_vendor.ref(false);
+    const showPactRejectModal = common_vendor.ref(false);
     const showDebugModal = common_vendor.ref(false);
     const showIgnoreConfirmModal = common_vendor.ref(false);
     const capsuleButton = common_vendor.ref({
@@ -52,10 +67,10 @@ const _sfc_main = {
       appTheme: ""
     });
     const themeLogs = common_vendor.ref([]);
-    const addThemeLog = (log) => {
+    const addThemeLog = (log, source = "Main") => {
       const time = (/* @__PURE__ */ new Date()).toLocaleTimeString();
-      themeLogs.value.unshift(`[${time}] ${log}`);
-      if (themeLogs.value.length > 200) {
+      themeLogs.value.unshift(`[${time}] [${source}] ${log}`);
+      if (themeLogs.value.length > 300) {
         themeLogs.value.pop();
       }
     };
@@ -78,7 +93,7 @@ const _sfc_main = {
         platform: systemInfo.platform || "unknown",
         appTheme: userTheme || "auto"
       };
-      addThemeLog("刷新调试信息");
+      addThemeLog("刷新调试信息", "Main");
     };
     const toggleDebugPanel = () => {
       debugPanelExpanded.value = !debugPanelExpanded.value;
@@ -88,6 +103,34 @@ const _sfc_main = {
     };
     const clearThemeLogs = () => {
       themeLogs.value = [];
+      addThemeLog("清空日志", "Main");
+    };
+    const copyDebugLogs = () => {
+      try {
+        const logsText = themeLogs.value.join("\n");
+        const infoText = Object.entries(debugInfo.value).map(([key, val]) => `${key}: ${val}`).join("\n");
+        const fullText = `=== 调试信息 ===
+${infoText}
+
+=== 日志 ===
+${logsText}`;
+        common_vendor.index.setClipboardData({
+          data: fullText,
+          success: () => {
+            common_vendor.index.showToast({ title: "已复制到剪贴板", icon: "success" });
+            addThemeLog("日志已复制", "Main");
+          }
+        });
+      } catch (e) {
+        console.error("[Main] 复制日志失败:", e);
+        common_vendor.index.showToast({ title: "复制失败", icon: "none" });
+      }
+    };
+    const onDebugLogsWheel = (e) => {
+      const scrollEl = e.target;
+      if (scrollEl && scrollEl.scrollTop !== void 0) {
+        return;
+      }
     };
     const getCapsuleButtonRect = () => {
       try {
@@ -143,40 +186,80 @@ const _sfc_main = {
       });
       console.log("[Main] 用户已确认永久忽略HTTP检测");
     };
+    const checkIsTablet = () => {
+      try {
+        const systemInfo = common_vendor.index.getSystemInfoSync();
+        const width = systemInfo.windowWidth || systemInfo.screenWidth || 0;
+        const height = systemInfo.windowHeight || systemInfo.screenHeight || 0;
+        const newIsTablet = width / height >= TABLET_ASPECT_RATIO && width >= TABLET_MIN_WIDTH;
+        if (isTablet.value !== newIsTablet) {
+          isTablet.value = newIsTablet;
+          console.log("[Main] 平板模式状态变化:", newIsTablet);
+          common_vendor.index.$emit("tabletModeChanged", newIsTablet);
+        }
+        console.log("[Main] 容器:", width, "x", height, "宽高比:", (width / height).toFixed(2), "平板模式:", isTablet.value);
+      } catch (e) {
+        isTablet.value = false;
+        console.log("[Main] 检测平板模式失败:", e);
+      }
+    };
+    const handleWindowResize = () => {
+      console.log("[Main] 窗口大小变化，重新检测平板模式");
+      const wasTablet = isTablet.value;
+      checkIsTablet();
+      if (wasTablet && !isTablet.value) {
+        console.log("[Main] 退出平板模式");
+        if (subPageStack.value.length > 0) {
+          console.log("[Main] 清空子页面栈");
+          subPageStack.value = [];
+        }
+        if (currentTab.value === 4) {
+          console.log("[Main] 从平板设置页退出，切换到首页");
+          switchTab(0);
+        }
+      }
+    };
     const initDarkMode = () => {
       console.log("[Main] ========== initDarkMode 开始 ==========");
-      addThemeLog("initDarkMode 开始");
+      addThemeLog("initDarkMode 开始", "Main");
       let followSystem = common_vendor.index.getStorageSync("followSystem");
       console.log("[Main] initDarkMode - followSystem 原始值:", followSystem, "类型:", typeof followSystem);
-      addThemeLog(`followSystem: ${followSystem}, 类型: ${typeof followSystem}`);
+      addThemeLog(`followSystem: ${followSystem}, 类型: ${typeof followSystem}`, "Main");
       if (followSystem === "" || followSystem === null || followSystem === void 0) {
         followSystem = true;
         common_vendor.index.setStorageSync("followSystem", "true");
         console.log("[Main] initDarkMode - 首次安装，默认设置 followSystem 为 true");
-        addThemeLog("首次安装，默认 followSystem: true");
+        addThemeLog("首次安装，默认 followSystem: true", "Main");
       }
       const isFollowSystem = followSystem !== "false" && followSystem !== false;
       console.log("[Main] initDarkMode - isFollowSystem:", isFollowSystem);
-      addThemeLog(`isFollowSystem: ${isFollowSystem}`);
+      addThemeLog(`isFollowSystem: ${isFollowSystem}`, "Main");
       if (isFollowSystem) {
-        const systemInfo = common_vendor.index.getSystemInfoSync();
-        const isDark = systemInfo.theme === "dark";
-        darkMode.value = isDark;
+        const storedDarkMode = common_vendor.index.getStorageSync("darkMode");
+        const hasElectronTheme = storedDarkMode !== "" && storedDarkMode !== null && storedDarkMode !== void 0;
+        if (hasElectronTheme) {
+          darkMode.value = storedDarkMode === "true";
+          console.log("[Main] initDarkMode - 使用 Electron 传来的主题值:", darkMode.value);
+          addThemeLog(`使用 Electron 主题值: ${darkMode.value}`, "Main");
+        } else {
+          const systemInfo = common_vendor.index.getSystemInfoSync();
+          darkMode.value = systemInfo.theme === "dark";
+          console.log("[Main] initDarkMode - 跟随系统，systemInfo.theme:", systemInfo.theme, "darkMode:", darkMode.value);
+          addThemeLog(`跟随系统, theme: ${systemInfo.theme}, darkMode: ${darkMode.value}`, "Main");
+        }
         const currentDarkMode = common_vendor.index.getStorageSync("darkMode");
         if (currentDarkMode === "" || currentDarkMode === null || currentDarkMode === void 0) {
-          common_vendor.index.setStorageSync("darkMode", isDark.toString());
-          console.log("[Main] initDarkMode - 首次安装，同步 darkMode 存储为:", isDark);
-          addThemeLog(`首次安装，同步 darkMode: ${isDark}`);
+          common_vendor.index.setStorageSync("darkMode", darkMode.value.toString());
+          console.log("[Main] initDarkMode - 首次安装，同步 darkMode 存储为:", darkMode.value);
+          addThemeLog(`首次安装，同步 darkMode: ${darkMode.value}`, "Main");
         }
-        console.log("[Main] initDarkMode - 跟随系统，systemInfo.theme:", systemInfo.theme, "darkMode:", darkMode.value);
-        addThemeLog(`跟随系统, theme: ${systemInfo.theme}, darkMode: ${darkMode.value}`);
       } else {
         darkMode.value = common_vendor.index.getStorageSync("darkMode") === "true";
         console.log("[Main] initDarkMode - 不跟随系统，darkMode:", darkMode.value);
-        addThemeLog(`不跟随系统, darkMode: ${darkMode.value}`);
+        addThemeLog(`不跟随系统, darkMode: ${darkMode.value}`, "Main");
       }
-      console.log("[Main] ========== initDarkMode 结束 ==========");
-      addThemeLog("initDarkMode 结束");
+      console.log("[Main] ========== initDarkMode 结束, 最终 darkMode:", darkMode.value, " ==========");
+      addThemeLog(`initDarkMode 结束, 最终 darkMode: ${darkMode.value}`, "Main");
     };
     const checkPactAgreement = () => {
       const isAgreed = common_vendor.index.getStorageSync("isAgreePact") === "true";
@@ -209,11 +292,10 @@ const _sfc_main = {
     };
     const handlePactReject = () => {
       console.log("[Main] 用户拒绝许可协议");
-      common_vendor.index.showModal({
-        title: "提示",
-        content: "您需要同意许可协议才能使用本应用。",
-        showCancel: false
-      });
+      showPactRejectModal.value = true;
+    };
+    const closePactRejectModal = () => {
+      showPactRejectModal.value = false;
     };
     const handleShowUpdatePopup = (data) => {
       console.log("[Main] 收到更新弹窗事件:", data);
@@ -234,6 +316,10 @@ const _sfc_main = {
         return;
       }
       console.log("[Main] switchTab 切换到:", index, "当前:", currentTab.value);
+      if (showSubPage.value) {
+        console.log("[Main] 切换Tab时关闭子页面覆盖层");
+        subPageStack.value = [];
+      }
       if (!loadedTabs.value.includes(index)) {
         loadedTabs.value.push(index);
         console.log("[Main] 懒加载页面:", index);
@@ -364,76 +450,97 @@ const _sfc_main = {
       console.log("[Main] 收到全局切换事件:", data);
       switchTab(data.index);
     };
+    const handleIndexNavigate = (data) => {
+      console.log("[Main] 收到首页导航事件:", data, "当前平板模式:", isTablet.value);
+      if (!isTablet.value) {
+        console.log("[Main] 非平板模式，忽略导航事件");
+        return;
+      }
+      subPageStack.value.push(data.url);
+      console.log("[Main] 子页面栈更新:", [...subPageStack.value], "当前显示URL:", data.url);
+    };
+    const handlePlaylistNavigate = (data) => {
+      console.log("[Main] 收到播放列表导航事件:", data, "当前平板模式:", isTablet.value);
+      if (!isTablet.value) {
+        console.log("[Main] 非平板模式，忽略导航事件");
+        return;
+      }
+      subPageStack.value.push(data.url);
+      console.log("[Main] 子页面栈更新:", [...subPageStack.value], "当前显示URL:", data.url);
+    };
+    const handleMyNavigate = (data) => {
+      console.log("[Main] 收到我的音乐导航事件:", data, "当前平板模式:", isTablet.value);
+      if (!isTablet.value) {
+        console.log("[Main] 非平板模式，忽略导航事件");
+        return;
+      }
+      subPageStack.value.push(data.url);
+      console.log("[Main] 子页面栈更新:", [...subPageStack.value], "当前显示URL:", data.url);
+    };
+    const handleSettingsNavigate = (data) => {
+      console.log("[Main] 收到设置页导航事件:", data, "当前平板模式:", isTablet.value);
+      if (!isTablet.value) {
+        console.log("[Main] 非平板模式，忽略导航事件");
+        return;
+      }
+      subPageStack.value.push(data.url);
+      console.log("[Main] 子页面栈更新:", [...subPageStack.value], "当前显示URL:", data.url);
+    };
+    const closeSubPage = () => {
+      if (subPageStack.value.length > 0) {
+        subPageStack.value.pop();
+        console.log("[Main] 关闭子页面，剩余栈:", [...subPageStack.value]);
+      }
+    };
+    const getSubPageParams = () => {
+      if (!currentSubPageUrl.value)
+        return {};
+      const params = {};
+      const urlParts = currentSubPageUrl.value.split("?");
+      if (urlParts.length > 1) {
+        const queryString = urlParts[1];
+        const pairs = queryString.split("&");
+        pairs.forEach((pair) => {
+          const [key, value] = pair.split("=");
+          if (key && value) {
+            try {
+              params[key] = decodeURIComponent(value);
+            } catch (e) {
+              params[key] = value;
+            }
+          }
+        });
+      }
+      return params;
+    };
     const handleThemeChange = (data) => {
       console.log("[Main] ========== handleThemeChange 开始 ==========");
       console.log("[Main] 收到主题变化事件:", data);
-      addThemeLog(`收到主题变化事件: isDark=${data.isDark}, from=${data.from || "unknown"}`);
-      console.log("[Main] handleThemeChange - 当前 darkMode.value:", darkMode.value, "新值:", data.isDark);
-      if (darkMode.value !== data.isDark) {
-        console.log("[Main] handleThemeChange - 值不同，更新 darkMode");
-        addThemeLog(`值不同，更新 darkMode: ${darkMode.value} -> ${data.isDark}`);
+      addThemeLog(`收到主题变化: ${JSON.stringify(data)}`, "Main");
+      if (data && typeof data.isDark === "boolean") {
         darkMode.value = data.isDark;
-        addThemeLog(`更新 darkMode: ${data.isDark}`);
-        common_vendor.index.$emit("themeChanged", {
-          isDark: data.isDark,
-          from: "systemThemeChange"
-        });
-        addThemeLog("已广播 themeChanged 事件");
-      } else {
-        console.log("[Main] handleThemeChange - 值相同，跳过更新");
-        addThemeLog("值相同，跳过更新");
+        console.log("[Main] 已更新 darkMode:", data.isDark);
+        addThemeLog(`已更新 darkMode: ${data.isDark}`, "Main");
+        common_vendor.index.$emit("themeChanged", { isDark: data.isDark });
+        console.log("[Main] 已广播 themeChanged 给子组件");
+        addThemeLog("已广播 themeChanged 给子组件", "Main");
       }
       console.log("[Main] ========== handleThemeChange 结束 ==========");
     };
+    const handleThemeLogAdded = (data) => {
+      if (data && data.log) {
+        themeLogs.value.unshift(data.log);
+        if (themeLogs.value.length > 300) {
+          themeLogs.value.pop();
+        }
+      }
+    };
     const checkAndBroadcastTheme = () => {
       console.log("[Main] ========== checkAndBroadcastTheme 开始 ==========");
-      addThemeLog("checkAndBroadcastTheme 开始");
-      let followSystem = common_vendor.index.getStorageSync("followSystem");
-      console.log("[Main] checkAndBroadcastTheme - followSystem 原始值:", followSystem, "类型:", typeof followSystem);
-      addThemeLog(`followSystem: ${followSystem}, 类型: ${typeof followSystem}`);
-      if (followSystem === "" || followSystem === null || followSystem === void 0) {
-        followSystem = true;
-        common_vendor.index.setStorageSync("followSystem", "true");
-        console.log("[Main] checkAndBroadcastTheme - 首次安装，默认设置 followSystem 为 true");
-        addThemeLog("首次安装，默认 followSystem: true");
-      }
-      const isFollowSystem = followSystem !== "false" && followSystem !== false;
-      console.log("[Main] checkAndBroadcastTheme - isFollowSystem:", isFollowSystem);
-      addThemeLog(`isFollowSystem: ${isFollowSystem}`);
-      let isDark = false;
-      if (isFollowSystem) {
-        const systemInfo = common_vendor.index.getSystemInfoSync();
-        isDark = systemInfo.theme === "dark";
-        const currentDarkMode = common_vendor.index.getStorageSync("darkMode");
-        if (currentDarkMode === "" || currentDarkMode === null || currentDarkMode === void 0) {
-          common_vendor.index.setStorageSync("darkMode", isDark.toString());
-          console.log("[Main] checkAndBroadcastTheme - 首次安装，同步 darkMode 存储为:", isDark);
-          addThemeLog(`首次安装，同步 darkMode: ${isDark}`);
-        }
-        console.log("[Main] checkAndBroadcastTheme - 跟随系统，systemInfo.theme:", systemInfo.theme, "isDark:", isDark);
-        addThemeLog(`跟随系统, theme: ${systemInfo.theme}, isDark: ${isDark}`);
-      } else {
-        isDark = common_vendor.index.getStorageSync("darkMode") === "true";
-        console.log("[Main] checkAndBroadcastTheme - 不跟随系统，darkMode:", isDark);
-        addThemeLog(`不跟随系统, darkMode: ${isDark}`);
-      }
-      console.log("[Main] checkAndBroadcastTheme - 最终 isDark:", isDark, "当前 darkMode:", darkMode.value);
-      addThemeLog(`最终 isDark: ${isDark}, 当前: ${darkMode.value}`);
-      if (darkMode.value !== isDark) {
-        console.log("[Main] checkAndBroadcastTheme - 值不同，更新 darkMode");
-        addThemeLog(`值不同，更新: ${darkMode.value} -> ${isDark}`);
-        darkMode.value = isDark;
-        common_vendor.index.$emit("themeChanged", {
-          isDark,
-          from: "onShow"
-        });
-        addThemeLog("已广播 themeChanged 事件");
-      } else {
-        console.log("[Main] checkAndBroadcastTheme - 值相同，跳过更新");
-        addThemeLog("值相同，跳过更新");
-      }
+      let isDark = common_vendor.index.getStorageSync("darkMode") === "true";
+      darkMode.value = isDark;
+      console.log("[Main] checkAndBroadcastTheme - 已更新 darkMode:", isDark);
       console.log("[Main] ========== checkAndBroadcastTheme 结束 ==========");
-      addThemeLog("checkAndBroadcastTheme 结束");
     };
     common_vendor.onShow(() => {
       console.log("[Main] 页面显示");
@@ -445,6 +552,8 @@ const _sfc_main = {
     });
     common_vendor.onMounted(() => {
       console.log("[Main] 主页面初始化");
+      checkIsTablet();
+      common_vendor.index.$emit("tabletModeChanged", isTablet.value);
       showDebugLog.value = common_vendor.index.getStorageSync("showDebugLog") === "true";
       console.log("[Main] 调试日志显示状态:", showDebugLog.value);
       initDarkMode();
@@ -455,12 +564,24 @@ const _sfc_main = {
       }, 1e3);
       common_vendor.index.$on("main-switch-tab", handleGlobalSwitchTab);
       console.log("[Main] 已注册全局事件监听: main-switch-tab");
+      common_vendor.index.$on("index-navigate", handleIndexNavigate);
+      console.log("[Main] 已注册首页导航监听: index-navigate");
+      common_vendor.index.$on("playlist-navigate", handlePlaylistNavigate);
+      console.log("[Main] 已注册播放列表导航监听: playlist-navigate");
+      common_vendor.index.$on("my-navigate", handleMyNavigate);
+      console.log("[Main] 已注册我的音乐导航监听: my-navigate");
+      common_vendor.index.$on("settings-navigate", handleSettingsNavigate);
+      console.log("[Main] 已注册设置页导航监听: settings-navigate");
       common_vendor.index.$on("systemThemeChange", handleThemeChange);
       console.log("[Main] 已注册主题变化监听: systemThemeChange");
+      common_vendor.index.$on("themeLogAdded", handleThemeLogAdded);
+      console.log("[Main] 已注册子组件日志监听: themeLogAdded");
       common_vendor.index.$on("showUpdatePopup", handleShowUpdatePopup);
       console.log("[Main] 已注册更新弹窗监听: showUpdatePopup");
       common_vendor.index.$on("debugLogStatusChanged", handleDebugLogStatusChanged);
       console.log("[Main] 已注册调试日志状态变化监听: debugLogStatusChanged");
+      common_vendor.index.onWindowResize(handleWindowResize);
+      console.log("[Main] 已注册窗口大小变化监听");
       setTimeout(() => {
         restorePlayStateAfterTabsReady();
       }, 500);
@@ -485,130 +606,198 @@ const _sfc_main = {
     };
     common_vendor.onUnmounted(() => {
       common_vendor.index.$off("main-switch-tab", handleGlobalSwitchTab);
+      common_vendor.index.$off("index-navigate", handleIndexNavigate);
+      common_vendor.index.$off("playlist-navigate", handlePlaylistNavigate);
+      common_vendor.index.$off("my-navigate", handleMyNavigate);
+      common_vendor.index.$off("settings-navigate", handleSettingsNavigate);
       common_vendor.index.$off("systemThemeChange", handleThemeChange);
+      common_vendor.index.$off("themeChanged", handleThemeChange);
       common_vendor.index.$off("showUpdatePopup", handleShowUpdatePopup);
       common_vendor.index.$off("debugLogStatusChanged", handleDebugLogStatusChanged);
+      common_vendor.index.offWindowResize(handleWindowResize);
       console.log("[Main] 已移除全局事件监听");
     });
     return (_ctx, _cache) => {
+      var _a, _b, _c, _d, _e, _f, _g, _h;
       return common_vendor.e({
-        a: common_vendor.o(handlePactAgree, "a9"),
-        b: common_vendor.o(handlePactReject, "88"),
+        a: common_vendor.o(handlePactAgree, "ff"),
+        b: common_vendor.o(handlePactReject, "ef"),
         c: common_vendor.p({
           visible: showPactModal.value,
           isAgreed: pactAgreed.value
         }),
-        d: common_vendor.o(closeUpdatePopup, "33"),
-        e: common_vendor.p({
+        d: showPactRejectModal.value
+      }, showPactRejectModal.value ? {
+        e: darkMode.value ? 1 : "",
+        f: darkMode.value ? 1 : "",
+        g: common_vendor.o(closePactRejectModal, "ce"),
+        h: darkMode.value ? 1 : "",
+        i: common_vendor.o(() => {
+        }, "c0"),
+        j: common_vendor.o(closePactRejectModal, "bd")
+      } : {}, {
+        k: common_vendor.o(closeUpdatePopup, "d8"),
+        l: common_vendor.p({
           visible: showUpdatePopup.value,
           ["update-info"]: updateInfo.value,
           ["dark-mode"]: darkMode.value
         }),
-        f: showDebugModal.value
+        m: showDebugModal.value
       }, showDebugModal.value ? {
-        g: common_vendor.p({
+        n: common_vendor.p({
           type: "fas",
           name: "arrow-up",
           size: 40,
           color: "#ffffff"
         }),
-        h: capsuleButton.value.left + capsuleButton.value.width / 2 - 20 + "px",
-        i: capsuleButton.value.top + capsuleButton.value.height + 8 + "px",
-        j: darkMode.value ? 1 : "",
-        k: darkMode.value ? 1 : "",
-        l: darkMode.value ? 1 : "",
-        m: darkMode.value ? 1 : "",
-        n: common_vendor.o(handleIgnoreForever, "bf"),
-        o: common_vendor.o(closeDebugModal, "8b"),
-        p: darkMode.value ? 1 : "",
-        q: common_vendor.o(() => {
-        }, "34"),
-        r: common_vendor.o(closeDebugModal, "21")
-      } : {}, {
-        s: showIgnoreConfirmModal.value
-      }, showIgnoreConfirmModal.value ? {
+        o: capsuleButton.value.left + capsuleButton.value.width / 2 - 20 + "px",
+        p: capsuleButton.value.top + capsuleButton.value.height + 8 + "px",
+        q: darkMode.value ? 1 : "",
+        r: darkMode.value ? 1 : "",
+        s: darkMode.value ? 1 : "",
         t: darkMode.value ? 1 : "",
-        v: darkMode.value ? 1 : "",
-        w: common_vendor.o(closeIgnoreConfirmModal, "c1"),
-        x: common_vendor.o(confirmIgnoreForever, "48"),
-        y: darkMode.value ? 1 : "",
-        z: common_vendor.o(() => {
-        }, "1d"),
-        A: common_vendor.o(closeIgnoreConfirmModal, "8d")
+        v: common_vendor.o(handleIgnoreForever, "77"),
+        w: common_vendor.o(closeDebugModal, "87"),
+        x: darkMode.value ? 1 : "",
+        y: common_vendor.o(() => {
+        }, "5f"),
+        z: common_vendor.o(closeDebugModal, "9d")
       } : {}, {
-        B: loadedTabs.value.includes(0)
+        A: showIgnoreConfirmModal.value
+      }, showIgnoreConfirmModal.value ? {
+        B: darkMode.value ? 1 : "",
+        C: darkMode.value ? 1 : "",
+        D: common_vendor.o(closeIgnoreConfirmModal, "5b"),
+        E: common_vendor.o(confirmIgnoreForever, "2e"),
+        F: darkMode.value ? 1 : "",
+        G: common_vendor.o(() => {
+        }, "d2"),
+        H: common_vendor.o(closeIgnoreConfirmModal, "be")
+      } : {}, {
+        I: loadedTabs.value.includes(0)
       }, loadedTabs.value.includes(0) ? {
-        C: common_vendor.p({
+        J: common_vendor.p({
           ["is-active"]: currentTab.value === 0
         })
       } : {}, {
-        D: loadedTabs.value.includes(1)
+        K: loadedTabs.value.includes(1)
       }, loadedTabs.value.includes(1) ? {
-        E: common_vendor.p({
+        L: common_vendor.p({
           ["is-active"]: currentTab.value === 1
         })
       } : {}, {
-        F: loadedTabs.value.includes(2)
+        M: loadedTabs.value.includes(2)
       }, loadedTabs.value.includes(2) ? {
-        G: common_vendor.p({
+        N: common_vendor.p({
           ["is-active"]: currentTab.value === 2
         })
       } : {}, {
-        H: loadedTabs.value.includes(3)
+        O: loadedTabs.value.includes(3)
       }, loadedTabs.value.includes(3) ? {
-        I: common_vendor.p({
+        P: common_vendor.p({
           ["is-active"]: currentTab.value === 3
         })
       } : {}, {
-        J: currentTab.value,
-        K: common_vendor.o(onSwiperChange, "81"),
-        L: common_vendor.o(switchTab, "ef"),
-        M: common_vendor.p({
-          ["current-index"]: currentTab.value
+        Q: isTablet.value
+      }, isTablet.value ? common_vendor.e({
+        R: loadedTabs.value.includes(4)
+      }, loadedTabs.value.includes(4) ? {
+        S: common_vendor.p({
+          ["is-active"]: currentTab.value === 4
+        })
+      } : {}) : {}, {
+        T: isTablet.value ? 1 : "",
+        U: currentTab.value,
+        V: common_vendor.o(onSwiperChange, "da"),
+        W: isTablet.value ? 0 : 300,
+        X: isTablet.value,
+        Y: showSubPage.value && isTablet.value
+      }, showSubPage.value && isTablet.value ? common_vendor.e({
+        Z: (_a = currentSubPageUrl.value) == null ? void 0 : _a.includes("/pages/sharelist/index")
+      }, ((_b = currentSubPageUrl.value) == null ? void 0 : _b.includes("/pages/sharelist/index")) ? {
+        aa: common_vendor.o(closeSubPage, "f1"),
+        ab: common_vendor.p({
+          ["url-params"]: getSubPageParams()
+        })
+      } : ((_c = currentSubPageUrl.value) == null ? void 0 : _c.includes("/pages/rank/index")) ? {
+        ad: common_vendor.o(closeSubPage, "64"),
+        ae: common_vendor.p({
+          ["url-params"]: getSubPageParams()
+        })
+      } : ((_d = currentSubPageUrl.value) == null ? void 0 : _d.includes("/pages/songlist-list/index")) ? {
+        ag: common_vendor.o(closeSubPage, "ee"),
+        ah: common_vendor.p({
+          ["url-params"]: getSubPageParams()
+        })
+      } : ((_e = currentSubPageUrl.value) == null ? void 0 : _e.includes("/pages/music-sources/index")) ? {
+        aj: common_vendor.o(closeSubPage, "23")
+      } : {}, {
+        ac: (_f = currentSubPageUrl.value) == null ? void 0 : _f.includes("/pages/rank/index"),
+        af: (_g = currentSubPageUrl.value) == null ? void 0 : _g.includes("/pages/songlist-list/index"),
+        ai: (_h = currentSubPageUrl.value) == null ? void 0 : _h.includes("/pages/music-sources/index"),
+        ak: darkMode.value ? 1 : ""
+      }) : {}, {
+        al: common_vendor.o(switchTab, "ee"),
+        am: common_vendor.p({
+          ["current-index"]: currentTab.value,
+          ["is-tablet"]: isTablet.value
         }),
-        N: showDebugLog.value
+        an: showDebugLog.value
       }, showDebugLog.value ? common_vendor.e({
-        O: common_vendor.p({
+        ao: isTablet.value
+      }, isTablet.value ? {
+        ap: common_vendor.p({
+          type: "fas",
+          name: "copy",
+          size: "14",
+          color: darkMode.value ? "#9ca3af" : "#6b7280"
+        }),
+        aq: common_vendor.o(copyDebugLogs, "91")
+      } : {}, {
+        ar: common_vendor.p({
           type: "fas",
           name: debugPanelExpanded.value ? "chevron-down" : "chevron-up",
           size: "14",
           color: darkMode.value ? "#9ca3af" : "#6b7280"
         }),
-        P: debugPanelExpanded.value
+        as: debugPanelExpanded.value
       }, debugPanelExpanded.value ? {
-        Q: common_vendor.t(debugInfo.value.followSystem),
-        R: common_vendor.t(debugInfo.value.followSystemType),
-        S: common_vendor.t(debugInfo.value.isFollowSystem),
-        T: common_vendor.n(debugInfo.value.isFollowSystem ? "success" : "warning"),
-        U: common_vendor.t(debugInfo.value.darkModeStorage),
-        V: common_vendor.t(debugInfo.value.systemTheme),
-        W: common_vendor.t(darkMode.value),
-        X: common_vendor.n(darkMode.value ? "dark" : "light"),
-        Y: common_vendor.t(debugInfo.value.platform),
-        Z: common_vendor.t(debugInfo.value.appTheme),
-        aa: common_vendor.t(debugInfo.value.isFirstInstall),
-        ab: common_vendor.n(debugInfo.value.isFirstInstall ? "success" : ""),
-        ac: common_vendor.t(debugInfo.value.appLaunchTime),
-        ad: common_vendor.t(themeLogs.value.length),
-        ae: common_vendor.f(themeLogs.value, (log, index, i0) => {
+        at: common_vendor.t(debugInfo.value.followSystem),
+        av: common_vendor.t(debugInfo.value.followSystemType),
+        aw: common_vendor.t(debugInfo.value.isFollowSystem),
+        ax: common_vendor.n(debugInfo.value.isFollowSystem ? "success" : "warning"),
+        ay: common_vendor.t(debugInfo.value.darkModeStorage),
+        az: common_vendor.t(debugInfo.value.systemTheme),
+        aA: common_vendor.t(darkMode.value),
+        aB: common_vendor.n(darkMode.value ? "dark" : "light"),
+        aC: common_vendor.t(debugInfo.value.platform),
+        aD: common_vendor.t(debugInfo.value.appTheme),
+        aE: common_vendor.t(debugInfo.value.isFirstInstall),
+        aF: common_vendor.n(debugInfo.value.isFirstInstall ? "success" : ""),
+        aG: common_vendor.t(debugInfo.value.appLaunchTime),
+        aH: common_vendor.t(themeLogs.value.length),
+        aI: common_vendor.f(themeLogs.value, (log, index, i0) => {
           return {
             a: common_vendor.t(log),
             b: index
           };
         }),
-        af: common_vendor.o(refreshDebugInfo, "70"),
-        ag: common_vendor.o(clearThemeLogs, "45"),
-        ah: common_vendor.o(() => {
-        }, "31")
+        aJ: common_vendor.o(onDebugLogsWheel, "65"),
+        aK: common_vendor.o(refreshDebugInfo, "d7"),
+        aL: common_vendor.o(clearThemeLogs, "d1"),
+        aM: common_vendor.o(() => {
+        }, "b7")
       } : {}, {
-        ai: darkMode.value ? 1 : "",
-        aj: debugPanelExpanded.value ? 1 : "",
-        ak: common_vendor.o(toggleDebugPanel, "5a")
+        aN: darkMode.value ? 1 : "",
+        aO: debugPanelExpanded.value ? 1 : "",
+        aP: isTablet.value ? 1 : "",
+        aQ: common_vendor.o(toggleDebugPanel, "ac")
       }) : {}, {
-        al: darkMode.value ? 1 : ""
+        aR: darkMode.value ? 1 : "",
+        aS: isTablet.value ? 1 : ""
       });
     };
   }
 };
-const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-9631e604"]]);
+const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-b90ae7ff"]]);
 wx.createPage(MiniProgramPage);

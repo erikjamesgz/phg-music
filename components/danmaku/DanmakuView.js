@@ -22,6 +22,10 @@ const _sfc_main = {
     playing: {
       type: Boolean,
       default: true
+    },
+    isTablet: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
@@ -333,9 +337,13 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
         f: common_vendor.o(($event) => $options.onDanmakuEnd(item.uniqueId), item.uniqueId)
       };
     }),
-    c: $props.darkMode ? 1 : "",
-    d: $data.isPaused ? 1 : ""
+    c: $props.isTablet ? 1 : "",
+    d: $props.isTablet ? 1 : "",
+    e: $props.darkMode ? 1 : "",
+    f: $data.isPaused ? 1 : "",
+    g: $props.isTablet ? 1 : "",
+    h: $props.isTablet ? 1 : ""
   } : {});
 }
-const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-dce456fb"]]);
+const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-d31cdb96"]]);
 wx.createComponent(Component);

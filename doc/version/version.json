@@ -1,12 +1,12 @@
 {
-  "version": "1.0.07",
-  "versionCode": 1007,
-  "desc": "1. Android版修复状态栏不能正常切换歌曲问题\n2. 添加脚本源成功率统计功能\n3. 修复歌单的播放数据同步问题\n4.添加显示当前使用那个脚本源获取的数据的提醒",
+  "version": "1.0.08",
+  "versionCode": 1008,
+  "desc": "1. 发布Windows、Mac、Linux客户端 有需要的用户可以前往项目开源厂库下载使用\n2.服务器环境发布了Cloudflare平台版本，每天10万次调用，强烈推荐大家切换到此版本\n3.微信小程序/Android客户端进行了深度适配平板模式\n4. 修复若干小问题\n\n---开发规划（有时间的话😄）---\n1.下个版本上线云端数据同步，不同设备可以实现歌单、音乐脚本、播放历史记录实现无缝同步 \n2.远期版本Android/windows/mac/linux客户端脱离服务器在本地执行脚本获取音乐播放链接\n3.优化每日推荐功能，实现根据真实用户喜好推荐歌曲",
   "releaseUrl": "",
   "projectUrl": "https://github.com/erikjamesgz/phg-music",
   "platforms": {
     "android": {
-      "downloadUrl": "https://github.com/erikjamesgz/phg-music/releases/download/phg-music-v1.0.07-release/phg-music-android-v1.0.07-release-20260404.apk"
+      "downloadUrl": "https://github.com/erikjamesgz/phg-music/releases/download/phg-music-v1.0.08-release/phg-music-android-v1.0.08-release-20260508.apk"
     },
     "ios": {
       "downloadUrl": ""

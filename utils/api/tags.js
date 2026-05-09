@@ -1,5 +1,8 @@
 "use strict";
 const common_vendor = require("../../common/vendor.js");
+function filterHeadersForPlatform(headers) {
+  return headers;
+}
 async function getKuwoTags() {
   console.log("[Tags] 获取酷我音乐标签");
   return new Promise((resolve, reject) => {
@@ -135,9 +138,9 @@ async function getNeteaseTags() {
     common_vendor.index.request({
       url,
       method: "GET",
-      header: {
+      header: filterHeadersForPlatform({
         "Referer": "https://music.163.com/"
-      },
+      }),
       success: (res) => {
         console.log("[Tags] 网易云音乐响应:", res.statusCode);
         if (res.statusCode === 200 && res.data) {

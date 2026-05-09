@@ -43,6 +43,33 @@ const _sfc_main = /* @__PURE__ */ Object.assign({
     const hotSearches = common_vendor.ref([]);
     const searchSuggestions = common_vendor.ref([]);
     const darkMode = common_vendor.ref(false);
+    const isTablet = common_vendor.ref(false);
+    const checkIsTablet = () => {
+      try {
+        const systemInfo = common_vendor.index.getSystemInfoSync();
+        const width = systemInfo.windowWidth || systemInfo.screenWidth || 0;
+        const height = systemInfo.windowHeight || systemInfo.screenHeight || 0;
+        const TABLET_ASPECT_RATIO = 0.85;
+        const TABLET_MIN_WIDTH = 400;
+        const aspectRatio = width / height;
+        const newIsTablet = aspectRatio >= TABLET_ASPECT_RATIO && width >= TABLET_MIN_WIDTH;
+        if (isTablet.value !== newIsTablet) {
+          console.log("[Search] checkIsTablet - 状态变化:", isTablet.value, "->", newIsTablet, `尺寸:${width}x${height} 比值:${aspectRatio.toFixed(2)}`);
+          isTablet.value = newIsTablet;
+        }
+        return isTablet.value;
+      } catch (e) {
+        isTablet.value = false;
+        return false;
+      }
+    };
+    const handleTabletModeChanged = (newIsTablet) => {
+      console.log("[Search] 收到平板模式变化事件:", newIsTablet, "当前值:", isTablet.value);
+      if (isTablet.value !== newIsTablet) {
+        isTablet.value = newIsTablet;
+        console.log("[Search] 平板模式已更新为:", newIsTablet);
+      }
+    };
     const { bottomPaddingStyle, totalBottomHeight } = composables_useBottomHeight.useBottomHeight();
     const safeBottomStyle = common_vendor.computed(() => {
       return {
@@ -128,11 +155,14 @@ const _sfc_main = /* @__PURE__ */ Object.assign({
     };
     common_vendor.onMounted(() => {
       common_vendor.index.$on("themeChanged", handleThemeChanged);
-      console.log("[Search] 已注册主题变化监听");
+      common_vendor.index.$on("tabletModeChanged", handleTabletModeChanged);
+      console.log("[Search] 已注册监听: themeChanged, tabletModeChanged");
+      checkIsTablet();
     });
     common_vendor.onUnmounted(() => {
       common_vendor.index.$off("themeChanged", handleThemeChanged);
-      console.log("[Search] 已移除主题变化监听");
+      common_vendor.index.$off("tabletModeChanged", handleTabletModeChanged);
+      console.log("[Search] 已移除监听: themeChanged, tabletModeChanged");
     });
     const searchBarStyle = common_vendor.computed(() => {
       const menuButtonInfo = common_vendor.index.getMenuButtonBoundingClientRect();
@@ -824,6 +854,8 @@ const _sfc_main = /* @__PURE__ */ Object.assign({
       return colors[index % colors.length];
     };
     const navigateTo = (url) => {
+      checkIsTablet();
+      console.log("[Search] navigateTo - 检测后 isTablet:", isTablet.value, "url:", url);
       common_vendor.index.navigateTo({ url });
     };
     const goToPlaylistDetail = (playlist) => {
@@ -849,8 +881,15 @@ const _sfc_main = /* @__PURE__ */ Object.assign({
         default:
           link = playlist.id;
       }
+      const params = `/pages/sharelist/index?source=${playlist.source}&platform=${playlist.source}&link=${encodeURIComponent(link)}&id=${playlistId}&picUrl=${encodeURIComponent(playlist.coverImgUrl)}&name=${encodeURIComponent(playlist.name || "")}&author=${encodeURIComponent(playlist.creator || playlist.author || "")}&playCount=${playlist.playCount || 0}&fromName=search`;
+      checkIsTablet();
+      console.log("[Search] goToPlaylistDetail - 检测后 isTablet:", isTablet.value, "params:", params.substring(0, 50));
+      if (isTablet.value) {
+        common_vendor.index.$emit("index-navigate", { url: params });
+        return;
+      }
       common_vendor.index.navigateTo({
-        url: `/pages/sharelist/index?source=${playlist.source}&link=${encodeURIComponent(link)}&id=${playlistId}&picUrl=${encodeURIComponent(playlist.coverImgUrl)}&name=${encodeURIComponent(playlist.name || "")}&author=${encodeURIComponent(playlist.creator || playlist.author || "")}&playCount=${playlist.playCount || 0}&fromName=search`
+        url: params
       });
     };
     const handleSearchImageError = (event, playlist) => {
@@ -884,15 +923,15 @@ const _sfc_main = /* @__PURE__ */ Object.assign({
           size: "16",
           color: "#9ca3af"
         }),
-        d: common_vendor.o(onSearch, "29"),
+        d: common_vendor.o(onSearch, "fb"),
         e: common_vendor.o([($event) => searchKeyword.value = $event.detail.value, onInput], "d0"),
         f: shouldFocus.value,
-        g: common_vendor.o(handleFocus, "fe"),
-        h: common_vendor.o(handleBlur, "ca"),
+        g: common_vendor.o(handleFocus, "7b"),
+        h: common_vendor.o(handleBlur, "81"),
         i: searchKeyword.value,
         j: searchKeyword.value
       }, searchKeyword.value ? {
-        k: common_vendor.o(clearSearch, "56"),
+        k: common_vendor.o(clearSearch, "21"),
         l: common_vendor.p({
           type: "fas",
           name: "times-circle",
@@ -903,7 +942,7 @@ const _sfc_main = /* @__PURE__ */ Object.assign({
         m: searchKeyword.value ? 1 : "",
         n: searchKeyword.value
       }, searchKeyword.value ? {
-        o: common_vendor.o(onSearch, "94")
+        o: common_vendor.o(onSearch, "9d")
       } : {}, {
         p: common_vendor.s(searchBarStyle.value)
       }, {
@@ -941,7 +980,7 @@ const _sfc_main = /* @__PURE__ */ Object.assign({
           size: "14",
           color: "#999999"
         }),
-        x: common_vendor.o(clearHistory, "90"),
+        x: common_vendor.o(clearHistory, "e3"),
         y: common_vendor.f(searchHistory.value, (item, index, i0) => {
           return {
             a: common_vendor.t(item.keyword),
@@ -953,7 +992,7 @@ const _sfc_main = /* @__PURE__ */ Object.assign({
       } : {}, {
         z: !hasSearched.value && !searchKeyword.value
       }, !hasSearched.value && !searchKeyword.value ? {
-        A: common_vendor.o(getHotSearches, "d3"),
+        A: common_vendor.o(getHotSearches, "fa"),
         B: common_vendor.f(hotSearches.value, (item, index, i0) => {
           return common_vendor.e({
             a: common_vendor.t(index + 1),
@@ -978,7 +1017,7 @@ const _sfc_main = /* @__PURE__ */ Object.assign({
       }, searchError.value ? {
         F: common_assets._imports_0,
         G: common_vendor.t(searchError.value),
-        H: common_vendor.o(onSearch, "83")
+        H: common_vendor.o(onSearch, "0d")
       } : {}, {
         I: hasSearched.value && !isLoading.value && isEmpty.value
       }, hasSearched.value && !isLoading.value && isEmpty.value ? {
@@ -1069,17 +1108,18 @@ const _sfc_main = /* @__PURE__ */ Object.assign({
         O: currentType.value === "playlists",
         Q: hasMore.value && !isLoading.value && !isEmpty.value
       }, hasMore.value && !isLoading.value && !isEmpty.value ? {
-        R: common_vendor.o(loadMore, "45")
+        R: common_vendor.o(loadMore, "77")
       } : isLoading.value && currentPage.value > 1 ? {} : !hasMore.value && !isEmpty.value ? {} : {}, {
         S: isLoading.value && currentPage.value > 1,
         T: !hasMore.value && !isEmpty.value
       }) : {}, {
         U: common_vendor.s(safeBottomStyle.value),
-        V: common_vendor.o(loadMore, "d1"),
-        W: common_vendor.o(onRefresh, "98"),
+        V: common_vendor.o(loadMore, "37"),
+        W: common_vendor.o(onRefresh, "c9"),
         X: hasSearched.value,
         Y: isRefreshing.value,
-        Z: darkMode.value ? 1 : ""
+        Z: darkMode.value ? 1 : "",
+        aa: isTablet.value ? 1 : ""
       });
     };
   }

@@ -5,6 +5,10 @@ const _sfc_main = {
     currentIndex: {
       type: Number,
       required: true
+    },
+    isTablet: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
@@ -13,7 +17,8 @@ const _sfc_main = {
       platform: "",
       safeAreaInsetBottom: 0,
       isDarkMode: false,
-      list: [
+      // 手机模式列表（4个tab）
+      phoneList: [
         {
           pagePath: "/pages/main/index",
           text: "首页",
@@ -34,6 +39,34 @@ const _sfc_main = {
           text: "我的",
           icon: "user"
         }
+      ],
+      // 平板模式列表（5个tab，包含设置）
+      tabletList: [
+        {
+          pagePath: "/pages/main/index",
+          text: "首页",
+          icon: "house"
+        },
+        {
+          pagePath: "/pages/main/index",
+          text: "搜索",
+          icon: "magnifying-glass"
+        },
+        {
+          pagePath: "/pages/main/index",
+          text: "列表",
+          icon: "list-ul"
+        },
+        {
+          pagePath: "/pages/main/index",
+          text: "我的",
+          icon: "user"
+        },
+        {
+          pagePath: "/pages/settings/index",
+          text: "设置",
+          icon: "gear"
+        }
       ]
     };
   },
@@ -43,6 +76,10 @@ const _sfc_main = {
         return "is-ios";
       }
       return "is-android";
+    },
+    // 根据模式显示不同的列表
+    displayList() {
+      return this.isTablet ? this.tabletList : this.phoneList;
     }
   },
   mounted() {
@@ -56,9 +93,11 @@ const _sfc_main = {
     console.log("[CustomTabBar] safeAreaInsets:", systemInfo.safeAreaInsets);
     console.log("[CustomTabBar] safeAreaInsetBottom:", this.safeAreaInsetBottom);
     console.log("[CustomTabBar] 深色模式:", this.isDarkMode);
+    console.log("[CustomTabBar] 平板模式:", this.isTablet);
     common_vendor.index.$on("themeChanged", this.handleThemeChange);
     common_vendor.index.$on("systemThemeChange", this.handleSystemThemeChange);
     console.log("[CustomTabBar] 已注册主题变化监听");
+    this.updateDarkMode();
   },
   beforeUnmount() {
     common_vendor.index.$off("themeChanged", this.handleThemeChange);
@@ -69,7 +108,8 @@ const _sfc_main = {
     switchTab(index) {
       if (this.currentIndex === index)
         return;
-      console.log("[CustomTabBar] switchTab to:", index);
+      const item = this.displayList[index];
+      console.log("[CustomTabBar] switchTab to:", index, item.text, item.pagePath);
       this.$emit("switch", index);
       common_vendor.index.$emit("main-switch-tab", { index });
       const pages = getCurrentPages();
@@ -91,9 +131,7 @@ const _sfc_main = {
     // 处理主题变化事件（来自 main/index.vue）
     handleThemeChange(data) {
       console.log("[CustomTabBar] 收到 themeChanged 事件:", data);
-      if (data && typeof data.isDark === "boolean") {
-        this.isDarkMode = data.isDark;
-      }
+      this.updateDarkMode();
     },
     // 处理系统主题变化事件（来自 App.vue）
     handleSystemThemeChange(data) {
@@ -136,9 +174,9 @@ if (!Math) {
 }
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return {
-    a: common_vendor.f($data.list, (item, index, i0) => {
+    a: common_vendor.f($options.displayList, (item, index, i0) => {
       return {
-        a: "47fdb5b7-0-" + i0,
+        a: "57e10287-0-" + i0,
         b: common_vendor.p({
           name: $options.getIconName(item.icon, index),
           size: $props.currentIndex === index ? 22 : 20,
@@ -155,9 +193,10 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     }),
     b: common_vendor.n($options.platformClass),
     c: common_vendor.n({
-      "dark-mode": $data.isDarkMode
+      "dark-mode": $data.isDarkMode,
+      "tablet-mode": $props.isTablet
     })
   };
 }
-const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-47fdb5b7"]]);
+const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-57e10287"]]);
 wx.createComponent(Component);

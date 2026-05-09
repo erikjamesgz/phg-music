@@ -1,6 +1,7 @@
 "use strict";
 const common_vendor = require("../../common/vendor.js");
 const services_api = require("../../services/api.js");
+const utils_system = require("../../utils/system.js");
 if (!Math) {
   RocIconPlus();
 }
@@ -27,6 +28,15 @@ const _sfc_main = {
     bottomSafeHeight: {
       type: Number,
       default: 0
+    },
+    isTablet: {
+      type: Boolean,
+      default: false
+    },
+    // 是否启用顶部安全区域适配（只在特定页面需要，如 playlist 竖屏模式）
+    enableTopSafeArea: {
+      type: Boolean,
+      default: false
     }
   },
   emits: ["close", "confirm", "preview"],
@@ -36,9 +46,70 @@ const _sfc_main = {
     const screenWidth = common_vendor.ref(375);
     const screenHeight = common_vendor.ref(667);
     const scaleRatio = common_vendor.ref(1);
-    const modalStyle = common_vendor.computed(() => {
-      if (scaleRatio.value === 1)
+    const safeAreaTopHeight = common_vendor.computed(() => {
+      console.log("[MusicToggleModal] safeAreaTopHeight 计算:", {
+        enableTopSafeArea: props.enableTopSafeArea,
+        isTablet: props.isTablet,
+        scaleRatio: scaleRatio.value
+      });
+      if (!props.enableTopSafeArea) {
+        console.log("[MusicToggleModal] safeAreaTopArea - 未启用，返回0");
+        return 0;
+      }
+      const navbarH = utils_system.getNavbarHeight();
+      console.log("[MusicToggleModal] safeAreaTopHeight - 已启用，导航栏高度:", navbarH);
+      return navbarH;
+    });
+    const tabletModalSafeTop = common_vendor.computed(() => {
+      if (!props.isTablet)
+        return "0px";
+      return `${utils_system.getNavbarHeight()}px`;
+    });
+    const containerStyle = common_vendor.computed(() => {
+      console.log("[MusicToggleModal] containerStyle 计算:", {
+        scaleRatio: scaleRatio.value,
+        isTablet: props.isTablet,
+        bottomSafeHeight: props.bottomSafeHeight
+      });
+      if (props.isTablet || scaleRatio.value < 1) {
+        console.log("[MusicToggleModal] containerStyle - 平板/大屏模式，使用默认样式");
         return "";
+      }
+      const safeHeight = props.bottomSafeHeight || 0;
+      const topPadding = props.enableTopSafeArea ? utils_system.getNavbarHeight() : 0;
+      return `
+    height: auto;
+    max-height: none;
+    padding-top: ${topPadding}px;
+    padding-bottom: ${Math.max(0, safeHeight)}px;
+  `;
+    });
+    const resultListMaxHeight = common_vendor.computed(() => {
+      if (props.isTablet || scaleRatio.value < 1)
+        return "none";
+      try {
+        const systemInfo = common_vendor.index.getSystemInfoSync();
+        const windowHeight = systemInfo.windowHeight || systemInfo.screenHeight || 667;
+        const topSafe = props.enableTopSafeArea ? utils_system.getNavbarHeight() : 44;
+        const headerH = 50;
+        const tabsH = 45;
+        const compareH = 120;
+        const btnH = 55;
+        const bottomSafe = props.bottomSafeHeight || 0;
+        const availableHeight = windowHeight - topSafe - headerH - tabsH - compareH - btnH - bottomSafe - 40;
+        const max4Items = 288;
+        console.log("[MusicToggleModal] 列表最大高度:", availableHeight, "px, 限制:", max4Items, "px, 结果数:", searchResults.value.length);
+        return `${Math.min(Math.max(availableHeight, 72), max4Items)}px`;
+      } catch (e) {
+        return "300px";
+      }
+    });
+    common_vendor.computed(() => {
+      if (scaleRatio.value === 1) {
+        const safeHeight = props.bottomSafeHeight || 0;
+        console.log("[MusicToggleModal] modalStyle 竖屏模式:", { bottomSafeHeight: safeHeight });
+        return `max-height: calc(100vh - ${safeHeight}px); height: auto;`;
+      }
       let maxHeight;
       if (scaleRatio.value <= 0.4) {
         maxHeight = 140;
@@ -54,8 +125,28 @@ const _sfc_main = {
       return `zoom: ${scaleRatio.value}; max-height: ${maxHeight}vh;`;
     });
     const compareSectionStyle = common_vendor.computed(() => {
-      const basePadding = Math.max(20, props.bottomSafeHeight);
+      console.log("[MusicToggleModal] compareSectionStyle 计算:", {
+        scaleRatio: scaleRatio.value,
+        isTablet: props.isTablet,
+        bottomSafeHeight: props.bottomSafeHeight
+      });
+      if (!props.isTablet && scaleRatio.value === 1) {
+        console.log("[MusicToggleModal] compareSectionStyle - 竖屏模式，由 containerStyle 处理");
+        return "";
+      }
+      let safeHeight = props.bottomSafeHeight;
+      if (safeHeight > 100) {
+        try {
+          const systemInfo = common_vendor.index.getSystemInfoSync();
+          const isIOS = systemInfo.platform === "ios";
+          safeHeight -= isIOS ? 62 : 67;
+        } catch (e) {
+          safeHeight -= 65;
+        }
+      }
+      const basePadding = Math.max(20, safeHeight);
       const paddingBottom = scaleRatio.value < 1 ? Math.ceil(basePadding / scaleRatio.value) : basePadding;
+      console.log("[MusicToggleModal] compareSectionStyle - 大屏模式, paddingBottom:", paddingBottom);
       return `padding-bottom: ${paddingBottom}px;`;
     });
     const checkScreenSize = () => {
@@ -64,7 +155,11 @@ const _sfc_main = {
         screenWidth.value = systemInfo.screenWidth;
         screenHeight.value = systemInfo.screenHeight;
         const screenRatio = systemInfo.screenWidth / systemInfo.screenHeight;
-        if (systemInfo.screenWidth >= 1024) {
+        if (props.isTablet) {
+          scaleRatio.value = 0.5;
+        } else if (screenRatio >= 0.85) {
+          scaleRatio.value = 1;
+        } else if (systemInfo.screenWidth >= 1024) {
           scaleRatio.value = 0.4;
         } else if (systemInfo.screenWidth >= 768) {
           scaleRatio.value = 0.5;
@@ -75,7 +170,7 @@ const _sfc_main = {
         } else {
           scaleRatio.value = 1;
         }
-        console.log("[MusicToggleModal] 屏幕尺寸:", systemInfo.screenWidth, "x", systemInfo.screenHeight, "宽高比:", screenRatio.toFixed(3), "弹窗宽度比例:", scaleRatio.value);
+        console.log("[MusicToggleModal] 屏幕尺寸:", systemInfo.screenWidth, "x", systemInfo.screenHeight, "宽高比:", screenRatio.toFixed(3), "弹窗宽度比例:", scaleRatio.value, "isTablet:", props.isTablet);
       } catch (e) {
         console.error("[MusicToggleModal] 获取屏幕尺寸失败:", e);
       }
@@ -332,16 +427,20 @@ const _sfc_main = {
       return common_vendor.e({
         a: __props.visible
       }, __props.visible ? common_vendor.e({
-        b: common_vendor.p({
+        b: !__props.isTablet && scaleRatio.value === 1 && __props.enableTopSafeArea
+      }, !__props.isTablet && scaleRatio.value === 1 && __props.enableTopSafeArea ? {
+        c: safeAreaTopHeight.value + "px"
+      } : {}, {
+        d: common_vendor.p({
           type: "fas",
           name: "xmark",
           size: "20",
           color: "#999"
         }),
-        c: common_vendor.o(closeModal, "92"),
-        d: !loading.value && sourceList.value.length > 0
+        e: common_vendor.o(closeModal, "b1"),
+        f: !loading.value && sourceList.value.length > 0
       }, !loading.value && sourceList.value.length > 0 ? {
-        e: common_vendor.f(sourceList.value, (source, k0, i0) => {
+        g: common_vendor.f(sourceList.value, (source, k0, i0) => {
           return {
             a: common_vendor.t(source.name),
             b: source.id,
@@ -350,11 +449,11 @@ const _sfc_main = {
           };
         })
       } : {}, {
-        f: loading.value
+        h: loading.value
       }, loading.value ? {} : error.value ? {
-        h: common_vendor.o(retrySearch, "a2")
+        j: common_vendor.o(retrySearch, "0a")
       } : !loading.value && searchResults.value.length > 0 ? {
-        j: common_vendor.f(searchResults.value, (song, index, i0) => {
+        l: common_vendor.f(searchResults.value, (song, index, i0) => {
           var _a;
           return common_vendor.e({
             a: common_vendor.t(song.name),
@@ -365,49 +464,54 @@ const _sfc_main = {
           } : {}, {
             e: common_vendor.t(getSourceName(song.source)),
             f: common_vendor.t(song.interval || formatDuration(song.duration)),
-            g: "b9225df2-1-" + i0,
+            g: "fa1b6fee-1-" + i0,
             h: common_vendor.o(($event) => previewSong(song), song.id || index),
             i: song.id || index,
             j: selectedSong.value && selectedSong.value.id === song.id ? 1 : "",
             k: common_vendor.o(($event) => selectSong(song), song.id || index)
           });
         }),
-        k: common_vendor.p({
+        m: common_vendor.p({
           type: "fas",
           name: "headphones",
           size: "16",
           color: "#666"
-        })
+        }),
+        n: resultListMaxHeight.value
       } : !loading.value && !error.value && searchResults.value.length === 0 ? {} : {}, {
-        g: error.value,
-        i: !loading.value && searchResults.value.length > 0,
-        l: !loading.value && !error.value && searchResults.value.length === 0,
-        m: __props.originalSong
+        i: error.value,
+        k: !loading.value && searchResults.value.length > 0,
+        o: !loading.value && !error.value && searchResults.value.length === 0,
+        p: __props.originalSong
       }, __props.originalSong ? common_vendor.e({
-        n: common_vendor.t(__props.originalSong.name),
-        o: common_vendor.t(getSourceName(__props.originalSong.source)),
-        p: common_vendor.t(__props.originalSong.interval || formatDuration(__props.originalSong.duration)),
-        q: common_vendor.t(formatSinger(__props.originalSong.singer || __props.originalSong.artists)),
-        r: selectedSong.value
+        q: common_vendor.t(__props.originalSong.name),
+        r: common_vendor.t(getSourceName(__props.originalSong.source)),
+        s: common_vendor.t(__props.originalSong.interval || formatDuration(__props.originalSong.duration)),
+        t: common_vendor.t(formatSinger(__props.originalSong.singer || __props.originalSong.artists)),
+        v: selectedSong.value
       }, selectedSong.value ? {
-        s: common_vendor.t(selectedSong.value.name),
-        t: common_vendor.t(getSourceName(selectedSong.value.source)),
-        v: common_vendor.t(selectedSong.value.interval || formatDuration(selectedSong.value.duration)),
-        w: common_vendor.t(formatSinger(selectedSong.value.singer || selectedSong.value.artists))
+        w: common_vendor.t(selectedSong.value.name),
+        x: common_vendor.t(getSourceName(selectedSong.value.source)),
+        y: common_vendor.t(selectedSong.value.interval || formatDuration(selectedSong.value.duration)),
+        z: common_vendor.t(formatSinger(selectedSong.value.singer || selectedSong.value.artists))
       } : {}, {
-        x: !selectedSong.value || selectedSong.value.id === __props.originalSong.id ? 1 : "",
-        y: common_vendor.o(confirmToggle, "a9"),
-        z: common_vendor.s(compareSectionStyle.value)
+        A: !selectedSong.value || selectedSong.value.id === __props.originalSong.id ? 1 : "",
+        B: common_vendor.o(confirmToggle, "29"),
+        C: common_vendor.s(compareSectionStyle.value)
       }) : {}, {
-        A: __props.darkMode ? 1 : "",
-        B: scaleRatio.value < 1 ? 1 : "",
-        C: common_vendor.s(modalStyle.value),
-        D: common_vendor.o(() => {
-        }, "05"),
-        E: common_vendor.o(closeModal, "c5")
+        D: __props.darkMode ? 1 : "",
+        E: scaleRatio.value < 1 ? 1 : "",
+        F: __props.isTablet ? 1 : "",
+        G: common_vendor.s(__props.isTablet ? {
+          paddingTop: tabletModalSafeTop.value
+        } : containerStyle.value),
+        H: common_vendor.o(() => {
+        }, "c4"),
+        I: __props.isTablet ? 1 : "",
+        J: common_vendor.o(closeModal, "98")
       }) : {});
     };
   }
 };
-const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-b9225df2"]]);
+const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-fa1b6fee"]]);
 wx.createComponent(Component);

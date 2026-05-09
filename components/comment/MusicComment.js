@@ -1,6 +1,7 @@
 "use strict";
 const common_vendor = require("../../common/vendor.js");
 const utils_api_comment = require("../../utils/api/comment.js");
+const utils_system = require("../../utils/system.js");
 if (!Math) {
   (RocIconPlus + CommentFloor)();
 }
@@ -16,6 +17,10 @@ const _sfc_main = {
     musicInfo: {
       type: Object,
       required: true
+    },
+    isTablet: {
+      type: Boolean,
+      default: false
     }
   },
   emits: ["close"],
@@ -23,6 +28,7 @@ const _sfc_main = {
     const props = __props;
     const emit = __emit;
     const darkMode = common_vendor.ref(false);
+    console.log("[MusicComment] isTablet:", props.isTablet);
     const initDarkMode = () => {
       darkMode.value = common_vendor.index.getStorageSync("darkMode") === "true";
       console.log("[MusicComment] 初始化暗黑模式:", darkMode.value);
@@ -31,6 +37,11 @@ const _sfc_main = {
       darkMode.value = common_vendor.index.getStorageSync("darkMode") === "true";
       console.log("[MusicComment] 刷新暗黑模式:", darkMode.value);
     };
+    const modalSafeTop = common_vendor.computed(() => {
+      if (!props.isTablet)
+        return "";
+      return `${utils_system.getNavbarHeight()}px`;
+    });
     common_vendor.onMounted(() => {
       initDarkMode();
       common_vendor.index.$on("darkModeChanged", refreshDarkMode);
@@ -197,30 +208,30 @@ const _sfc_main = {
           size: "16",
           color: "#00d7cd"
         }),
-        d: common_vendor.o(handleRefresh, "82"),
+        d: common_vendor.o(handleRefresh, "90"),
         e: common_vendor.p({
           type: "fas",
           name: "xmark",
           size: "16",
           color: "#999"
         }),
-        f: common_vendor.o(handleClose, "0c"),
+        f: common_vendor.o(handleClose, "c6"),
         g: available.value
       }, available.value ? common_vendor.e({
         h: common_vendor.t(hotComment.value.total),
         i: tabActiveId.value === "hot" ? 1 : "",
-        j: common_vendor.o(($event) => handleToggleTab("hot"), "18"),
+        j: common_vendor.o(($event) => handleToggleTab("hot"), "fd"),
         k: newComment.value.total > 0
       }, newComment.value.total > 0 ? {
         l: common_vendor.t(newComment.value.total)
       } : {}, {
         m: tabActiveId.value === "new" ? 1 : "",
-        n: common_vendor.o(($event) => handleToggleTab("new"), "ee"),
+        n: common_vendor.o(($event) => handleToggleTab("new"), "78"),
         o: tabActiveId.value === "hot"
       }, tabActiveId.value === "hot" ? common_vendor.e({
         p: hotComment.value.isLoadError
       }, hotComment.value.isLoadError ? {
-        q: common_vendor.o(($event) => handleGetHotComment(hotComment.value.page, hotComment.value.limit), "e1")
+        q: common_vendor.o(($event) => handleGetHotComment(hotComment.value.page, hotComment.value.limit), "0b")
       } : hotComment.value.isLoading && hotComment.value.list.length === 0 ? {} : hotComment.value.list.length > 0 ? {
         t: common_vendor.p({
           comments: hotComment.value.list
@@ -236,7 +247,7 @@ const _sfc_main = {
       }, tabActiveId.value === "new" ? common_vendor.e({
         y: newComment.value.isLoadError
       }, newComment.value.isLoadError ? {
-        z: common_vendor.o(($event) => handleGetNewComment(newComment.value.page, newComment.value.limit), "32")
+        z: common_vendor.o(($event) => handleGetNewComment(newComment.value.page, newComment.value.limit), "16")
       } : newComment.value.isLoading && newComment.value.list.length === 0 ? {} : newComment.value.list.length > 0 ? {
         C: common_vendor.p({
           comments: newComment.value.list
@@ -249,15 +260,18 @@ const _sfc_main = {
         E: common_vendor.t(newComment.value.isLoading ? "加载中..." : "上拉加载更多")
       } : {}) : {}, {
         F: scrollTop.value,
-        G: common_vendor.o(handleLoadMore, "53")
+        G: common_vendor.o(handleLoadMore, "33")
       }) : {}, {
         H: darkMode.value ? 1 : "",
-        I: common_vendor.o(() => {
-        }, "8f"),
-        J: common_vendor.o(handleClose, "36")
+        I: __props.isTablet ? 1 : "",
+        J: __props.isTablet ? modalSafeTop.value : "",
+        K: common_vendor.o(() => {
+        }, "5b"),
+        L: __props.isTablet ? 1 : "",
+        M: common_vendor.o(handleClose, "78")
       }) : {});
     };
   }
 };
-const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-99fdfd2b"]]);
+const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-ec74bb2a"]]);
 wx.createComponent(Component);

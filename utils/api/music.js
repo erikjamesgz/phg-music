@@ -4,6 +4,7 @@ const utils_config = require("../config.js");
 const utils_musicParams = require("../musicParams.js");
 const utils_lyricCache = require("../lyricCache.js");
 const pendingMusicUrlRequests = /* @__PURE__ */ new Map();
+const MAX_REQUEST_REUSE_AGE = 1e4;
 const REQUEST_TIMEOUT = 15e3;
 let requestIdCounter = 0;
 let lastRequestInfo = {
@@ -50,8 +51,15 @@ function getMusicUrl(params, quality = "320k") {
     interval: (_c = requestParams.musicInfo) == null ? void 0 : _c.interval
   });
   if (pendingMusicUrlRequests.has(requestKey)) {
-    console.log("[getMusicUrl] 复用正在进行的请求:", requestKey);
-    return pendingMusicUrlRequests.get(requestKey);
+    const existingRequest = pendingMusicUrlRequests.get(requestKey);
+    const requestAge = Date.now() - existingRequest.createTime;
+    if (requestAge > MAX_REQUEST_REUSE_AGE) {
+      console.log("[getMusicUrl] 旧请求已过期（" + Math.round(requestAge / 1e3) + "s），丢弃并重新发起:", requestKey);
+      pendingMusicUrlRequests.delete(requestKey);
+    } else {
+      console.log("[getMusicUrl] 复用正在进行的请求:", requestKey, "已存在", Math.round(requestAge / 1e3) + "s");
+      return existingRequest.promise;
+    }
   }
   const requestPromise = new Promise((resolve, reject) => {
     var _a2;
@@ -185,7 +193,10 @@ function getMusicUrl(params, quality = "320k") {
     pendingMusicUrlRequests.delete(requestKey);
     console.log("[getMusicUrl] 请求完成，移除 pending:", requestKey);
   });
-  pendingMusicUrlRequests.set(requestKey, requestPromise);
+  pendingMusicUrlRequests.set(requestKey, {
+    promise: requestPromise,
+    createTime: Date.now()
+  });
   return requestPromise;
 }
 exports.getMusicUrl = getMusicUrl;

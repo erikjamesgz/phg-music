@@ -2,7 +2,7 @@
 const common_vendor = require("../common/vendor.js");
 const utils_storage = require("./storage.js");
 const config = {
-  // 基础URL
+  // 基础URL - 你自己的后端 API
   baseUrl: "https://api.celadonmusic.com",
   // 请求超时时间（毫秒）
   timeout: 3e4,

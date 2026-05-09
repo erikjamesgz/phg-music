@@ -24,6 +24,7 @@ if (!Math) {
   _easycom_roc_icon_plus();
 }
 const DOUBLE_CLICK_DELAY = 300;
+const STATUS_BAR_DOUBLE_CLICK_DELAY = 300;
 const _sfc_main = {
   __name: "index",
   props: {
@@ -44,6 +45,7 @@ const _sfc_main = {
     const isLoadingMore = common_vendor.ref(false);
     const isDarkMode = common_vendor.ref(false);
     const isRefreshing = common_vendor.ref(false);
+    common_vendor.ref(false);
     const APP_NAMES = ["拼好歌", "青釉音乐"];
     const currentAppNameIndex = common_vendor.ref(0);
     const appName = common_vendor.computed(() => APP_NAMES[currentAppNameIndex.value]);
@@ -64,24 +66,79 @@ const _sfc_main = {
     const newSongs = common_vendor.ref([]);
     const newAlbums = common_vendor.ref([]);
     const topArtists = common_vendor.ref([]);
+    const isTablet = common_vendor.ref(false);
+    const showBannerNav = common_vendor.ref(false);
+    const showPlaylistNav = common_vendor.ref(false);
+    const showArtistNav = common_vendor.ref(false);
+    const playlistScrollLeft = common_vendor.ref(0);
+    const artistScrollLeft = common_vendor.ref(0);
+    const canScrollPlaylistLeft = common_vendor.ref(false);
+    const canScrollPlaylistRight = common_vendor.ref(false);
+    const canScrollArtistLeft = common_vendor.ref(false);
+    const canScrollArtistRight = common_vendor.ref(false);
+    common_vendor.ref(null);
+    common_vendor.ref(null);
+    const checkIsTablet = () => {
+      try {
+        const systemInfo = common_vendor.index.getSystemInfoSync();
+        const width = systemInfo.windowWidth || systemInfo.screenWidth || 0;
+        const height = systemInfo.windowHeight || systemInfo.screenHeight || 0;
+        const TABLET_ASPECT_RATIO = 0.85;
+        const TABLET_MIN_WIDTH = 400;
+        const aspectRatio = width / height;
+        const newIsTablet = aspectRatio >= TABLET_ASPECT_RATIO && width >= TABLET_MIN_WIDTH;
+        if (isTablet.value !== newIsTablet) {
+          console.log("[Index] checkIsTablet - 状态变化:", isTablet.value, "->", newIsTablet, `尺寸:${width}x${height} 比值:${aspectRatio.toFixed(2)}`);
+          isTablet.value = newIsTablet;
+        }
+        return isTablet.value;
+      } catch (e) {
+        isTablet.value = false;
+        return false;
+      }
+    };
+    const handleTabletModeChanged = (newIsTablet) => {
+      console.log("[Index] 收到平板模式变化事件:", newIsTablet, "当前值:", isTablet.value);
+      if (isTablet.value !== newIsTablet) {
+        isTablet.value = newIsTablet;
+        console.log("[Index] 平板模式已更新为:", newIsTablet);
+      }
+    };
     const decodeName = (str) => {
       if (!str)
         return "";
       return str.replace(/&apos;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&").replace(/&#039;/g, "'").replace(/&nbsp;/g, " ").replace(/&#32;/g, " ");
     };
     const checkDarkMode = () => {
-      const darkMode = common_vendor.index.getStorageSync("darkMode") === "true";
+      const storedDarkMode = common_vendor.index.getStorageSync("darkMode") === "true";
       const followSystem = common_vendor.index.getStorageSync("followSystem");
       const isFollowSystem = followSystem !== "false" && followSystem !== false;
       if (isFollowSystem) {
         const systemInfo = common_vendor.index.getSystemInfoSync();
-        isDarkMode.value = systemInfo.theme === "dark";
+        if (systemInfo && systemInfo.theme) {
+          isDarkMode.value = systemInfo.theme === "dark";
+        } else {
+          isDarkMode.value = storedDarkMode;
+        }
       } else {
-        isDarkMode.value = darkMode;
+        isDarkMode.value = storedDarkMode;
       }
-      const theme = isDarkMode.value ? "dark" : "light";
-      utils_system.setAppTheme(theme);
+      if (!isFollowSystem) {
+        const theme = isDarkMode.value ? "dark" : "light";
+        utils_system.setAppTheme(theme);
+      }
       console.log("[Index] checkDarkMode - 暗黑模式:", isDarkMode.value, "isFollowSystem:", isFollowSystem);
+    };
+    const checkScrollStatus = () => {
+      setTimeout(() => {
+        if (recommendPlaylists.value.length > 3) {
+          canScrollPlaylistRight.value = true;
+        }
+        if (topArtists.value.length > 4) {
+          canScrollArtistRight.value = true;
+        }
+        console.log("[Index] 初始化滚动状态 - 推荐歌单:", canScrollPlaylistRight.value, "热门歌手:", canScrollArtistRight.value);
+      }, 100);
     };
     const checkMiniPlayerStatus = () => {
       console.log("[Index] checkMiniPlayerStatus - 开始检查");
@@ -104,6 +161,7 @@ const _sfc_main = {
           fetchNewAlbums(),
           fetchTopArtists()
         ]);
+        checkScrollStatus();
       } catch (error) {
         console.error("获取首页数据失败:", error);
         common_vendor.index.showToast({
@@ -132,17 +190,30 @@ const _sfc_main = {
     );
     common_vendor.onMounted(() => {
       initAppName();
+      checkIsTablet();
       common_vendor.index.$on("themeChanged", handleThemeChanged);
-      console.log("[Index] 已注册主题变化监听");
+      common_vendor.index.$on("systemThemeChange", handleSystemThemeChange);
+      common_vendor.index.$on("tabletModeChanged", handleTabletModeChanged);
+      console.log("[Index] 已注册监听: themeChanged, systemThemeChange, tabletModeChanged");
+      setTimeout(() => {
+        checkScrollStatus();
+      }, 1e3);
     });
     common_vendor.onUnmounted(() => {
       common_vendor.index.$off("themeChanged", handleThemeChanged);
-      console.log("[Index] 已移除主题变化监听");
+      common_vendor.index.$off("systemThemeChange", handleSystemThemeChange);
+      common_vendor.index.$off("tabletModeChanged", handleTabletModeChanged);
+      console.log("[Index] 已移除监听: themeChanged, systemThemeChange, tabletModeChanged");
     });
     const handleThemeChanged = (data) => {
-      console.log("[Index] 收到主题变化事件:", data);
+      console.log("[Index] 收到主题变化事件 (themeChanged):", data);
       isDarkMode.value = data.isDark;
-      utils_system.setAppTheme(data.isDark ? "dark" : "light");
+      common_vendor.index.$emit("themeLogAdded", { log: `[${(/* @__PURE__ */ new Date()).toLocaleTimeString()}] [Index] 收到主题变化: ${JSON.stringify(data)}` });
+    };
+    const handleSystemThemeChange = (data) => {
+      console.log("[Index] 收到系统主题变化事件 (systemThemeChange):", data);
+      isDarkMode.value = data.isDark;
+      common_vendor.index.$emit("themeLogAdded", { log: `[${(/* @__PURE__ */ new Date()).toLocaleTimeString()}] [Index] 收到系统主题变化: ${JSON.stringify(data)}` });
     };
     const fetchBanners = async () => {
       try {
@@ -299,7 +370,7 @@ const _sfc_main = {
       try {
         const savedMaxPage = common_vendor.index.getStorageSync("kw_recommend_max_page");
         let targetPage = 1;
-        const rn = 6;
+        const rn = 15;
         if (savedMaxPage && savedMaxPage > 0) {
           targetPage = Math.floor(Math.random() * savedMaxPage) + 1;
           console.log("[Recommend] 使用保存的页码范围:", savedMaxPage, "随机选择页码:", targetPage);
@@ -516,6 +587,18 @@ const _sfc_main = {
       } else {
         lastClickTime = currentTime;
         console.log("[Index] 检测到单击，记录时间:", lastClickTime);
+      }
+    };
+    let statusBarLastClickTime = 0;
+    const handleStatusBarClick = () => {
+      const currentTime = Date.now();
+      const timeDiff = currentTime - statusBarLastClickTime;
+      console.log("[Index] 状态栏被点击，时间差:", timeDiff);
+      if (timeDiff > 0 && timeDiff < STATUS_BAR_DOUBLE_CLICK_DELAY) {
+        console.log("[Index] 检测到状态栏双击，切换全屏");
+        statusBarLastClickTime = 0;
+      } else {
+        statusBarLastClickTime = currentTime;
       }
     };
     const onRefresh = async () => {
@@ -934,6 +1017,12 @@ const _sfc_main = {
       });
     };
     const navigateTo = (url) => {
+      checkIsTablet();
+      console.log("[Index] navigateTo - 检测后 isTablet:", isTablet.value, "url:", url);
+      if (isTablet.value) {
+        common_vendor.index.$emit("index-navigate", { url });
+        return;
+      }
       common_vendor.index.navigateTo({ url });
     };
     const goToPlaylistDetail = (playlist) => {
@@ -958,8 +1047,14 @@ const _sfc_main = {
         default:
           link = playlist.id;
       }
+      const params = `/pages/sharelist/index?source=${source}&link=${encodeURIComponent(link)}&id=${playlist.id}&picUrl=${encodeURIComponent(playlist.coverImgUrl || "")}&name=${encodeURIComponent(playlist.name || "")}&author=${encodeURIComponent(playlist.author || "")}&playCount=${playlist.playCount || 0}&fromName=index`;
+      checkIsTablet();
+      if (isTablet.value) {
+        common_vendor.index.$emit("index-navigate", { url: params });
+        return;
+      }
       common_vendor.index.navigateTo({
-        url: `/pages/sharelist/index?source=${source}&link=${encodeURIComponent(link)}&id=${playlist.id}&picUrl=${encodeURIComponent(playlist.coverImgUrl || "")}&name=${encodeURIComponent(playlist.name || "")}&author=${encodeURIComponent(playlist.author || "")}&playCount=${playlist.playCount || 0}&fromName=index`
+        url: params
       });
     };
     const goToSearch = () => {
@@ -979,6 +1074,11 @@ const _sfc_main = {
     const goToHotSongs = () => {
       common_vendor.index.setStorageSync("rank_temp_source", "mg");
       common_vendor.index.setStorageSync("rank_temp_boardId", "mg__27186466");
+      checkIsTablet();
+      if (isTablet.value) {
+        common_vendor.index.$emit("index-navigate", { url: "/pages/rank/index" });
+        return;
+      }
       common_vendor.index.navigateTo({
         url: "/pages/rank/index"
       });
@@ -986,6 +1086,11 @@ const _sfc_main = {
     const goToNewSongRank = () => {
       common_vendor.index.setStorageSync("rank_temp_source", "mg");
       common_vendor.index.setStorageSync("rank_temp_boardId", "mg__27553319");
+      checkIsTablet();
+      if (isTablet.value) {
+        common_vendor.index.$emit("index-navigate", { url: "/pages/rank/index" });
+        return;
+      }
       common_vendor.index.navigateTo({
         url: "/pages/rank/index"
       });
@@ -1154,6 +1259,222 @@ const _sfc_main = {
         playlist.coverImgUrl = nextUrl;
       }
     };
+    const handleBannerMouseEnter = () => {
+      showBannerNav.value = true;
+    };
+    const handleBannerMouseLeave = () => {
+      showBannerNav.value = false;
+    };
+    const prevBanner = () => {
+      if (currentBannerIndex.value > 0) {
+        currentBannerIndex.value--;
+      } else {
+        currentBannerIndex.value = banners.value.length - 1;
+      }
+    };
+    const nextBanner = () => {
+      if (currentBannerIndex.value < banners.value.length - 1) {
+        currentBannerIndex.value++;
+      } else {
+        currentBannerIndex.value = 0;
+      }
+    };
+    const handlePlaylistMouseEnter = () => {
+      showPlaylistNav.value = true;
+    };
+    const handlePlaylistMouseLeave = () => {
+      showPlaylistNav.value = false;
+    };
+    let playlistActualScrollLeft = 0;
+    let playlistScrollWidth = 0;
+    let playlistClientWidth = 0;
+    const getPlaylistContainerSize = () => {
+      setTimeout(() => {
+        common_vendor.index.createSelectorQuery().select(".playlist-scroll").boundingClientRect((rect) => {
+          if (rect) {
+            playlistClientWidth = rect.width;
+            console.log("[Index-Playlist] 主动获取容器宽度:", playlistClientWidth);
+            if (playlistScrollWidth > 0 && playlistClientWidth > 0) {
+              updatePlaylistButtonState(playlistActualScrollLeft, playlistScrollWidth, playlistClientWidth);
+            }
+          }
+        }).exec();
+      }, 100);
+    };
+    const onPlaylistScroll = (e) => {
+      const scrollLeft = e.detail.scrollLeft;
+      const scrollWidth = e.detail.scrollWidth;
+      const clientWidth = e.detail.clientWidth || playlistClientWidth;
+      console.log("[Index-Playlist] onScroll 触发 - scrollLeft:", scrollLeft, "scrollWidth:", scrollWidth, "clientWidth:", clientWidth);
+      playlistActualScrollLeft = scrollLeft;
+      if (scrollWidth)
+        playlistScrollWidth = scrollWidth;
+      if (e.detail.clientWidth)
+        playlistClientWidth = e.detail.clientWidth;
+      updatePlaylistButtonState(scrollLeft, scrollWidth, clientWidth);
+    };
+    const updatePlaylistButtonState = (scrollLeft, scrollWidth, clientWidth) => {
+      if (!scrollWidth || !clientWidth || clientWidth <= 0) {
+        console.log("[Index-Playlist] 尺寸信息不完整 - scrollWidth:", scrollWidth, "clientWidth:", clientWidth);
+        return;
+      }
+      const canLeft = scrollLeft > 1;
+      const canRight = scrollLeft < scrollWidth - clientWidth - 1;
+      console.log(
+        "[Index-Playlist] 更新按钮状态 - canLeft:",
+        canLeft,
+        "canRight:",
+        canRight,
+        "当前scrollLeft:",
+        scrollLeft,
+        "最大可滚动:",
+        scrollWidth - clientWidth
+      );
+      canScrollPlaylistLeft.value = canLeft;
+      canScrollPlaylistRight.value = canRight;
+    };
+    const scrollPlaylistLeft = () => {
+      const oldPos = playlistActualScrollLeft;
+      const newPos = Math.max(0, playlistActualScrollLeft - 300);
+      console.log(
+        "[Index-Playlist] 点击左按钮 - 旧位置:",
+        oldPos,
+        "新位置:",
+        newPos,
+        "容器宽度:",
+        playlistClientWidth,
+        "内容宽度:",
+        playlistScrollWidth
+      );
+      playlistActualScrollLeft = newPos;
+      playlistScrollLeft.value = newPos;
+      if (playlistScrollWidth > 0 && playlistClientWidth > 0) {
+        updatePlaylistButtonState(newPos, playlistScrollWidth, playlistClientWidth);
+      } else {
+        console.warn("[Index-Playlist] 容器尺寸未就绪，延迟获取");
+        getPlaylistContainerSize();
+      }
+    };
+    const scrollPlaylistRight = () => {
+      const oldPos = playlistActualScrollLeft;
+      const newPos = playlistActualScrollLeft + 300;
+      console.log(
+        "[Index-Playlist] 点击右按钮 - 旧位置:",
+        oldPos,
+        "新位置:",
+        newPos,
+        "容器宽度:",
+        playlistClientWidth,
+        "内容宽度:",
+        playlistScrollWidth
+      );
+      playlistActualScrollLeft = newPos;
+      playlistScrollLeft.value = newPos;
+      if (playlistScrollWidth > 0 && playlistClientWidth > 0) {
+        updatePlaylistButtonState(newPos, playlistScrollWidth, playlistClientWidth);
+      } else {
+        console.warn("[Index-Playlist] 容器尺寸未就绪，延迟获取");
+        getPlaylistContainerSize();
+      }
+    };
+    const handleArtistMouseEnter = () => {
+      showArtistNav.value = true;
+    };
+    const handleArtistMouseLeave = () => {
+      showArtistNav.value = false;
+    };
+    let artistActualScrollLeft = 0;
+    let artistScrollWidth = 0;
+    let artistClientWidth = 0;
+    const getArtistContainerSize = () => {
+      setTimeout(() => {
+        common_vendor.index.createSelectorQuery().select(".artist-scroll").boundingClientRect((rect) => {
+          if (rect) {
+            artistClientWidth = rect.width;
+            console.log("[Index-Artist] 主动获取容器宽度:", artistClientWidth);
+            if (artistScrollWidth > 0 && artistClientWidth > 0) {
+              updateArtistButtonState(artistActualScrollLeft, artistScrollWidth, artistClientWidth);
+            }
+          }
+        }).exec();
+      }, 100);
+    };
+    const onArtistScroll = (e) => {
+      const scrollLeft = e.detail.scrollLeft;
+      const scrollWidth = e.detail.scrollWidth;
+      const clientWidth = e.detail.clientWidth || artistClientWidth;
+      console.log("[Index-Artist] onScroll 触发 - scrollLeft:", scrollLeft, "scrollWidth:", scrollWidth, "clientWidth:", clientWidth);
+      artistActualScrollLeft = scrollLeft;
+      if (scrollWidth)
+        artistScrollWidth = scrollWidth;
+      if (e.detail.clientWidth)
+        artistClientWidth = e.detail.clientWidth;
+      updateArtistButtonState(scrollLeft, scrollWidth, clientWidth);
+    };
+    const updateArtistButtonState = (scrollLeft, scrollWidth, clientWidth) => {
+      if (!scrollWidth || !clientWidth || clientWidth <= 0) {
+        console.log("[Index-Artist] 尺寸信息不完整 - scrollWidth:", scrollWidth, "clientWidth:", clientWidth);
+        return;
+      }
+      const canLeft = scrollLeft > 1;
+      const canRight = scrollLeft < scrollWidth - clientWidth - 1;
+      console.log(
+        "[Index-Artist] 更新按钮状态 - canLeft:",
+        canLeft,
+        "canRight:",
+        canRight,
+        "当前scrollLeft:",
+        scrollLeft,
+        "最大可滚动:",
+        scrollWidth - clientWidth
+      );
+      canScrollArtistLeft.value = canLeft;
+      canScrollArtistRight.value = canRight;
+    };
+    const scrollArtistLeft = () => {
+      const oldPos = artistActualScrollLeft;
+      const newPos = Math.max(0, artistActualScrollLeft - 200);
+      console.log(
+        "[Index-Artist] 点击左按钮 - 旧位置:",
+        oldPos,
+        "新位置:",
+        newPos,
+        "容器宽度:",
+        artistClientWidth,
+        "内容宽度:",
+        artistScrollWidth
+      );
+      artistActualScrollLeft = newPos;
+      artistScrollLeft.value = newPos;
+      if (artistScrollWidth > 0 && artistClientWidth > 0) {
+        updateArtistButtonState(newPos, artistScrollWidth, artistClientWidth);
+      } else {
+        console.warn("[Index-Artist] 容器尺寸未就绪，延迟获取");
+        getArtistContainerSize();
+      }
+    };
+    const scrollArtistRight = () => {
+      const oldPos = artistActualScrollLeft;
+      const newPos = artistActualScrollLeft + 200;
+      console.log(
+        "[Index-Artist] 点击右按钮 - 旧位置:",
+        oldPos,
+        "新位置:",
+        newPos,
+        "容器宽度:",
+        artistClientWidth,
+        "内容宽度:",
+        artistScrollWidth
+      );
+      artistActualScrollLeft = newPos;
+      artistScrollLeft.value = newPos;
+      if (artistScrollWidth > 0 && artistClientWidth > 0) {
+        updateArtistButtonState(newPos, artistScrollWidth, artistClientWidth);
+      } else {
+        console.warn("[Index-Artist] 容器尺寸未就绪，延迟获取");
+        getArtistContainerSize();
+      }
+    };
     __expose({
       t: utils_i18n.t,
       banners,
@@ -1182,29 +1503,52 @@ const _sfc_main = {
       goToDailyRecommend,
       onBannerChange,
       handleBannerImageError,
-      handlePlaylistImageError
+      handlePlaylistImageError,
+      // 滚动导航
+      showBannerNav,
+      showPlaylistNav,
+      showArtistNav,
+      canScrollPlaylistLeft,
+      canScrollPlaylistRight,
+      canScrollArtistLeft,
+      canScrollArtistRight,
+      prevBanner,
+      nextBanner,
+      scrollPlaylistLeft,
+      scrollPlaylistRight,
+      scrollArtistLeft,
+      scrollArtistRight,
+      onPlaylistScroll,
+      onArtistScroll,
+      handleBannerMouseEnter,
+      handleBannerMouseLeave,
+      handlePlaylistMouseEnter,
+      handlePlaylistMouseLeave,
+      handleArtistMouseEnter,
+      handleArtistMouseLeave
     });
     return (_ctx, _cache) => {
       return common_vendor.e({
         a: common_vendor.s(statusBarStyle.value),
-        b: common_vendor.p({
+        b: common_vendor.o(handleStatusBarClick, "66"),
+        c: common_vendor.p({
           name: "wave-square",
           size: "20",
           color: "#ffffff"
         }),
-        c: common_vendor.t(appName.value),
-        d: common_vendor.o(handleAppLogoClick, "3a"),
-        e: common_vendor.p({
+        d: common_vendor.t(appName.value),
+        e: common_vendor.o(handleAppLogoClick, "0c"),
+        f: common_vendor.p({
           type: "fas",
           name: "search",
           size: "16",
           color: "#9ca3af"
         }),
-        f: common_vendor.o(goToSearch, "4d"),
-        g: common_vendor.s(searchBarStyle.value),
-        h: banners.value.length > 0
+        g: common_vendor.o(goToSearch, "42"),
+        h: common_vendor.s(searchBarStyle.value),
+        i: banners.value.length > 0
       }, banners.value.length > 0 ? {
-        i: common_vendor.f(banners.value, (banner, index, i0) => {
+        j: common_vendor.f(banners.value, (banner, index, i0) => {
           return {
             a: banner.imageUrl,
             b: common_vendor.o(($event) => handleBannerImageError($event, banner), banner.targetId || index),
@@ -1219,18 +1563,19 @@ const _sfc_main = {
             k: index === currentBannerIndex.value ? 1 : ""
           };
         }),
-        j: common_vendor.p({
+        k: common_vendor.p({
           name: "play",
           size: "18",
           color: "#ffffff"
         }),
-        k: common_vendor.p({
+        l: common_vendor.p({
           name: "heart",
           size: "18",
           color: "#ffffff"
         }),
-        l: common_vendor.o(onBannerChange, "f8"),
-        m: common_vendor.f(banners.value, (item, index, i0) => {
+        m: currentBannerIndex.value,
+        n: common_vendor.o(onBannerChange, "01"),
+        o: common_vendor.f(banners.value, (item, index, i0) => {
           return {
             a: item.targetId || index,
             b: common_vendor.n({
@@ -1239,37 +1584,37 @@ const _sfc_main = {
           };
         })
       } : {}, {
-        n: common_vendor.p({
+        p: common_vendor.p({
           name: "heart",
           size: "22",
           color: "#ffffff"
         }),
-        o: common_vendor.o(goToDailyRecommend, "86"),
-        p: common_vendor.p({
+        q: common_vendor.o(goToDailyRecommend, "74"),
+        r: common_vendor.p({
           name: "ranking-star",
           size: "22",
           color: "#ffffff"
         }),
-        q: common_vendor.o(($event) => navigateTo("/pages/rank/index"), "36"),
-        r: common_vendor.p({
+        s: common_vendor.o(($event) => navigateTo("/pages/rank/index"), "0b"),
+        t: common_vendor.p({
           name: "fire",
           size: "20",
           color: "#ffffff"
         }),
-        s: common_vendor.o(goToHotSongs, "7e"),
-        t: common_vendor.p({
+        v: common_vendor.o(goToHotSongs, "d1"),
+        w: common_vendor.p({
           name: "list",
           size: "20",
           color: "#ffffff"
         }),
-        v: common_vendor.o(($event) => navigateTo("/pages/songlist-list/index"), "31"),
-        w: common_vendor.p({
+        x: common_vendor.o(($event) => navigateTo("/pages/songlist-list/index"), "fd"),
+        y: common_vendor.p({
           name: "chevron-right",
           size: "12",
           color: "#999999"
         }),
-        x: common_vendor.o(($event) => navigateTo("/pages/songlist-list/index"), "3f"),
-        y: common_vendor.f(recommendPlaylists.value, (playlist, index, i0) => {
+        z: common_vendor.o(($event) => navigateTo("/pages/songlist-list/index"), "e9"),
+        A: common_vendor.f(recommendPlaylists.value, (playlist, index, i0) => {
           return {
             a: playlist.coverImgUrl,
             b: common_vendor.o(($event) => handlePlaylistImageError($event, playlist), playlist.id),
@@ -1279,18 +1624,20 @@ const _sfc_main = {
             f: common_vendor.o(($event) => goToPlaylistDetail(playlist), playlist.id)
           };
         }),
-        z: common_vendor.p({
+        B: common_vendor.p({
           name: "play",
           size: "12",
           color: "#ffffff"
         }),
-        A: common_vendor.p({
+        C: playlistScrollLeft.value,
+        D: common_vendor.o(onPlaylistScroll, "d2"),
+        E: common_vendor.p({
           name: "chevron-right",
           size: "12",
           color: "#999999"
         }),
-        B: common_vendor.o(goToNewSongRank, "95"),
-        C: common_vendor.f(newSongs.value, (song, index, i0) => {
+        F: common_vendor.o(goToNewSongRank, "3c"),
+        G: common_vendor.f(newSongs.value, (song, index, i0) => {
           return {
             a: song.img,
             b: common_vendor.t(song.name),
@@ -1300,7 +1647,7 @@ const _sfc_main = {
             f: common_vendor.o(($event) => playNewSong(song, index), song.id)
           };
         }),
-        D: common_vendor.f(topArtists.value, (artist, index, i0) => {
+        H: common_vendor.f(topArtists.value, (artist, index, i0) => {
           return {
             a: artist.picUrl,
             b: common_vendor.t(artist.name),
@@ -1308,11 +1655,13 @@ const _sfc_main = {
             d: common_vendor.o(($event) => goToSearchWithArtist(artist.name), artist.id)
           };
         }),
-        E: common_vendor.s(safeBottomStyle.value),
-        F: common_vendor.s(scrollViewStyle.value),
-        G: isRefreshing.value,
-        H: common_vendor.o(onRefresh, "29"),
-        I: isDarkMode.value ? 1 : ""
+        I: artistScrollLeft.value,
+        J: common_vendor.o(onArtistScroll, "de"),
+        K: common_vendor.s(safeBottomStyle.value),
+        L: common_vendor.s(scrollViewStyle.value),
+        M: isRefreshing.value,
+        N: common_vendor.o(onRefresh, "48"),
+        O: isDarkMode.value ? 1 : ""
       });
     };
   }

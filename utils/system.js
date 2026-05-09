@@ -43,6 +43,12 @@ const getMenuButtonInfo = () => {
 };
 const getStatusBarHeight = () => {
   const systemInfo = getSystemInfo();
+  if (systemInfo.platform === "darwin" || systemInfo.platform === "macos") {
+    return 28;
+  }
+  if (systemInfo.platform === "windows" || systemInfo.platform === "linux") {
+    return 36;
+  }
   return systemInfo.statusBarHeight || 20;
 };
 const getNavbarHeight = () => {
@@ -57,6 +63,12 @@ const getSafeAreaStyle = () => {
 };
 const setAppTheme = (theme) => {
   common_vendor.index.setStorageSync("userTheme", theme);
+  const isDark = theme === "dark";
+  common_vendor.index.$emit("themeChanged", {
+    isDark,
+    from: "setAppTheme"
+  });
+  console.log("[setAppTheme] 已触发 themeChanged 事件:", isDark);
 };
 const getDeviceInfo = () => {
   const systemInfo = common_vendor.index.getSystemInfoSync();

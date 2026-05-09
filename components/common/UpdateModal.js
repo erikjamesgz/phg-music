@@ -126,6 +126,20 @@ const _sfc_main = {
       }
       this.$emit("close");
     },
+    openDownloadUrl() {
+      const url = "https://github.com/erikjamesgz/phg-music/releases";
+      common_vendor.index.setClipboardData({
+        data: url,
+        success: () => {
+          common_vendor.index.showToast({
+            title: "链接已复制，请到浏览器打开",
+            icon: "none",
+            duration: 3e3
+          });
+        }
+      });
+      this.$emit("close");
+    },
     resetDownloadState() {
       this.downloading = false;
       this.downloadProgress = 0;
@@ -160,14 +174,14 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     h: $data.downloadProgress + "%",
     i: common_vendor.t($data.downloadProgressText)
   } : {}, {
-    j: common_vendor.o((...args) => $options.handleClose && $options.handleClose(...args), "1c"),
-    k: common_vendor.o((...args) => $options.openProjectUrl && $options.openProjectUrl(...args), "39"),
-    l: common_vendor.o((...args) => $options.ignoreUpdateVersion && $options.ignoreUpdateVersion(...args), "c5"),
+    j: common_vendor.o((...args) => $options.openDownloadUrl && $options.openDownloadUrl(...args), "36"),
+    k: common_vendor.o((...args) => $options.openProjectUrl && $options.openProjectUrl(...args), "c1"),
+    l: common_vendor.o((...args) => $options.ignoreUpdateVersion && $options.ignoreUpdateVersion(...args), "8b"),
     m: $props.darkMode ? 1 : "",
     n: common_vendor.o(() => {
     }, "59"),
     o: common_vendor.o((...args) => $options.handleOverlayClick && $options.handleOverlayClick(...args), "d5")
   }) : {});
 }
-const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-c94912fa"]]);
+const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-9a6e6b7d"]]);
 wx.createComponent(Component);

@@ -11,23 +11,31 @@ const utils_system = require("../../utils/system.js");
 const utils_imageProxy = require("../../utils/imageProxy.js");
 const utils_musicSwitchSourceStorage = require("../../utils/musicSwitchSourceStorage.js");
 if (!Math) {
-  (RocIconPlus + DanmakuView + MusicComment + MusicToggleModal)();
+  (RocIconPlus + DanmakuView + FavoritePopup + MusicComment + MusicToggleModal)();
 }
 const RocIconPlus = () => "../../uni_modules/roc-icon-plus/components/roc-icon-plus/roc-icon-plus.js";
 const DanmakuView = () => "../../components/danmaku/DanmakuView.js";
 const MusicComment = () => "../../components/comment/MusicComment.js";
 const MusicToggleModal = () => "../../components/player/MusicToggleModal.js";
+const FavoritePopup = () => "../../components/common/FavoritePopup.js";
+const TABLET_ASPECT_RATIO = 0.85;
+const TABLET_MIN_WIDTH = 400;
 const _sfc_main = {
   __name: "index",
   setup(__props) {
     common_vendor.useCssVars((_ctx) => ({
-      "c9bd428a": lyricsContainerHeight.value + "rpx"
+      "dc0b8d98": lyricsContainerHeight.value + "rpx"
     }));
     const instance = common_vendor.getCurrentInstance();
     const statusBarHeight = common_vendor.ref(utils_system.getStatusBarHeight());
     const navbarStyle = common_vendor.computed(() => ({
       paddingTop: `${statusBarHeight.value}px`
     }));
+    const tabletModalSafeTop = common_vendor.computed(() => {
+      if (!isTablet.value)
+        return "0px";
+      return `${utils_system.getNavbarHeight()}px`;
+    });
     const currentSong = common_vendor.computed(() => {
       var _a, _b;
       const song = store_modules_player.playerStore.state.currentSong;
@@ -59,6 +67,19 @@ const _sfc_main = {
     const isDragging = common_vendor.ref(false);
     const dragPercent = common_vendor.ref(0);
     const currentSlide = common_vendor.ref(0);
+    const isTablet = common_vendor.ref(false);
+    const checkIsTablet = () => {
+      try {
+        const systemInfo = common_vendor.index.getSystemInfoSync();
+        const width = systemInfo.windowWidth || systemInfo.screenWidth || 0;
+        const height = systemInfo.windowHeight || systemInfo.screenHeight || 0;
+        isTablet.value = width / height >= TABLET_ASPECT_RATIO && width >= TABLET_MIN_WIDTH;
+        console.log("[player] 容器:", width, "x", height, "宽高比:", (width / height).toFixed(2), "平板模式:", isTablet.value);
+      } catch (e) {
+        isTablet.value = false;
+      }
+    };
+    checkIsTablet();
     const lyricsContainerHeight = common_vendor.ref(750);
     const calculateLyricsContainerHeight = () => {
       try {
@@ -86,9 +107,12 @@ const _sfc_main = {
     const currentLyricIndex = common_vendor.ref(0);
     const isLoadingLyrics = common_vendor.ref(false);
     const lyricScrollTop = common_vendor.ref(0);
+    const tabletLyricScrollTop = common_vendor.ref(0);
     common_vendor.ref("");
     let lastScrollIndex = -1;
     let isScrollToActive = false;
+    let isUserScrolling = false;
+    let userScrollTimer = null;
     const showAddToModalFlag = common_vendor.ref(false);
     const availableLists = common_vendor.computed(() => store_modules_list.listStore.getAllAvailableLists());
     const isCurrentSongFavorite = common_vendor.computed(() => {
@@ -212,6 +236,10 @@ const _sfc_main = {
       playerStatusText.value = "";
     };
     const statusText = common_vendor.computed(() => playerStatusText.value);
+    const tabletStatusText = common_vendor.computed(() => {
+      const store = store_modules_player.playerStore.state;
+      return store.statusText || "";
+    });
     const showCommentFlag = common_vendor.ref(false);
     const showMusicToggleModal = common_vendor.ref(false);
     const toggleOriginalSong = common_vendor.ref(null);
@@ -425,6 +453,7 @@ const _sfc_main = {
               audioContext.coverImgUrl = coverImgUrl;
               audioContext.epname = ((_c = currentSongData.al) == null ? void 0 : _c.name) || ((_d = currentSongData.album) == null ? void 0 : _d.name) || "未知专辑";
               audioContext.src = secureUrl;
+              audioContext.play();
               console.log("[player] 单曲循环播放已触发");
             }
           }
@@ -471,6 +500,7 @@ const _sfc_main = {
       console.log("[player] onMounted 调用");
       calculateLyricsContainerHeight();
       initDarkMode();
+      checkIsTablet();
       if (!hasLoadedLyricsOnMount && currentSong.value && currentSong.value.id) {
         console.log("[player] onMounted - 调用loadLyrics");
         hasLoadedLyricsOnMount = true;
@@ -482,12 +512,16 @@ const _sfc_main = {
       common_vendor.nextTick$1(() => {
         checkNavbarMarquee();
       });
+      common_vendor.index.onWindowResize(() => {
+        checkIsTablet();
+      });
     });
     common_vendor.onShow(() => {
       console.log("[player] onShow 调用");
       utils_system.setStatusBarTextColor("black");
       refreshDarkMode();
       setupPlayEndedCallback();
+      checkIsTablet();
       if (currentSong.value) {
         console.log("[player] onShow currentSong 歌手字段检查:", {
           singer: currentSong.value.singer,
@@ -726,7 +760,7 @@ const _sfc_main = {
       }
     };
     const goBack = () => {
-      console.log("[player] goBack 调用 - 用户点击返回，销毁页面");
+      console.log("[player] goBack 调用 - 用户点击返回");
       common_vendor.index.navigateBack();
     };
     const togglePlay = () => {
@@ -734,6 +768,13 @@ const _sfc_main = {
     };
     const playNext = async () => {
       console.log("[Player] 播放下一首, 当前播放模式:", playMode.value);
+      console.log("[Player] 👆 用户主动操作（下一首），重置失败计数");
+      store_modules_player.playerStore.setState({
+        isUserManualSwitch: true,
+        playNextRetryCount: 0,
+        isPlaybackStopped: false,
+        currentFailingSongId: null
+      });
       let togglePlayMethod;
       switch (playMode.value) {
         case "random":
@@ -774,6 +815,13 @@ const _sfc_main = {
     };
     const playPrev = async () => {
       console.log("[Player] 播放上一首, 当前播放模式:", playMode.value);
+      console.log("[Player] 👆 用户主动操作（上一首），重置失败计数");
+      store_modules_player.playerStore.setState({
+        isUserManualSwitch: true,
+        playNextRetryCount: 0,
+        isPlaybackStopped: false,
+        currentFailingSongId: null
+      });
       let togglePlayMethod;
       switch (playMode.value) {
         case "random":
@@ -1047,11 +1095,48 @@ const _sfc_main = {
     const scrollToCurrentLyric = () => {
       if (currentLyricIndex.value < 0 || lyrics.value.length === 0)
         return;
+      if (isUserScrolling)
+        return;
       if (currentLyricIndex.value === lastScrollIndex && isScrollToActive) {
         return;
       }
       lastScrollIndex = currentLyricIndex.value;
       isScrollToActive = true;
+      if (isTablet.value) {
+        common_vendor.nextTick$1(() => {
+          try {
+            const query = common_vendor.index.createSelectorQuery().in(instance);
+            query.select(".tablet-right").boundingClientRect();
+            query.select("#tablet-lyric-line-" + currentLyricIndex.value).boundingClientRect();
+            query.select(".tablet-lyrics-list").boundingClientRect();
+            query.exec((res) => {
+              if (!res || res.length < 3) {
+                isScrollToActive = false;
+                return;
+              }
+              const containerRect = res[0];
+              const lineRect = res[1];
+              const listRect = res[2];
+              if (!containerRect || !lineRect || !listRect) {
+                isScrollToActive = false;
+                return;
+              }
+              const containerCenter = containerRect.height / 2;
+              const lineHeight = lineRect.height;
+              const lineTopInList = lineRect.top - listRect.top;
+              const scrollTop = lineTopInList - containerCenter + lineHeight / 2;
+              tabletLyricScrollTop.value = Math.max(0, scrollTop);
+              setTimeout(() => {
+                isScrollToActive = false;
+              }, 300);
+            });
+          } catch (e) {
+            console.error("[scrollToCurrentLyric] 平板滚动失败:", e);
+            isScrollToActive = false;
+          }
+        });
+        return;
+      }
       common_vendor.nextTick$1(() => {
         try {
           const query = common_vendor.index.createSelectorQuery().in(instance);
@@ -1086,6 +1171,129 @@ const _sfc_main = {
     };
     const onLyricScroll = (e) => {
     };
+    const onTabletLyricWheel = (e) => {
+      isUserScrolling = true;
+      if (userScrollTimer) {
+        clearTimeout(userScrollTimer);
+      }
+      userScrollTimer = setTimeout(() => {
+        isUserScrolling = false;
+        scrollToCurrentLyric();
+      }, 5e3);
+      const delta = e.deltaY;
+      let newScrollTop = tabletLyricScrollTop.value + delta;
+      common_vendor.nextTick$1(() => {
+        try {
+          const query = common_vendor.index.createSelectorQuery().in(instance);
+          query.select(".tablet-right").boundingClientRect();
+          query.select(".tablet-lyrics-list").boundingClientRect();
+          query.exec((res) => {
+            if (res && res[0] && res[1]) {
+              const containerHeight = res[0].height;
+              const contentHeight = res[1].height;
+              const maxScroll = Math.max(0, contentHeight - containerHeight);
+              newScrollTop = Math.max(0, Math.min(newScrollTop, maxScroll));
+              tabletLyricScrollTop.value = newScrollTop;
+            }
+          });
+        } catch (e2) {
+        }
+      });
+    };
+    let touchStartY = 0;
+    const onTabletLyricTouchStart = (e) => {
+      isUserScrolling = true;
+      if (userScrollTimer) {
+        clearTimeout(userScrollTimer);
+      }
+      if (e.touches && e.touches.length > 0) {
+        touchStartY = e.touches[0].clientY;
+      }
+    };
+    const onTabletLyricTouchMove = (e) => {
+      if (e.touches && e.touches.length > 0) {
+        const touchY = e.touches[0].clientY;
+        const deltaY = touchStartY - touchY;
+        touchStartY = touchY;
+        let newScrollTop = tabletLyricScrollTop.value + deltaY;
+        common_vendor.nextTick$1(() => {
+          try {
+            const query = common_vendor.index.createSelectorQuery().in(instance);
+            query.select(".tablet-right").boundingClientRect();
+            query.select(".tablet-lyrics-list").boundingClientRect();
+            query.exec((res) => {
+              if (res && res[0] && res[1]) {
+                const containerHeight = res[0].height;
+                const contentHeight = res[1].height;
+                const maxScroll = Math.max(0, contentHeight - containerHeight);
+                newScrollTop = Math.max(0, Math.min(newScrollTop, maxScroll));
+                tabletLyricScrollTop.value = newScrollTop;
+              }
+            });
+          } catch (e2) {
+          }
+        });
+      }
+    };
+    const onTabletLyricTouchEnd = () => {
+      userScrollTimer = setTimeout(() => {
+        isUserScrolling = false;
+        scrollToCurrentLyric();
+      }, 5e3);
+    };
+    let isMouseDragging = false;
+    let mouseStartY = 0;
+    const onTabletLyricMouseDown = (e) => {
+      if (!e)
+        return;
+      if (e.button && e.button !== 0)
+        return;
+      isMouseDragging = true;
+      mouseStartY = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+      isUserScrolling = true;
+      if (userScrollTimer) {
+        clearTimeout(userScrollTimer);
+      }
+      document.addEventListener("mousemove", onTabletLyricMouseMove);
+      document.addEventListener("mouseup", onTabletLyricMouseUp);
+      e.preventDefault ? e.preventDefault() : e.returnValue = false;
+    };
+    const onTabletLyricMouseMove = (e) => {
+      if (!isMouseDragging)
+        return;
+      const mouseY = e.clientY || 0;
+      const deltaY = mouseStartY - mouseY;
+      mouseStartY = mouseY;
+      let newScrollTop = tabletLyricScrollTop.value + deltaY;
+      common_vendor.nextTick$1(() => {
+        try {
+          const query = common_vendor.index.createSelectorQuery().in(instance);
+          query.select(".tablet-right").boundingClientRect();
+          query.select(".tablet-lyrics-list").boundingClientRect();
+          query.exec((res) => {
+            if (res && res[0] && res[1]) {
+              const containerHeight = res[0].height;
+              const contentHeight = res[1].height;
+              const maxScroll = Math.max(0, contentHeight - containerHeight);
+              newScrollTop = Math.max(0, Math.min(newScrollTop, maxScroll));
+              tabletLyricScrollTop.value = newScrollTop;
+            }
+          });
+        } catch (err) {
+        }
+      });
+    };
+    const onTabletLyricMouseUp = () => {
+      if (!isMouseDragging)
+        return;
+      isMouseDragging = false;
+      document.removeEventListener("mousemove", onTabletLyricMouseMove);
+      document.removeEventListener("mouseup", onTabletLyricMouseUp);
+      userScrollTimer = setTimeout(() => {
+        isUserScrolling = false;
+        scrollToCurrentLyric();
+      }, 5e3);
+    };
     const onLyricScrollTap = () => {
       scrollToCurrentLyric();
     };
@@ -1102,7 +1310,7 @@ const _sfc_main = {
       store_modules_player.playerStore.seek(seekPercent);
     };
     common_vendor.watch(() => currentTime.value, () => {
-      if (currentSlide.value === 1) {
+      if (currentSlide.value === 1 || isTablet.value) {
         updateCurrentLyricIndex();
       }
     });
@@ -1350,73 +1558,6 @@ const _sfc_main = {
     const closeAddToModal = () => {
       showAddToModalFlag.value = false;
     };
-    const getListIcon = (type) => {
-      const iconMap = {
-        "default": "music",
-        "love": "heart",
-        "user": "list-ul",
-        "custom": "folder",
-        "imported": "download"
-      };
-      return iconMap[type] || "list-ul";
-    };
-    const getListColor = (type, disabled = false) => {
-      const colorMap = {
-        "default": "#00d7cd",
-        "love": "#ff6b6b",
-        "user": "#6b7280",
-        "custom": "#f59e0b",
-        "imported": "#3b82f6"
-      };
-      const disabledColorMap = {
-        "default": "rgba(0, 215, 205, 0.4)",
-        "love": "rgba(255, 107, 107, 0.4)",
-        "user": "rgba(107, 114, 128, 0.4)",
-        "custom": "rgba(245, 158, 11, 0.4)",
-        "imported": "rgba(59, 130, 246, 0.4)"
-      };
-      if (disabled) {
-        return disabledColorMap[type] || "rgba(107, 114, 128, 0.4)";
-      }
-      return colorMap[type] || "#6b7280";
-    };
-    const isSongInList = (listId) => {
-      if (!currentSong.value)
-        return false;
-      return store_modules_list.listStore.checkSongInList(listId, currentSong.value.id);
-    };
-    const getListCount = (listId) => {
-      return store_modules_list.listStore.getListCount(listId);
-    };
-    const addToList = (listId) => {
-      var _a, _b;
-      if (!currentSong.value)
-        return;
-      const isInList = store_modules_list.listStore.checkSongInList(listId, currentSong.value.id);
-      if (isInList) {
-        store_modules_list.listStore.removeListMusics(listId, currentSong.value.id);
-        const listName = ((_a = availableLists.value.find((l) => l.id === listId)) == null ? void 0 : _a.name) || "列表";
-        common_vendor.index.showToast({
-          title: `已从${listName}移除`,
-          icon: "none"
-        });
-      } else {
-        const success = store_modules_list.listStore.addMusicToAnyList(listId, currentSong.value, "top");
-        if (success) {
-          const listName = ((_b = availableLists.value.find((l) => l.id === listId)) == null ? void 0 : _b.name) || "列表";
-          common_vendor.index.showToast({
-            title: `已添加到${listName}`,
-            icon: "success"
-          });
-        } else {
-          common_vendor.index.showToast({
-            title: "操作失败",
-            icon: "none"
-          });
-        }
-      }
-      closeAddToModal();
-    };
     const createNewList = () => {
       common_vendor.index.showModal({
         title: "新建歌单",
@@ -1455,51 +1596,57 @@ const _sfc_main = {
           size: "20",
           color: darkMode.value ? "#ffffff" : "#4b5563"
         }),
-        b: common_vendor.o(goBack, "04"),
-        c: common_vendor.t(formatAlbum(currentSong.value)),
-        d: navbarMarqueeScroll.value
-      }, navbarMarqueeScroll.value ? {} : {}, {
+        b: common_vendor.o(goBack, "a7"),
+        c: common_vendor.t(isTablet.value ? currentSong.value.name : "正在播放"),
+        d: common_vendor.t(isTablet.value && tabletStatusText.value ? tabletStatusText.value : "来自：" + formatAlbum(currentSong.value)),
         e: navbarMarqueeScroll.value
+      }, navbarMarqueeScroll.value ? {} : {}, {
+        f: navbarMarqueeScroll.value
       }, navbarMarqueeScroll.value ? {
-        f: common_vendor.t(formatAlbum(currentSong.value))
+        g: common_vendor.t(isTablet.value && tabletStatusText.value ? tabletStatusText.value : "来自：" + formatAlbum(currentSong.value))
       } : {}, {
-        g: navbarMarqueeScroll.value ? 1 : "",
-        h: currentSlide.value === 0 ? 1 : "",
-        i: currentSlide.value === 1 ? 1 : "",
-        j: common_vendor.s(navbarStyle.value),
-        k: !showDefaultCover.value && songPicCache.value
+        h: navbarMarqueeScroll.value ? 1 : "",
+        i: common_vendor.s(navbarStyle.value),
+        j: !isTablet.value
+      }, !isTablet.value ? common_vendor.e({
+        k: currentSlide.value === 0 ? 1 : "",
+        l: currentSlide.value === 1 ? 1 : "",
+        m: !showDefaultCover.value && songPicCache.value
       }, !showDefaultCover.value && songPicCache.value ? {
-        l: common_vendor.unref(utils_imageProxy.proxyImageUrl)(songPicCache.value),
-        m: common_vendor.o(handlePlayerImageError, "1e")
+        n: common_vendor.unref(utils_imageProxy.proxyImageUrl)(songPicCache.value),
+        o: common_vendor.o(handlePlayerImageError, "d3")
       } : {
-        n: common_vendor.p({
+        p: common_vendor.p({
           type: "fas",
           name: "music",
           size: "80",
           color: "rgba(0, 215, 205, 0.4)"
         })
       }, {
-        o: !showDefaultCover.value && songPicCache.value ? 1 : "",
-        p: common_vendor.o(previewCoverImage, "7d"),
-        q: playing.value ? 1 : "",
-        r: playing.value ? 1 : "",
-        s: common_vendor.t(currentSong.value.name),
-        t: statusText.value
+        q: !showDefaultCover.value && songPicCache.value ? 1 : "",
+        r: common_vendor.o(previewCoverImage, "2a"),
+        s: playing.value ? 1 : "",
+        t: playing.value ? 1 : "",
+        v: common_vendor.t(currentSong.value.name),
+        w: statusText.value
       }, statusText.value ? common_vendor.e({
-        v: common_vendor.t(statusText.value),
-        w: statusMarqueeScroll.value
+        x: common_vendor.t(statusText.value),
+        y: statusMarqueeScroll.value
       }, statusMarqueeScroll.value ? {} : {}, {
-        x: statusMarqueeScroll.value
+        z: statusMarqueeScroll.value
       }, statusMarqueeScroll.value ? {
-        y: common_vendor.t(statusText.value)
+        A: common_vendor.t(statusText.value)
       } : {}, {
-        z: statusMarqueeScroll.value ? 1 : ""
+        B: statusMarqueeScroll.value ? 1 : ""
       }) : {}, {
-        A: !playing.value ? 1 : "",
-        B: showDanmaku.value && danmakuList.value.length > 0
+        C: !isTablet.value
+      }, !isTablet.value ? {
+        D: !playing.value ? 1 : ""
+      } : {}, {
+        E: showDanmaku.value && danmakuList.value.length > 0
       }, showDanmaku.value && danmakuList.value.length > 0 ? {
-        C: common_vendor.o(handleDanmakuLoadMore, "db"),
-        D: common_vendor.p({
+        F: common_vendor.o(handleDanmakuLoadMore, "9e"),
+        G: common_vendor.p({
           ["danmaku-list"]: danmakuList.value,
           ["dark-mode"]: darkMode.value,
           visible: true,
@@ -1507,9 +1654,9 @@ const _sfc_main = {
           ["song-info"]: originalSong.value
         })
       } : {}, {
-        E: lyrics.value.length > 0
+        H: lyrics.value.length > 0
       }, lyrics.value.length > 0 ? {
-        F: common_vendor.f(lyrics.value, (line, index, i0) => {
+        I: common_vendor.f(lyrics.value, (line, index, i0) => {
           return common_vendor.e({
             a: common_vendor.t(line.text),
             b: line.translation
@@ -1523,219 +1670,371 @@ const _sfc_main = {
             h: common_vendor.o(($event) => onLyricLineTap(index), index)
           });
         }),
-        G: lyricScrollTop.value,
-        H: common_vendor.o(onLyricScroll, "26"),
-        I: common_vendor.o(onLyricScrollTap, "73")
+        J: lyricScrollTop.value,
+        K: common_vendor.o(onLyricScroll, "52"),
+        L: common_vendor.o(onLyricScrollTap, "e7")
       } : {}, {
-        J: currentSlide.value,
-        K: common_vendor.o(onSwiperChange, "c5"),
-        L: currentSlide.value === 1
+        M: currentSlide.value,
+        N: common_vendor.o(onSwiperChange, "5b"),
+        O: currentSlide.value === 1
       }, currentSlide.value === 1 ? {
-        M: common_vendor.p({
+        P: common_vendor.p({
           type: "fas",
           name: "chevron-left",
           size: "16",
           color: darkMode.value ? "#ffffff" : "#4b5563"
         }),
-        N: common_vendor.o(switchToAlbum, "e2")
+        Q: common_vendor.o(switchToAlbum, "ef")
       } : {}, {
-        O: currentSlide.value === 0
+        R: currentSlide.value === 0
       }, currentSlide.value === 0 ? {
-        P: common_vendor.p({
+        S: common_vendor.p({
           type: "fas",
           name: "chevron-right",
           size: "16",
           color: darkMode.value ? "#ffffff" : "#4b5563"
         }),
-        Q: common_vendor.o(switchToLyrics, "59")
+        T: common_vendor.o(switchToLyrics, "1d")
+      } : {}) : {}, {
+        U: isTablet.value
+      }, isTablet.value ? common_vendor.e({
+        V: showDanmaku.value && danmakuList.value.length > 0
+      }, showDanmaku.value && danmakuList.value.length > 0 ? {
+        W: common_vendor.o(handleDanmakuLoadMore, "f0"),
+        X: common_vendor.p({
+          ["danmaku-list"]: danmakuList.value,
+          ["dark-mode"]: darkMode.value,
+          visible: true,
+          playing: playing.value,
+          ["song-info"]: originalSong.value,
+          ["is-tablet"]: isTablet.value
+        })
       } : {}, {
-        R: isDragging.value ? dragPercent.value + "%" : progressPercent.value + "%",
-        S: isDragging.value ? dragPercent.value + "%" : progressPercent.value + "%",
-        T: common_vendor.o(onProgressTouchStart, "e4"),
-        U: common_vendor.o(onProgressTouchMove, "f3"),
-        V: common_vendor.o(onProgressTouchEnd, "e8"),
-        W: common_vendor.t(formatTime(currentTime.value)),
-        X: common_vendor.t(formatTime(duration.value)),
-        Y: common_vendor.p({
+        Y: !showDefaultCover.value && songPicCache.value
+      }, !showDefaultCover.value && songPicCache.value ? {
+        Z: common_vendor.unref(utils_imageProxy.proxyImageUrl)(songPicCache.value),
+        aa: common_vendor.o(handlePlayerImageError, "1e")
+      } : {
+        ab: common_vendor.p({
+          type: "fas",
+          name: "music",
+          size: "80",
+          color: "rgba(0, 215, 205, 0.4)"
+        })
+      }, {
+        ac: !showDefaultCover.value && songPicCache.value ? 1 : "",
+        ad: common_vendor.o(previewCoverImage, "a7"),
+        ae: playing.value ? 1 : "",
+        af: playing.value ? 1 : "",
+        ag: isDragging.value ? dragPercent.value + "%" : progressPercent.value + "%",
+        ah: isDragging.value ? dragPercent.value + "%" : progressPercent.value + "%",
+        ai: common_vendor.o(onProgressTouchStart, "34"),
+        aj: common_vendor.o(onProgressTouchMove, "48"),
+        ak: common_vendor.o(onProgressTouchEnd, "b5"),
+        al: common_vendor.t(formatTime(currentTime.value)),
+        am: common_vendor.t(formatTime(duration.value)),
+        an: playMode.value === "singleLoop"
+      }, playMode.value === "singleLoop" ? {
+        ao: common_vendor.p({
+          type: "fas",
+          name: "rotate-right",
+          size: "20",
+          color: darkMode.value ? "#ffffff" : "#6b7280"
+        }),
+        ap: darkMode.value ? "#ffffff" : "#6b7280"
+      } : {
+        aq: common_vendor.p({
           type: "fas",
           name: playModeIcon.value,
           size: "20",
           color: darkMode.value ? "#ffffff" : "#6b7280"
-        }),
-        Z: common_vendor.o(togglePlayMode, "ea"),
-        aa: common_vendor.p({
+        })
+      }, {
+        ar: common_vendor.o(togglePlayMode, "a3"),
+        as: common_vendor.p({
           type: "fas",
           name: "backward-step",
           size: "28",
           color: darkMode.value ? "#ffffff" : "#374151"
         }),
-        ab: common_vendor.o(playPrev, "d7"),
-        ac: isLoading.value
+        at: common_vendor.o(playPrev, "8e"),
+        av: isLoading.value
       }, isLoading.value ? {} : {
-        ad: common_vendor.p({
+        aw: common_vendor.p({
           type: "fas",
           name: playing.value ? "pause" : "play",
           size: "28",
           color: "#ffffff"
         })
       }, {
-        ae: isLoading.value ? 1 : "",
-        af: common_vendor.o(togglePlay, "24"),
-        ag: common_vendor.p({
+        ax: isLoading.value ? 1 : "",
+        ay: common_vendor.o(togglePlay, "2b"),
+        az: common_vendor.p({
           type: "fas",
           name: "forward-step",
           size: "28",
           color: darkMode.value ? "#ffffff" : "#374151"
         }),
-        ah: common_vendor.o(playNext, "7a"),
-        ai: common_vendor.p({
+        aA: common_vendor.o(playNext, "59"),
+        aB: common_vendor.p({
           type: "fas",
           name: "comment",
           size: "20",
           color: darkMode.value ? "#ffffff" : "#6b7280"
         }),
-        aj: commentTotalCount.value > 0
+        aC: commentTotalCount.value > 0
       }, commentTotalCount.value > 0 ? {
-        ak: common_vendor.t(commentTotalCount.value > 999 ? "999+" : commentTotalCount.value)
+        aD: common_vendor.t(commentTotalCount.value > 999 ? "999+" : commentTotalCount.value)
       } : {}, {
-        al: common_vendor.o(showComment, "68"),
-        am: common_vendor.p({
+        aE: common_vendor.o(showComment, "bf"),
+        aF: common_vendor.p({
           type: "fas",
           name: "clock",
           size: "18",
           color: sleepTimerRemaining.value > 0 ? "#00d7cd" : darkMode.value ? "#ffffff" : "#6b7280"
         }),
-        an: sleepTimerRemaining.value > 0
+        aG: sleepTimerRemaining.value > 0
       }, sleepTimerRemaining.value > 0 ? {
-        ao: common_vendor.t(formatSleepTimerShort.value)
+        aH: common_vendor.t(formatSleepTimerShort.value)
       } : {}, {
-        ap: sleepTimerRemaining.value > 0 ? 1 : "",
-        aq: common_vendor.o(showSleepTimerPopup, "25"),
-        ar: showFavoriteHint.value
+        aI: sleepTimerRemaining.value > 0 ? 1 : "",
+        aJ: common_vendor.o(showSleepTimerPopup, "1d"),
+        aK: showFavoriteHint.value
       }, showFavoriteHint.value ? {
-        as: common_vendor.t(currentFavoriteHintText.value),
-        at: common_vendor.p({
+        aL: common_vendor.t(currentFavoriteHintText.value),
+        aM: common_vendor.p({
           type: "fas",
           name: "xmark",
           size: "10",
           color: "rgba(255,255,255,0.7)"
         }),
-        av: common_vendor.o(($event) => showFavoriteHint.value = false, "7b"),
-        aw: common_vendor.o(handleFavorite, "3b")
+        aN: common_vendor.o(($event) => showFavoriteHint.value = false, "3f"),
+        aO: common_vendor.o(handleFavorite, "ac")
       } : {}, {
-        ax: common_vendor.p({
+        aP: common_vendor.p({
           type: "fas",
-          name: isCurrentSongFavorite.value ? "heart" : "heart",
+          name: "heart",
           size: 18,
           color: isCurrentSongFavorite.value ? "#ff6b6b" : darkMode.value ? "#ffffff" : "#6b7280"
         }),
-        ay: isCurrentSongFavorite.value ? 1 : "",
-        az: common_vendor.o(handleFavorite, "fc"),
-        aA: common_vendor.p({
+        aQ: isCurrentSongFavorite.value ? 1 : "",
+        aR: common_vendor.o(handleFavorite, "cf"),
+        aS: common_vendor.p({
           type: "fas",
           name: "plus",
           size: "18",
           color: darkMode.value ? "#ffffff" : "#6b7280"
         }),
-        aB: common_vendor.o(createNewList, "d1"),
-        aC: common_vendor.p({
+        aT: common_vendor.o(createNewList, "0d"),
+        aU: common_vendor.p({
           type: "fas",
           name: "clone",
           size: "18",
           color: darkMode.value ? "#ffffff" : "#6b7280"
         }),
-        aD: hasSwitchedSource.value && showSourceSwitchHint.value
+        aV: hasSwitchedSource.value && showSourceSwitchHint.value
       }, hasSwitchedSource.value && showSourceSwitchHint.value ? {} : {}, {
-        aE: hasSwitchedSource.value && showSourceSwitchHint.value ? 1 : "",
-        aF: common_vendor.o(showMusicToggle, "c5"),
-        aG: showAddToModalFlag.value
-      }, showAddToModalFlag.value ? {
-        aH: common_vendor.p({
+        aW: hasSwitchedSource.value && showSourceSwitchHint.value ? 1 : "",
+        aX: common_vendor.o(showMusicToggle, "f3"),
+        aY: lyrics.value.length > 0
+      }, lyrics.value.length > 0 ? {
+        aZ: common_vendor.f(lyrics.value, (line, index, i0) => {
+          return common_vendor.e({
+            a: common_vendor.t(line.text),
+            b: line.translation
+          }, line.translation ? {
+            c: common_vendor.t(line.translation)
+          } : {}, {
+            d: currentLyricIndex.value === index ? 1 : "",
+            e: index,
+            f: "tablet-lyric-line-" + index,
+            g: index,
+            h: common_vendor.o(($event) => onLyricLineTap(index), index)
+          });
+        }),
+        ba: `translateY(-${tabletLyricScrollTop.value}px)`
+      } : {}, {
+        bb: common_vendor.o(onTabletLyricWheel, "5d"),
+        bc: common_vendor.o(onTabletLyricTouchStart, "a8"),
+        bd: common_vendor.o(onTabletLyricTouchMove, "65"),
+        be: common_vendor.o(onTabletLyricTouchEnd, "ba"),
+        bf: common_vendor.o(onTabletLyricMouseDown, "9a")
+      }) : {}, {
+        bg: !isTablet.value
+      }, !isTablet.value ? common_vendor.e({
+        bh: isDragging.value ? dragPercent.value + "%" : progressPercent.value + "%",
+        bi: isDragging.value ? dragPercent.value + "%" : progressPercent.value + "%",
+        bj: common_vendor.o(onProgressTouchStart, "7c"),
+        bk: common_vendor.o(onProgressTouchMove, "d2"),
+        bl: common_vendor.o(onProgressTouchEnd, "18"),
+        bm: common_vendor.t(formatTime(currentTime.value)),
+        bn: common_vendor.t(formatTime(duration.value)),
+        bo: playMode.value === "singleLoop"
+      }, playMode.value === "singleLoop" ? {
+        bp: common_vendor.p({
+          type: "fas",
+          name: "rotate-right",
+          size: "20",
+          color: darkMode.value ? "#ffffff" : "#6b7280"
+        }),
+        bq: darkMode.value ? "#ffffff" : "#6b7280"
+      } : {
+        br: common_vendor.p({
+          type: "fas",
+          name: playModeIcon.value,
+          size: "20",
+          color: darkMode.value ? "#ffffff" : "#6b7280"
+        })
+      }, {
+        bs: common_vendor.o(togglePlayMode, "23"),
+        bt: common_vendor.p({
+          type: "fas",
+          name: "backward-step",
+          size: "28",
+          color: darkMode.value ? "#ffffff" : "#374151"
+        }),
+        bv: common_vendor.o(playPrev, "99"),
+        bw: isLoading.value
+      }, isLoading.value ? {} : {
+        bx: common_vendor.p({
+          type: "fas",
+          name: playing.value ? "pause" : "play",
+          size: "28",
+          color: "#ffffff"
+        })
+      }, {
+        by: isLoading.value ? 1 : "",
+        bz: common_vendor.o(togglePlay, "0d"),
+        bA: common_vendor.p({
+          type: "fas",
+          name: "forward-step",
+          size: "28",
+          color: darkMode.value ? "#ffffff" : "#374151"
+        }),
+        bB: common_vendor.o(playNext, "55"),
+        bC: common_vendor.p({
+          type: "fas",
+          name: "comment",
+          size: "20",
+          color: darkMode.value ? "#ffffff" : "#6b7280"
+        }),
+        bD: commentTotalCount.value > 0
+      }, commentTotalCount.value > 0 ? {
+        bE: common_vendor.t(commentTotalCount.value > 999 ? "999+" : commentTotalCount.value)
+      } : {}, {
+        bF: common_vendor.o(showComment, "fd"),
+        bG: common_vendor.p({
+          type: "fas",
+          name: "clock",
+          size: "18",
+          color: sleepTimerRemaining.value > 0 ? "#00d7cd" : darkMode.value ? "#ffffff" : "#6b7280"
+        }),
+        bH: sleepTimerRemaining.value > 0
+      }, sleepTimerRemaining.value > 0 ? {
+        bI: common_vendor.t(formatSleepTimerShort.value)
+      } : {}, {
+        bJ: sleepTimerRemaining.value > 0 ? 1 : "",
+        bK: common_vendor.o(showSleepTimerPopup, "bb"),
+        bL: showFavoriteHint.value
+      }, showFavoriteHint.value ? {
+        bM: common_vendor.t(currentFavoriteHintText.value),
+        bN: common_vendor.p({
           type: "fas",
           name: "xmark",
-          size: "20",
-          color: "#999"
+          size: "10",
+          color: "rgba(255,255,255,0.7)"
         }),
-        aI: common_vendor.o(closeAddToModal, "ff"),
-        aJ: common_vendor.p({
+        bO: common_vendor.o(($event) => showFavoriteHint.value = false, "58"),
+        bP: common_vendor.o(handleFavorite, "72")
+      } : {}, {
+        bQ: common_vendor.p({
+          type: "fas",
+          name: isCurrentSongFavorite.value ? "heart" : "heart",
+          size: 18,
+          color: isCurrentSongFavorite.value ? "#ff6b6b" : darkMode.value ? "#ffffff" : "#6b7280"
+        }),
+        bR: isCurrentSongFavorite.value ? 1 : "",
+        bS: common_vendor.o(handleFavorite, "54"),
+        bT: common_vendor.p({
           type: "fas",
           name: "plus",
           size: "18",
-          color: "#00d7cd"
+          color: darkMode.value ? "#ffffff" : "#6b7280"
         }),
-        aK: common_vendor.o(createNewList, "d8"),
-        aL: common_vendor.f(availableLists.value, (list, k0, i0) => {
-          return {
-            a: "54811c87-17-" + i0,
-            b: common_vendor.p({
-              type: "fas",
-              name: getListIcon(list.type),
-              size: "18",
-              color: isSongInList(list.id) ? getListColor(list.type, true) : getListColor(list.type, false)
-            }),
-            c: common_vendor.t(list.name),
-            d: isSongInList(list.id) ? 1 : "",
-            e: common_vendor.t(isSongInList(list.id) ? "已添加" : getListCount(list.id) + "首"),
-            f: isSongInList(list.id) ? 1 : "",
-            g: isSongInList(list.id) ? 1 : "",
-            h: list.id,
-            i: common_vendor.o(($event) => addToList(list.id), list.id)
-          };
+        bU: common_vendor.o(createNewList, "19"),
+        bV: common_vendor.p({
+          type: "fas",
+          name: "clone",
+          size: "18",
+          color: darkMode.value ? "#ffffff" : "#6b7280"
         }),
-        aM: common_vendor.o(() => {
-        }, "8f"),
-        aN: common_vendor.o(closeAddToModal, "c2")
-      } : {}, {
-        aO: showSleepTimerPopupFlag.value
+        bW: hasSwitchedSource.value && showSourceSwitchHint.value
+      }, hasSwitchedSource.value && showSourceSwitchHint.value ? {} : {}, {
+        bX: hasSwitchedSource.value && showSourceSwitchHint.value ? 1 : "",
+        bY: common_vendor.o(showMusicToggle, "02")
+      }) : {}, {
+        bZ: common_vendor.o(($event) => showAddToModalFlag.value = $event, "90"),
+        ca: common_vendor.o(closeAddToModal, "b3"),
+        cb: common_vendor.p({
+          visible: showAddToModalFlag.value,
+          ["dark-mode"]: darkMode.value,
+          ["is-tablet"]: isTablet.value
+        }),
+        cc: showSleepTimerPopupFlag.value
       }, showSleepTimerPopupFlag.value ? common_vendor.e({
-        aP: common_vendor.p({
+        cd: common_vendor.p({
           type: "fas",
           name: "xmark",
           size: "16",
           color: "#6b7280"
         }),
-        aQ: common_vendor.o(closeSleepTimerPopup, "d6"),
-        aR: sleepTimerRemaining.value > 0
+        ce: common_vendor.o(closeSleepTimerPopup, "e1"),
+        cf: sleepTimerRemaining.value > 0
       }, sleepTimerRemaining.value > 0 ? {
-        aS: common_vendor.t(formatSleepTimerRemaining.value),
-        aT: common_vendor.o(cancelSleepTimer, "f8")
+        cg: common_vendor.t(formatSleepTimerRemaining.value),
+        ch: common_vendor.o(cancelSleepTimer, "c6")
       } : {}, {
-        aU: common_vendor.f(hourOptions.value, (hour, index, i0) => {
+        ci: common_vendor.f(hourOptions.value, (hour, index, i0) => {
           return {
             a: common_vendor.t(hour),
             b: index
           };
         }),
-        aV: common_vendor.f(minuteOptions.value, (minute, index, i0) => {
+        cj: common_vendor.f(minuteOptions.value, (minute, index, i0) => {
           return {
             a: common_vendor.t(minute),
             b: index
           };
         }),
-        aW: sleepTimerPickerValue.value,
-        aX: common_vendor.o(onSleepTimerPickerChange, "93"),
-        aY: common_vendor.o(closeSleepTimerPopup, "39"),
-        aZ: common_vendor.o(confirmSleepTimerSelection, "2b"),
-        ba: common_vendor.o(() => {
-        }, "76"),
-        bb: common_vendor.o(closeSleepTimerPopup, "29")
+        ck: sleepTimerPickerValue.value,
+        cl: common_vendor.o(onSleepTimerPickerChange, "2e"),
+        cm: common_vendor.o(closeSleepTimerPopup, "0c"),
+        cn: common_vendor.o(confirmSleepTimerSelection, "dd"),
+        co: isTablet.value ? tabletModalSafeTop.value : "",
+        cp: common_vendor.o(() => {
+        }, "f9"),
+        cq: common_vendor.o(closeSleepTimerPopup, "3c")
       }) : {}, {
-        bc: common_vendor.o(closeComment, "cc"),
-        bd: common_vendor.p({
+        cr: common_vendor.o(closeComment, "d2"),
+        cs: common_vendor.p({
           show: showCommentFlag.value,
-          ["music-info"]: originalSong.value
+          ["music-info"]: originalSong.value,
+          ["is-tablet"]: isTablet.value
         }),
-        be: common_vendor.o(closeMusicToggleModal, "96"),
-        bf: common_vendor.o(handleToggleConfirm, "0f"),
-        bg: common_vendor.o(handleTogglePreview, "3d"),
-        bh: common_vendor.p({
+        ct: common_vendor.o(closeMusicToggleModal, "5f"),
+        cv: common_vendor.o(handleToggleConfirm, "d7"),
+        cw: common_vendor.o(handleTogglePreview, "b5"),
+        cx: common_vendor.p({
           visible: showMusicToggleModal.value,
           ["original-song"]: toggleOriginalSong.value,
           ["list-id"]: null,
-          ["dark-mode"]: darkMode.value
+          ["dark-mode"]: darkMode.value,
+          ["bottom-safe-height"]: 0,
+          ["is-tablet"]: isTablet.value
         }),
-        bi: darkMode.value ? 1 : "",
-        bj: common_vendor.s(_ctx.__cssVars())
+        cy: darkMode.value ? 1 : "",
+        cz: isTablet.value ? 1 : "",
+        cA: common_vendor.s(_ctx.__cssVars())
       });
     };
   }

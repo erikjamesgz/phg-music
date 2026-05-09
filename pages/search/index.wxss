@@ -43,8 +43,13 @@
   display: flex;
   padding: 0 16px;
   align-items: center;
-  column-gap: 24px;
-  /* 使用column-gap确保间距一致 */
+  /* 使用margin-right确保间距一致，兼容老设备 */
+}
+.search-types-inner .search-type-item {
+  margin-right: 24px;
+}
+.search-types-inner .search-type-item:last-child {
+  margin-right: 0;
 }
 .search-type-item {
   display: inline-block;
@@ -250,7 +255,8 @@ to {
 .hot-search-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  /* gap替换为grid-gap兼容老设备 */
+  grid-gap: 12px;
 }
 .hot-search-grid-item {
   display: flex;
@@ -396,7 +402,12 @@ to {
 .song-details {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+}
+.song-details > view {
+  margin-bottom: 2px;
+}
+.song-details > view:last-child {
+  margin-bottom: 0;
 }
 .song-artist {
   font-size: 12px;
@@ -408,7 +419,12 @@ to {
 .song-quality-duration {
   display: flex;
   align-items: center;
-  gap: 8px;
+}
+.song-quality-duration > view {
+  margin-right: 8px;
+}
+.song-quality-duration > view:last-child {
+  margin-right: 0;
 }
 .song-quality {
   font-size: 10px;
@@ -529,21 +545,71 @@ to {
 .playlist-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  /* 使用 margin 替代 gap 以兼容老旧设备 */
 }
 .playlist-grid-item {
+  /* 每行2个，间距使用margin实现 */
   width: calc((100% - 12px) / 2);
+  margin-right: 12px;
+  margin-bottom: 12px;
+  /* 第二个item不需要右边距 */
   background: #fff;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  margin-bottom: 0;
-  padding: 0;
+}
+.playlist-grid-item:nth-child(2n) {
+  margin-right: 0;
+}
+
+/* 平板模式下的歌单网格 - 使用CSS Grid实现自适应列数 */
+.tablet-mode .playlist-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  /* gap替换为grid-gap兼容老设备 */
+  grid-gap: 16px;
+}
+
+/* 平板模式下的歌单项 - 宽度自适应 */
+.tablet-mode .playlist-grid-item {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  /* 不设置固定高度，让内容自适应 */
+  height: auto;
+}
+
+/* 平板模式下封面容器自适应 - 限制最大高度确保信息显示 */
+.tablet-mode .playlist-grid-item .cover-wrapper {
+  flex-shrink: 0;
+  /* 使用 padding-bottom 替代 aspect-ratio 以兼容老旧设备 */
+  aspect-ratio: auto;
+  padding-bottom: 100%;
+  height: 0;
+  position: relative;
+  /* 限制封面最大高度，避免在小屏幕上占用过多空间 */
+  max-height: 200px;
+}
+
+/* 平板模式下封面图片适配 */
+.tablet-mode .playlist-grid-item .cover-wrapper .cover-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* 平板模式下信息区域样式优化 */
+.tablet-mode .playlist-grid-item .songlist-info {
+  flex-shrink: 0;
 }
 .cover-wrapper {
   position: relative;
   width: 100%;
-  aspect-ratio: 1;
+  /* 使用 padding-bottom 实现1:1宽高比，兼容老旧设备 */
+  padding-bottom: 100%;
+  height: 0;
 }
 .source-tag {
   position: absolute;
@@ -559,6 +625,9 @@ to {
   line-height: 1;
 }
 .cover-image {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
 }
