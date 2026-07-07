@@ -412,30 +412,30 @@ const _sfc_main = {
           type: "fas",
           name: "spinner",
           size: "24",
-          color: "#00d7cd"
+          color: "#6b7280"
         })
       } : sources.value.length === 0 ? {
         i: common_vendor.p({
           type: "fas",
           name: "music",
           size: "48",
-          color: "#00d7cd"
+          color: "#6b7280"
         })
       } : {
         j: common_vendor.f(sources.value, (source, index, i0) => {
           return common_vendor.e({
-            a: "4ad0de08-3-" + i0,
+            a: "2b818c67-3-" + i0,
             b: common_vendor.t(source.name),
             c: common_vendor.t(source.version),
             d: source.isCircuitBroken
           }, source.isCircuitBroken ? {} : {}, {
-            e: "4ad0de08-4-" + i0,
+            e: "2b818c67-4-" + i0,
             f: common_vendor.t(source.developer || "未知"),
-            g: "4ad0de08-5-" + i0,
+            g: "2b818c67-5-" + i0,
             h: common_vendor.t(source.createdAt || source.updateDate),
             i: source.description
           }, source.description ? {
-            j: "4ad0de08-6-" + i0,
+            j: "2b818c67-6-" + i0,
             k: common_vendor.p({
               type: "fas",
               name: "comment-alt",
@@ -444,7 +444,7 @@ const _sfc_main = {
             }),
             l: common_vendor.t(source.description)
           } : {}, {
-            m: "4ad0de08-7-" + i0,
+            m: "2b818c67-7-" + i0,
             n: common_vendor.p({
               type: "fas",
               name: "chart-line",
@@ -452,14 +452,14 @@ const _sfc_main = {
               color: source.successRate >= 80 ? "#10b981" : source.successRate >= 50 ? "#f59e0b" : "#ef4444"
             }),
             o: common_vendor.t((source.successRate * 100).toFixed(2)),
-            p: "4ad0de08-8-" + i0,
+            p: "2b818c67-8-" + i0,
             q: common_vendor.t(source.totalRequests),
             r: common_vendor.t(source.failCount),
             s: source.isCircuitBroken
           }, source.isCircuitBroken ? {} : {}, {
             t: source.selected
           }, source.selected ? {
-            v: "4ad0de08-9-" + i0,
+            v: "2b818c67-9-" + i0,
             w: common_vendor.p({
               type: "fas",
               name: "check-circle",
@@ -477,7 +477,7 @@ const _sfc_main = {
           type: "fas",
           name: "music",
           size: "20",
-          color: "#00d7cd"
+          color: "#6b7280"
         }),
         l: common_vendor.p({
           type: "fas",
@@ -510,7 +510,7 @@ const _sfc_main = {
           type: "fas",
           name: "file-import",
           size: "20",
-          color: "#00d7cd"
+          color: "#6b7280"
         }),
         r: common_vendor.o(importLocal, "47"),
         s: activities.value.length === 0
@@ -519,12 +519,12 @@ const _sfc_main = {
           type: "fas",
           name: "history",
           size: "48",
-          color: "#7b68ee"
+          color: "#6b7280"
         })
       } : {
         v: common_vendor.f(activities.value, (activity, index, i0) => {
           return {
-            a: "4ad0de08-13-" + i0,
+            a: "2b818c67-13-" + i0,
             b: common_vendor.p({
               type: "fas",
               name: getActivityIcon(activity.type),
@@ -572,5 +572,5 @@ const _sfc_main = {
     };
   }
 };
-const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-4ad0de08"]]);
+const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-2b818c67"]]);
 exports.MiniProgramPage = MiniProgramPage;

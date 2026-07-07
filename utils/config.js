@@ -30,5 +30,12 @@ function setServerUrl(url) {
     return false;
   }
 }
+function getApiUrl(path) {
+  const serverUrl = getServerUrl();
+  const normalizedPath = path.startsWith("/") ? path : "/" + path;
+  const normalizedServerUrl = serverUrl.endsWith("/") ? serverUrl.slice(0, -1) : serverUrl;
+  return normalizedServerUrl + normalizedPath;
+}
+exports.getApiUrl = getApiUrl;
 exports.getServerUrl = getServerUrl;
 exports.setServerUrl = setServerUrl;

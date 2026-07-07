@@ -102,7 +102,7 @@ function normalizeMusicInfo(musicInfo) {
   if (!musicInfo)
     return null;
   return {
-    id: generateMusicId(musicInfo),
+    id: musicInfo.id || generateMusicId(musicInfo),
     name: musicInfo.name || "未知歌曲",
     singer: musicInfo.singer || ((_a = musicInfo.ar) == null ? void 0 : _a.map((a) => a.name).join("/")) || "未知歌手",
     albumName: musicInfo.albumName || ((_b = musicInfo.al) == null ? void 0 : _b.name) || "",

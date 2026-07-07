@@ -8,6 +8,7 @@
     "pages/player/index",
     "pages/rank/index",
     "pages/my/index",
+    "pages/ai-recommend/index",
     "pages/settings/index",
     "pages/sharelist/index",
     "pages/songlist-list/index"

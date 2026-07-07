@@ -100,6 +100,9 @@ const _sfc_main = {
     handleUpdateButtonClick() {
       this.$emit("close");
     },
+    // 开始下载并安装APK
+    startDownload() {
+    },
     ignoreUpdateVersion() {
       if (this.updateInfo && this.updateInfo.versionInfo) {
         utils_version.ignoreVersion(this.updateInfo.versionInfo.version);
@@ -183,5 +186,5 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     o: common_vendor.o((...args) => $options.handleOverlayClick && $options.handleOverlayClick(...args), "d5")
   }) : {});
 }
-const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-9a6e6b7d"]]);
+const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-ec8270c8"]]);
 wx.createComponent(Component);

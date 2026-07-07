@@ -24,7 +24,7 @@ const _sfc_main = {
   __name: "index",
   setup(__props) {
     common_vendor.useCssVars((_ctx) => ({
-      "dc0b8d98": lyricsContainerHeight.value + "rpx"
+      "4ce6d7af": lyricsContainerHeight.value + "rpx"
     }));
     const instance = common_vendor.getCurrentInstance();
     const statusBarHeight = common_vendor.ref(utils_system.getStatusBarHeight());
@@ -119,6 +119,11 @@ const _sfc_main = {
       if (!currentSong.value)
         return false;
       return store_modules_list.listStore.isInLoveList(currentSong.value.id);
+    });
+    const isCurrentSongDisliked = common_vendor.computed(() => {
+      if (!currentSong.value)
+        return false;
+      return store_modules_player.playerStore.isDisliked(currentSong.value.id);
     });
     const hasSwitchedSource = common_vendor.computed(() => store_modules_player.playerStore.hasSwitchedSource);
     const showSourceSwitchHint = common_vendor.computed(() => store_modules_player.playerStore.getState().showSourceSwitchHint);
@@ -1406,7 +1411,6 @@ const _sfc_main = {
       toggleOriginalSong.value = null;
     };
     const handleToggleConfirm = (data) => {
-      var _a, _b;
       const { originalSong: originalSong2, newSong } = data;
       console.log("[Player] 确认换源:", {
         from: originalSong2.name,
@@ -1427,16 +1431,7 @@ const _sfc_main = {
         quality: newSong.quality || "standard"
       });
       console.log("[Player] 已保存换源信息到本地存储, 新歌曲ID:", newSong.id);
-      const musicInfo = {
-        ...newSong,
-        id: newSong.id,
-        name: newSong.name,
-        singer: newSong.singer || ((_a = newSong.ar) == null ? void 0 : _a.map((a) => a.name).join(", ")) || "未知歌手",
-        albumName: newSong.albumName || ((_b = newSong.al) == null ? void 0 : _b.name) || "",
-        source: newSong.source,
-        sourceId: newSong.sourceId
-      };
-      store_modules_player.playerStore.playSong(musicInfo);
+      store_modules_player.playerStore.switchToSource(originalSong2, newSong);
       closeMusicToggleModal();
       common_vendor.index.showToast({ title: "已切换音源", icon: "success" });
     };
@@ -1553,6 +1548,41 @@ const _sfc_main = {
         store_modules_list.listStore.addListMusics(store_modules_list.LIST_IDS.LOVE, currentSong.value, "top");
         console.log("[Player] 添加到我的收藏:", currentSong.value.name);
         common_vendor.index.showToast({ title: "已添加到我喜欢的音乐", icon: "success" });
+      }
+    };
+    const handleDislike = () => {
+      if (!currentSong.value) {
+        common_vendor.index.showToast({ title: "没有正在播放的歌曲", icon: "none" });
+        return;
+      }
+      const song = currentSong.value;
+      if (store_modules_player.playerStore.isDisliked(song.id)) {
+        common_vendor.index.showModal({
+          title: "提示",
+          content: `「${song.name}」已在不喜欢列表中，是否移除？`,
+          confirmText: "移除",
+          success: (res) => {
+            if (res.confirm) {
+              store_modules_player.playerStore.removeFromDislikeList(song.id);
+              common_vendor.index.showToast({ title: "已移除", icon: "success" });
+            }
+          }
+        });
+        return;
+      }
+      const success = store_modules_player.playerStore.addToDislikeList(song);
+      if (success) {
+        common_vendor.index.showToast({
+          title: "已加入不喜欢列表",
+          icon: "none",
+          duration: 1500
+        });
+        console.log("[Player] 不喜欢当前歌曲，自动切换到下一首");
+        setTimeout(() => {
+          playNext();
+        }, 500);
+      } else {
+        common_vendor.index.showToast({ title: "操作失败", icon: "none" });
       }
     };
     const closeAddToModal = () => {
@@ -1808,8 +1838,8 @@ const _sfc_main = {
           size: "10",
           color: "rgba(255,255,255,0.7)"
         }),
-        aN: common_vendor.o(($event) => showFavoriteHint.value = false, "3f"),
-        aO: common_vendor.o(handleFavorite, "ac")
+        aN: common_vendor.o(($event) => showFavoriteHint.value = false, "ad"),
+        aO: common_vendor.o(handleFavorite, "8e")
       } : {}, {
         aP: common_vendor.p({
           type: "fas",
@@ -1818,27 +1848,35 @@ const _sfc_main = {
           color: isCurrentSongFavorite.value ? "#ff6b6b" : darkMode.value ? "#ffffff" : "#6b7280"
         }),
         aQ: isCurrentSongFavorite.value ? 1 : "",
-        aR: common_vendor.o(handleFavorite, "cf"),
+        aR: common_vendor.o(handleFavorite, "44"),
         aS: common_vendor.p({
+          type: "fas",
+          name: "heart-crack",
+          size: 18,
+          color: isCurrentSongDisliked.value ? "#ff4444" : darkMode.value ? "#ffffff" : "#6b7280"
+        }),
+        aT: isCurrentSongDisliked.value ? 1 : "",
+        aU: common_vendor.o(handleDislike, "35"),
+        aV: common_vendor.p({
           type: "fas",
           name: "plus",
           size: "18",
           color: darkMode.value ? "#ffffff" : "#6b7280"
         }),
-        aT: common_vendor.o(createNewList, "0d"),
-        aU: common_vendor.p({
+        aW: common_vendor.o(createNewList, "c5"),
+        aX: common_vendor.p({
           type: "fas",
           name: "clone",
           size: "18",
           color: darkMode.value ? "#ffffff" : "#6b7280"
         }),
-        aV: hasSwitchedSource.value && showSourceSwitchHint.value
+        aY: hasSwitchedSource.value && showSourceSwitchHint.value
       }, hasSwitchedSource.value && showSourceSwitchHint.value ? {} : {}, {
-        aW: hasSwitchedSource.value && showSourceSwitchHint.value ? 1 : "",
-        aX: common_vendor.o(showMusicToggle, "f3"),
-        aY: lyrics.value.length > 0
+        aZ: hasSwitchedSource.value && showSourceSwitchHint.value ? 1 : "",
+        ba: common_vendor.o(showMusicToggle, "c5"),
+        bb: lyrics.value.length > 0
       }, lyrics.value.length > 0 ? {
-        aZ: common_vendor.f(lyrics.value, (line, index, i0) => {
+        bc: common_vendor.f(lyrics.value, (line, index, i0) => {
           return common_vendor.e({
             a: common_vendor.t(line.text),
             b: line.translation
@@ -1852,179 +1890,187 @@ const _sfc_main = {
             h: common_vendor.o(($event) => onLyricLineTap(index), index)
           });
         }),
-        ba: `translateY(-${tabletLyricScrollTop.value}px)`
+        bd: `translateY(-${tabletLyricScrollTop.value}px)`
       } : {}, {
-        bb: common_vendor.o(onTabletLyricWheel, "5d"),
-        bc: common_vendor.o(onTabletLyricTouchStart, "a8"),
-        bd: common_vendor.o(onTabletLyricTouchMove, "65"),
-        be: common_vendor.o(onTabletLyricTouchEnd, "ba"),
-        bf: common_vendor.o(onTabletLyricMouseDown, "9a")
+        be: common_vendor.o(onTabletLyricWheel, "3e"),
+        bf: common_vendor.o(onTabletLyricTouchStart, "82"),
+        bg: common_vendor.o(onTabletLyricTouchMove, "40"),
+        bh: common_vendor.o(onTabletLyricTouchEnd, "de"),
+        bi: common_vendor.o(onTabletLyricMouseDown, "21")
       }) : {}, {
-        bg: !isTablet.value
+        bj: !isTablet.value
       }, !isTablet.value ? common_vendor.e({
-        bh: isDragging.value ? dragPercent.value + "%" : progressPercent.value + "%",
-        bi: isDragging.value ? dragPercent.value + "%" : progressPercent.value + "%",
-        bj: common_vendor.o(onProgressTouchStart, "7c"),
-        bk: common_vendor.o(onProgressTouchMove, "d2"),
-        bl: common_vendor.o(onProgressTouchEnd, "18"),
-        bm: common_vendor.t(formatTime(currentTime.value)),
-        bn: common_vendor.t(formatTime(duration.value)),
-        bo: playMode.value === "singleLoop"
+        bk: isDragging.value ? dragPercent.value + "%" : progressPercent.value + "%",
+        bl: isDragging.value ? dragPercent.value + "%" : progressPercent.value + "%",
+        bm: common_vendor.o(onProgressTouchStart, "a2"),
+        bn: common_vendor.o(onProgressTouchMove, "0f"),
+        bo: common_vendor.o(onProgressTouchEnd, "d2"),
+        bp: common_vendor.t(formatTime(currentTime.value)),
+        bq: common_vendor.t(formatTime(duration.value)),
+        br: playMode.value === "singleLoop"
       }, playMode.value === "singleLoop" ? {
-        bp: common_vendor.p({
+        bs: common_vendor.p({
           type: "fas",
           name: "rotate-right",
           size: "20",
           color: darkMode.value ? "#ffffff" : "#6b7280"
         }),
-        bq: darkMode.value ? "#ffffff" : "#6b7280"
+        bt: darkMode.value ? "#ffffff" : "#6b7280"
       } : {
-        br: common_vendor.p({
+        bv: common_vendor.p({
           type: "fas",
           name: playModeIcon.value,
           size: "20",
           color: darkMode.value ? "#ffffff" : "#6b7280"
         })
       }, {
-        bs: common_vendor.o(togglePlayMode, "23"),
-        bt: common_vendor.p({
+        bw: common_vendor.o(togglePlayMode, "08"),
+        bx: common_vendor.p({
           type: "fas",
           name: "backward-step",
           size: "28",
           color: darkMode.value ? "#ffffff" : "#374151"
         }),
-        bv: common_vendor.o(playPrev, "99"),
-        bw: isLoading.value
+        by: common_vendor.o(playPrev, "ff"),
+        bz: isLoading.value
       }, isLoading.value ? {} : {
-        bx: common_vendor.p({
+        bA: common_vendor.p({
           type: "fas",
           name: playing.value ? "pause" : "play",
           size: "28",
           color: "#ffffff"
         })
       }, {
-        by: isLoading.value ? 1 : "",
-        bz: common_vendor.o(togglePlay, "0d"),
-        bA: common_vendor.p({
+        bB: isLoading.value ? 1 : "",
+        bC: common_vendor.o(togglePlay, "0a"),
+        bD: common_vendor.p({
           type: "fas",
           name: "forward-step",
           size: "28",
           color: darkMode.value ? "#ffffff" : "#374151"
         }),
-        bB: common_vendor.o(playNext, "55"),
-        bC: common_vendor.p({
+        bE: common_vendor.o(playNext, "48"),
+        bF: common_vendor.p({
           type: "fas",
           name: "comment",
           size: "20",
           color: darkMode.value ? "#ffffff" : "#6b7280"
         }),
-        bD: commentTotalCount.value > 0
+        bG: commentTotalCount.value > 0
       }, commentTotalCount.value > 0 ? {
-        bE: common_vendor.t(commentTotalCount.value > 999 ? "999+" : commentTotalCount.value)
+        bH: common_vendor.t(commentTotalCount.value > 999 ? "999+" : commentTotalCount.value)
       } : {}, {
-        bF: common_vendor.o(showComment, "fd"),
-        bG: common_vendor.p({
+        bI: common_vendor.o(showComment, "d2"),
+        bJ: common_vendor.p({
           type: "fas",
           name: "clock",
           size: "18",
           color: sleepTimerRemaining.value > 0 ? "#00d7cd" : darkMode.value ? "#ffffff" : "#6b7280"
         }),
-        bH: sleepTimerRemaining.value > 0
+        bK: sleepTimerRemaining.value > 0
       }, sleepTimerRemaining.value > 0 ? {
-        bI: common_vendor.t(formatSleepTimerShort.value)
+        bL: common_vendor.t(formatSleepTimerShort.value)
       } : {}, {
-        bJ: sleepTimerRemaining.value > 0 ? 1 : "",
-        bK: common_vendor.o(showSleepTimerPopup, "bb"),
-        bL: showFavoriteHint.value
+        bM: sleepTimerRemaining.value > 0 ? 1 : "",
+        bN: common_vendor.o(showSleepTimerPopup, "52"),
+        bO: showFavoriteHint.value
       }, showFavoriteHint.value ? {
-        bM: common_vendor.t(currentFavoriteHintText.value),
-        bN: common_vendor.p({
+        bP: common_vendor.t(currentFavoriteHintText.value),
+        bQ: common_vendor.p({
           type: "fas",
           name: "xmark",
           size: "10",
           color: "rgba(255,255,255,0.7)"
         }),
-        bO: common_vendor.o(($event) => showFavoriteHint.value = false, "58"),
-        bP: common_vendor.o(handleFavorite, "72")
+        bR: common_vendor.o(($event) => showFavoriteHint.value = false, "89"),
+        bS: common_vendor.o(handleFavorite, "b9")
       } : {}, {
-        bQ: common_vendor.p({
+        bT: common_vendor.p({
           type: "fas",
           name: isCurrentSongFavorite.value ? "heart" : "heart",
           size: 18,
           color: isCurrentSongFavorite.value ? "#ff6b6b" : darkMode.value ? "#ffffff" : "#6b7280"
         }),
-        bR: isCurrentSongFavorite.value ? 1 : "",
-        bS: common_vendor.o(handleFavorite, "54"),
-        bT: common_vendor.p({
+        bU: isCurrentSongFavorite.value ? 1 : "",
+        bV: common_vendor.o(handleFavorite, "87"),
+        bW: common_vendor.p({
+          type: "fas",
+          name: "heart-crack",
+          size: 18,
+          color: isCurrentSongDisliked.value ? "#ff4444" : darkMode.value ? "#ffffff" : "#6b7280"
+        }),
+        bX: isCurrentSongDisliked.value ? 1 : "",
+        bY: common_vendor.o(handleDislike, "b1"),
+        bZ: common_vendor.p({
           type: "fas",
           name: "plus",
           size: "18",
           color: darkMode.value ? "#ffffff" : "#6b7280"
         }),
-        bU: common_vendor.o(createNewList, "19"),
-        bV: common_vendor.p({
+        ca: common_vendor.o(createNewList, "23"),
+        cb: common_vendor.p({
           type: "fas",
           name: "clone",
           size: "18",
           color: darkMode.value ? "#ffffff" : "#6b7280"
         }),
-        bW: hasSwitchedSource.value && showSourceSwitchHint.value
+        cc: hasSwitchedSource.value && showSourceSwitchHint.value
       }, hasSwitchedSource.value && showSourceSwitchHint.value ? {} : {}, {
-        bX: hasSwitchedSource.value && showSourceSwitchHint.value ? 1 : "",
-        bY: common_vendor.o(showMusicToggle, "02")
+        cd: hasSwitchedSource.value && showSourceSwitchHint.value ? 1 : "",
+        ce: common_vendor.o(showMusicToggle, "9f")
       }) : {}, {
-        bZ: common_vendor.o(($event) => showAddToModalFlag.value = $event, "90"),
-        ca: common_vendor.o(closeAddToModal, "b3"),
-        cb: common_vendor.p({
+        cf: common_vendor.o(($event) => showAddToModalFlag.value = $event, "a5"),
+        cg: common_vendor.o(closeAddToModal, "a9"),
+        ch: common_vendor.p({
           visible: showAddToModalFlag.value,
           ["dark-mode"]: darkMode.value,
           ["is-tablet"]: isTablet.value
         }),
-        cc: showSleepTimerPopupFlag.value
+        ci: showSleepTimerPopupFlag.value
       }, showSleepTimerPopupFlag.value ? common_vendor.e({
-        cd: common_vendor.p({
+        cj: common_vendor.p({
           type: "fas",
           name: "xmark",
           size: "16",
           color: "#6b7280"
         }),
-        ce: common_vendor.o(closeSleepTimerPopup, "e1"),
-        cf: sleepTimerRemaining.value > 0
+        ck: common_vendor.o(closeSleepTimerPopup, "b9"),
+        cl: sleepTimerRemaining.value > 0
       }, sleepTimerRemaining.value > 0 ? {
-        cg: common_vendor.t(formatSleepTimerRemaining.value),
-        ch: common_vendor.o(cancelSleepTimer, "c6")
+        cm: common_vendor.t(formatSleepTimerRemaining.value),
+        cn: common_vendor.o(cancelSleepTimer, "9e")
       } : {}, {
-        ci: common_vendor.f(hourOptions.value, (hour, index, i0) => {
+        co: common_vendor.f(hourOptions.value, (hour, index, i0) => {
           return {
             a: common_vendor.t(hour),
             b: index
           };
         }),
-        cj: common_vendor.f(minuteOptions.value, (minute, index, i0) => {
+        cp: common_vendor.f(minuteOptions.value, (minute, index, i0) => {
           return {
             a: common_vendor.t(minute),
             b: index
           };
         }),
-        ck: sleepTimerPickerValue.value,
-        cl: common_vendor.o(onSleepTimerPickerChange, "2e"),
-        cm: common_vendor.o(closeSleepTimerPopup, "0c"),
-        cn: common_vendor.o(confirmSleepTimerSelection, "dd"),
-        co: isTablet.value ? tabletModalSafeTop.value : "",
-        cp: common_vendor.o(() => {
-        }, "f9"),
-        cq: common_vendor.o(closeSleepTimerPopup, "3c")
+        cq: sleepTimerPickerValue.value,
+        cr: common_vendor.o(onSleepTimerPickerChange, "a5"),
+        cs: common_vendor.o(closeSleepTimerPopup, "cd"),
+        ct: common_vendor.o(confirmSleepTimerSelection, "d5"),
+        cv: isTablet.value ? tabletModalSafeTop.value : "",
+        cw: common_vendor.o(() => {
+        }, "84"),
+        cx: common_vendor.o(closeSleepTimerPopup, "d6")
       }) : {}, {
-        cr: common_vendor.o(closeComment, "d2"),
-        cs: common_vendor.p({
+        cy: common_vendor.o(closeComment, "f9"),
+        cz: common_vendor.p({
           show: showCommentFlag.value,
           ["music-info"]: originalSong.value,
           ["is-tablet"]: isTablet.value
         }),
-        ct: common_vendor.o(closeMusicToggleModal, "5f"),
-        cv: common_vendor.o(handleToggleConfirm, "d7"),
-        cw: common_vendor.o(handleTogglePreview, "b5"),
-        cx: common_vendor.p({
+        cA: common_vendor.o(closeMusicToggleModal, "25"),
+        cB: common_vendor.o(handleToggleConfirm, "e3"),
+        cC: common_vendor.o(handleTogglePreview, "6b"),
+        cD: common_vendor.p({
           visible: showMusicToggleModal.value,
           ["original-song"]: toggleOriginalSong.value,
           ["list-id"]: null,
@@ -2032,9 +2078,9 @@ const _sfc_main = {
           ["bottom-safe-height"]: 0,
           ["is-tablet"]: isTablet.value
         }),
-        cy: darkMode.value ? 1 : "",
-        cz: isTablet.value ? 1 : "",
-        cA: common_vendor.s(_ctx.__cssVars())
+        cE: darkMode.value ? 1 : "",
+        cF: isTablet.value ? 1 : "",
+        cG: common_vendor.s(_ctx.__cssVars())
       });
     };
   }

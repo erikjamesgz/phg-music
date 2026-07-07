@@ -582,6 +582,23 @@ ${logsText}`;
       console.log("[Main] 已注册调试日志状态变化监听: debugLogStatusChanged");
       common_vendor.index.onWindowResize(handleWindowResize);
       console.log("[Main] 已注册窗口大小变化监听");
+      common_vendor.index.$on("switchToSettingsTab", () => {
+        console.log("[Main] 收到切换到设置tab的事件");
+        if (isTablet.value) {
+          switchTab(4);
+        }
+      });
+      console.log("[Main] 已注册切换到设置tab监听: switchToSettingsTab");
+      common_vendor.index.$on("navigateToAIRecommend", () => {
+        console.log("[Main] 收到导航到AI推荐页面的事件");
+        if (isTablet.value) {
+          subPageStack.value.push("/pages/ai-recommend/index");
+          showSubPage.value = true;
+        } else {
+          common_vendor.index.navigateTo({ url: "/pages/ai-recommend/index" });
+        }
+      });
+      console.log("[Main] 已注册导航到AI推荐页面监听: navigateToAIRecommend");
       setTimeout(() => {
         restorePlayStateAfterTabsReady();
       }, 500);
@@ -614,6 +631,8 @@ ${logsText}`;
       common_vendor.index.$off("themeChanged", handleThemeChange);
       common_vendor.index.$off("showUpdatePopup", handleShowUpdatePopup);
       common_vendor.index.$off("debugLogStatusChanged", handleDebugLogStatusChanged);
+      common_vendor.index.$off("switchToSettingsTab");
+      common_vendor.index.$off("navigateToAIRecommend");
       common_vendor.index.offWindowResize(handleWindowResize);
       console.log("[Main] 已移除全局事件监听");
     });
@@ -799,5 +818,5 @@ ${logsText}`;
     };
   }
 };
-const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-b90ae7ff"]]);
+const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-4073cb87"]]);
 wx.createPage(MiniProgramPage);

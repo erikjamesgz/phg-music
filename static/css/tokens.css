@@ -1,0 +1,148 @@
+/**
+ * 拼好歌 PHG Music — 全局设计 Token
+ * 基于 DESIGN.md 青色 Celadon 品牌色系统
+ *
+ * 核心规则：
+ *   #00d7cd 仅用于渐变（gradient），禁止作为纯色文字/边框/背景使用
+ *   文字统一使用黑白灰中性色（Slate 色板）
+ *   选中态/强调态用字重（font-weight）+ 深色对比，不用彩色
+ *
+ * 使用方式：在模板中直接使用 class，如 class="text-ink bg-surface"
+ * 兼容微信小程序（不依赖 CSS 变量）
+ */
+
+/* ============================================
+   品牌色 — 青色系 Celadon（仅用于渐变！）
+   ============================================ */
+
+/* ⚠️ 纯色 Token 已废弃，保留仅为向后兼容 */
+/* 新代码请使用下方「中性色」Token 替代 */
+
+.text-primary          { color: #1e293b; }       /* 改为深墨色 */
+.text-primary-light    { color: #475569; }       /* 改为中性灰 */
+.text-primary-dark     { color: #334155; }       /* 改为深灰 */
+
+.bg-primary            { background: linear-gradient(135deg, #00d7cd 0%, #00afff 100%); }
+.bg-primary-light      { background: linear-gradient(135deg, #00afff 0%, #7dd3fc 100%); }
+.bg-primary-bg         { background-color: rgba(241, 245, 249, 0.8); }  /* 改为浅灰底 */
+.bg-primary-bg-hover   { background-color: rgba(226, 232, 240, 0.9); }
+
+.border-primary        { border-color: #94a3b8; }  /* 改为中性灰 */
+.border-primary-subtle { border-color: #e2e8f0; }
+
+/* 渐变专用 Token — 唯一允许使用 #00d7cd 的地方 */
+.gradient-brand {
+  background: linear-gradient(135deg, #00d7cd 0%, #00afff 100%);
+}
+.gradient-brand-subtle {
+  background: linear-gradient(135deg, rgba(0, 215, 205, 0.08) 0%, rgba(0, 175, 255, 0.06) 100%);
+}
+.gradient-brand-strong {
+  background: linear-gradient(135deg, rgba(0, 215, 205, 0.15) 0%, rgba(0, 175, 255, 0.12) 100%);
+}
+
+/* ============================================
+   中性色 — 文本（Tailwind Slate 色板）
+   ============================================ */
+
+.text-ink              { color: #1e293b; }       /* 主文本 - 深墨 */
+.text-ink-bold         { color: #0f172a; font-weight: 600; }  /* 强调文本 - 更深 + 加粗 */
+.text-ink-secondary    { color: #334155; }       /* 次要文本 */
+.text-body             { color: #374151; }       /* 正文 */
+.text-secondary        { color: #6b7280; }       /* 辅助文字 */
+.text-muted            { color: #9ca3af; }       /* 弱化文字 */
+.text-placeholder      { color: #cccccc; }       /* 占位符 */
+.text-disabled         { color: #c0c0c0; }       /* 禁用态 */
+.text-inverse          { color: #ffffff; }       /* 反色文字（深底白字） */
+
+/* ============================================
+   中性色 — 背景 / 表面
+   ============================================ */
+
+.bg-white              { background-color: #ffffff; }
+.bg-surface             { background-color: #f9fafb; }
+.bg-surface-alt         { background-color: #f3f4f6; }
+.bg-surface-warm        { background-color: #f8f8f8; }
+
+/* ============================================
+   语义色 — 状态指示
+   ============================================ */
+
+.text-success          { color: #4cd964; }
+.text-warning          { color: #f0ad4e; }
+.text-error            { color: #dd524d; }
+.text-info             { color: #909399; }
+
+.bg-success            { background-color: #4cd964; }
+.bg-warning            { background-color: #f0ad4e; }
+.bg-error              { background-color: #dd524d; }
+
+/* 收藏/喜欢 — 珊瑚红（与品牌青形成互补对比） */
+.text-favorite         { color: #ff6b6b; }
+.bg-favorite           { background-color: rgba(255, 107, 107, 0.1); }
+
+/* ============================================
+   边框
+   ============================================ */
+
+.border-default        { border-color: #e5e5e5; }
+.border-subtle         { border-color: #f0f0f0; }
+.border-focus          { border-color: #93c5fd; }  /* 聚焦态 - 淡蓝灰 */
+
+/* ============================================
+   暗色模式覆盖
+   所有暗色态通过 .dark-mode 父级选择器切换
+   ============================================ */
+
+.dark-mode .text-ink              { color: #f1f5f9; }
+.dark-mode .text-ink-bold         { color: #ffffff; font-weight: 600; }
+.dark-mode .text-ink-secondary    { color: #cbd5e1; }
+.dark-mode .text-body             { color: #e2e8f0; }
+.dark-mode .text-secondary        { color: #94a3b8; }
+.dark-mode .text-muted            { color: #64748b; }
+.dark-mode .text-placeholder      { color: #475569; }
+
+.dark-mode .bg-white              { background-color: #111827; }
+.dark-mode .bg-surface            { background-color: #1f2937; }
+.dark-mode .bg-surface-alt        { background-color: #273445; }
+.dark-mode .bg-surface-warm       { background-color: #1a2332; }
+
+.dark-mode .border-default        { border-color: #374151; }
+.dark-mode .border-subtle         { border-color: #2d3748; }
+.dark-mode .border-focus          { border-color: #475569; }
+
+.dark-mode .bg-primary-bg         { background-color: rgba(51, 65, 85, 0.4); }
+.dark-mode .bg-primary-bg-hover   { background-color: rgba(51, 65, 85, 0.6); }
+.dark-mode .border-primary-subtle { border-color: rgba(71, 85, 105, 0.35); }
+
+/* ============================================
+   常用组合模式
+   ============================================ */
+
+/* 卡片 */
+.card {
+  background-color: #ffffff;
+  border-radius: 12rpx;
+  border: 1rpx solid #e5e5e5;
+}
+.dark-mode .card {
+  background-color: #1f2937;
+  border-color: #374151;
+}
+
+/* 选中态 — 用背景色而非侧边条纹 */
+.selected {
+  background-color: rgba(241, 245, 249, 0.8);
+}
+.dark-mode .selected {
+  background-color: rgba(51, 65, 85, 0.3);
+}
+
+/* 分割线 */
+.divider {
+  height: 1rpx;
+  background-color: #f0f0f0;
+}
+.dark-mode .divider {
+  background-color: #2d3748;
+}

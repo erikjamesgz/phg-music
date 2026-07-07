@@ -374,21 +374,27 @@ swiper-item.swiper-item-active {
   right: -10px;
 }
 .nav-section {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  /* gap替换为grid-gap兼容老设备 */
-  grid-gap: 16px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
   padding: 16px;
   margin-bottom: 20px;
+}
+.nav-section--tablet {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
 }
 .nav-item {
   display: flex;
   flex-direction: column;
   align-items: center;
+  flex: 1;
+  min-width: 0;
 }
 .nav-icon {
-  width: 56px;
-  height: 56px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   display: flex;
   justify-content: center;
@@ -411,6 +417,33 @@ swiper-item.swiper-item-active {
 }
 .playlist-icon {
   background: linear-gradient(135deg, #00d7cd 0%, #00afff 100%);
+}
+
+/* AI推荐按钮 */
+.ai-recommend-nav {
+  position: relative;
+}
+.ai-recommend-nav .ai-icon {
+  background: linear-gradient(135deg, #00d7cd 0%, #00afff 100%);
+  animation: aiGlow 2s ease-in-out infinite;
+}
+@keyframes aiGlow {
+0%, 100% {
+    box-shadow: 0 2px 8px rgba(0, 215, 205, 0.3);
+}
+50% {
+    box-shadow: 0 4px 16px rgba(0, 215, 205, 0.5);
+}
+}
+@keyframes statusPulse {
+0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+}
+50% {
+    opacity: 0.7;
+    transform: scale(1.2);
+}
 }
 .nav-text {
   font-size: 12px;

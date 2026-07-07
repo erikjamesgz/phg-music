@@ -51,6 +51,7 @@ const _sfc_main = {
         isTablet.value = false;
       }
     };
+    checkIsTablet();
     const props = __props;
     const emit = __emit;
     const statusBarHeight = common_vendor.ref(utils_system.getStatusBarHeight());
@@ -944,6 +945,64 @@ const _sfc_main = {
         }, 100);
         return;
       }
+      if (options.mode === "ai_playlist") {
+        console.log("[Sharelist] 🎵 进入AI推荐歌单模式");
+        console.log("[Sharelist] AI歌单ID:", options.id);
+        console.log("[Sharelist] AI歌单名称:", options.name);
+        isPreviewMode.value = false;
+        showActionBar.value = true;
+        isLocalPlaylist.value = true;
+        isLoading.value = true;
+        setTimeout(() => {
+          try {
+            const aiPlaylistData = common_vendor.index.getStorageSync("tempAiPlaylist");
+            if (!aiPlaylistData || !aiPlaylistData.songs || aiPlaylistData.songs.length === 0) {
+              console.error("[Sharelist] ❌ 未找到AI歌单数据");
+              isLoading.value = false;
+              loadError.value = "AI歌单数据不存在";
+              return;
+            }
+            console.log("[Sharelist] ✅ 找到AI歌单数据，歌曲数量:", aiPlaylistData.songs.length);
+            const playlistInfo = aiPlaylistData.playlistInfo || {};
+            playlistName.value = decodeURIComponent(options.name) || playlistInfo.title || "AI推荐歌单";
+            playlistCover.value = "";
+            playlistAuthor.value = "AI 智能推荐";
+            playlistDesc.value = playlistInfo.reason || "基于你的听歌习惯智能生成";
+            playlistTrackCount.value = aiPlaylistData.songs.length;
+            playlistPlayCount.value = "";
+            const processedSongs = aiPlaylistData.songs.map((song, index) => ({
+              ...song,
+              id: song._aiId || `ai_song_${Date.now()}_${index}`,
+              singer: song.singer,
+              ar: song.ar || (song.singer ? [{ name: song.singer }] : []),
+              al: song.al || { name: song.album || "" },
+              album: song.album || { name: song.album || "" },
+              source: "ai_pending",
+              // 标记待搜索
+              _isAiSong: true,
+              // 标记是AI歌曲
+              _aiIndex: index
+              // 保存在歌单中的索引
+            }));
+            songs.value = processedSongs;
+            hasMore.value = false;
+            isLoading.value = false;
+            currentListId.value = options.id || aiPlaylistData.id || `ai_playlist_${Date.now()}`;
+            listSource.value = "ai_recommend";
+            console.log("[Sharelist] ✅ AI推荐歌单数据加载完成");
+            console.log("[Sharelist] 📋 歌单信息:", {
+              名称: playlistName.value,
+              歌曲数: songs.length,
+              列表ID: currentListId.value
+            });
+          } catch (error) {
+            console.error("[Sharelist] ❌ 加载AI歌单失败:", error);
+            isLoading.value = false;
+            loadError.value = "加载AI歌单失败: " + (error.message || "未知错误");
+          }
+        }, 100);
+        return;
+      }
       if (options.link && options.source) {
         console.log("[Sharelist] 进入预览模式");
         isPreviewMode.value = true;
@@ -1255,7 +1314,7 @@ const _sfc_main = {
       } : {}, {
         S: songs.value.length > 0
       }, songs.value.length > 0 ? {
-        T: common_vendor.sr(virtualListRef, "e99d8857-8", {
+        T: common_vendor.sr(virtualListRef, "cab5a59c-8", {
           "k": "virtualListRef"
         }),
         U: common_vendor.o(onScrollHandler, "1f"),
@@ -1296,5 +1355,5 @@ const _sfc_main = {
     };
   }
 };
-const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-e99d8857"]]);
+const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-cab5a59c"]]);
 exports.MiniProgramPage = MiniProgramPage;

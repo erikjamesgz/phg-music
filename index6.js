@@ -422,6 +422,49 @@ const _sfc_main = {
       }
       return deletedList.slice(0, 5);
     });
+    const dislikeList = common_vendor.computed(() => {
+      return store_modules_player.playerStore.getDislikeList();
+    });
+    const displayDislikeList = common_vendor.computed(() => {
+      return dislikeList.value.slice(0, 5);
+    });
+    const formatDislikeTime = (timestamp) => {
+      if (!timestamp)
+        return "";
+      const now = Date.now();
+      const diff = now - timestamp;
+      if (diff < 60 * 1e3)
+        return "刚刚";
+      if (diff < 3600 * 1e3)
+        return `${Math.floor(diff / (60 * 1e3))}分钟前`;
+      if (diff < 86400 * 1e3)
+        return `${Math.floor(diff / (3600 * 1e3))}小时前`;
+      if (diff < 2592e3 * 1e3)
+        return `${Math.floor(diff / (86400 * 1e3))}天前`;
+      const date = new Date(timestamp);
+      return `${date.getMonth() + 1}/${date.getDate()}`;
+    };
+    const handleClearDislikeList = () => {
+      common_vendor.index.showModal({
+        title: "清空不喜欢列表",
+        content: `确定要清空 ${dislikeList.length} 首不喜欢的歌曲吗？`,
+        confirmText: "清空",
+        confirmColor: "#ff4444",
+        success: (res) => {
+          if (res.confirm) {
+            store_modules_player.playerStore.clearDislikeList();
+            common_vendor.index.showToast({ title: "已清空", icon: "success" });
+          }
+        }
+      });
+    };
+    const handleRemoveFromDislike = (songId) => {
+      store_modules_player.playerStore.removeFromDislikeList(songId);
+      common_vendor.index.showToast({ title: "已移除", icon: "none", duration: 800 });
+    };
+    const viewAllDisliked = () => {
+      common_vendor.index.showToast({ title: "功能开发中", icon: "none" });
+    };
     common_vendor.computed(() => store_modules_player.playerStore.getState().showMiniPlayer);
     const allSongCount = common_vendor.ref(0);
     const refreshAllSongCount = () => {
@@ -695,11 +738,70 @@ const _sfc_main = {
       }
     };
     const openRecentPlaylist = (playlist) => {
+      var _a, _b, _c;
       if (!playlist)
         return;
       console.log("[My] 打开最近播放歌单:", playlist);
       const source = playlist.source || "";
       const id = playlist.id || "";
+      if (source === "ai_recommend" || playlist.type === "ai_recommend") {
+        console.log("[My] 🎵 检测到AI推荐歌单，特殊处理...");
+        let aiPlaylistData = null;
+        if (playlist.songs && playlist.songs.length > 0) {
+          aiPlaylistData = {
+            songs: playlist.songs,
+            playlistInfo: playlist.playlistInfo || {},
+            id,
+            name: playlist.name || "",
+            createTime: playlist.createTime
+          };
+          console.log("[My] ✅ 从playlist对象获取到完整数据，歌曲数:", aiPlaylistData.songs.length);
+        }
+        if (!aiPlaylistData || aiPlaylistData.songs.length === 0) {
+          const cachedPlaylist = common_vendor.index.getStorageSync("aiRecommendPlaylist");
+          if (cachedPlaylist && cachedPlaylist.songs && cachedPlaylist.songs.length > 0) {
+            if (((_a = cachedPlaylist.playlistInfo) == null ? void 0 : _a.id) === id || !id || // 如果没有ID，使用最新的缓存
+            id.startsWith("ai_playlist_")) {
+              aiPlaylistData = {
+                songs: cachedPlaylist.songs,
+                playlistInfo: cachedPlaylist.playlistInfo || {},
+                id: ((_b = cachedPlaylist.playlistInfo) == null ? void 0 : _b.id) || id,
+                name: ((_c = cachedPlaylist.playlistInfo) == null ? void 0 : _c.title) || playlist.name || "AI推荐歌单",
+                createTime: cachedPlaylist.generateTime || playlist.createTime
+              };
+              console.log("[My] ✅ 从缓存获取到完整数据，歌曲数:", aiPlaylistData.songs.length);
+            }
+          }
+        }
+        if (!aiPlaylistData || !aiPlaylistData.songs || aiPlaylistData.songs.length === 0) {
+          console.error("[My] ❌ 无法获取AI歌单的完整数据（缺少歌曲列表）");
+          console.warn("[My] ⚠️ 可能原因：1. 缓存已过期  2. 歌单数据未正确保存");
+          aiPlaylistData = {
+            songs: [],
+            playlistInfo: {
+              title: playlist.name || "AI推荐歌单",
+              reason: "歌单数据加载失败，请返回AI推荐页面重新生成",
+              id
+            },
+            id,
+            name: playlist.name || "AI推荐歌单",
+            createTime: playlist.createTime
+          };
+        }
+        common_vendor.index.setStorageSync("tempAiPlaylist", aiPlaylistData);
+        console.log("[My] 💾 已保存tempAiPlaylist到storage:", {
+          歌曲数: aiPlaylistData.songs.length,
+          歌单名: aiPlaylistData.name,
+          ID: aiPlaylistData.id
+        });
+        const url2 = `/pages/sharelist/index?mode=ai_playlist&fromName=my&id=${encodeURIComponent(id)}&name=${encodeURIComponent(playlist.name || "AI推荐歌单")}`;
+        if (isTablet.value) {
+          common_vendor.index.$emit("my-navigate", { url: url2 });
+        } else {
+          common_vendor.index.navigateTo({ url: url2 });
+        }
+        return;
+      }
       let link = playlist.link || "";
       if (!link) {
         let cleanId = id;
@@ -955,7 +1057,7 @@ const _sfc_main = {
           return common_vendor.e({
             a: playlist.playlistType === "default"
           }, playlist.playlistType === "default" ? {
-            b: "afe08bce-3-" + i0,
+            b: "4598f48f-3-" + i0,
             c: common_vendor.p({
               name: "headphones",
               size: "32",
@@ -968,7 +1070,7 @@ const _sfc_main = {
             g: common_vendor.unref(utils_imageProxy.proxyImageUrl)(playlist.coverUrl),
             h: common_vendor.o(($event) => handleMyImageError($event, playlist, "coverUrl"), playlist.id + "-" + playlist.playlistType)
           } : {
-            i: "afe08bce-4-" + i0,
+            i: "4598f48f-4-" + i0,
             j: common_vendor.p({
               name: "heart",
               size: "32",
@@ -981,7 +1083,7 @@ const _sfc_main = {
             m: common_vendor.unref(utils_imageProxy.proxyImageUrl)(playlist.coverUrl),
             n: common_vendor.o(($event) => handleMyImageError($event, playlist, "coverUrl"), playlist.id + "-" + playlist.playlistType)
           } : {
-            o: "afe08bce-5-" + i0,
+            o: "4598f48f-5-" + i0,
             p: common_vendor.p({
               name: "music",
               size: "32",
@@ -1000,7 +1102,7 @@ const _sfc_main = {
             w: common_vendor.t(playlist.songCount || 0),
             x: playlist.playlistType === "favorite"
           }, playlist.playlistType === "favorite" ? {
-            y: "afe08bce-6-" + i0,
+            y: "4598f48f-6-" + i0,
             z: common_vendor.p({
               name: "heart",
               size: "12",
@@ -1023,7 +1125,7 @@ const _sfc_main = {
             b: getSongCover(song),
             c: common_vendor.o(($event) => handleRecentSongImageError($event, song), song.id)
           } : {
-            d: "afe08bce-7-" + i0,
+            d: "4598f48f-7-" + i0,
             e: common_vendor.p({
               name: "music",
               size: "24",
@@ -1033,7 +1135,7 @@ const _sfc_main = {
           }, {
             g: isSongPlaying(song)
           }, isSongPlaying(song) ? {} : {
-            h: "afe08bce-8-" + i0,
+            h: "4598f48f-8-" + i0,
             i: common_vendor.p({
               name: "play",
               size: "16",
@@ -1063,7 +1165,7 @@ const _sfc_main = {
           }, playlist.coverUrl && playlist.coverUrl !== "/static/logo.png" ? {
             b: common_vendor.unref(utils_imageProxy.proxyImageUrl)(playlist.coverUrl)
           } : {
-            c: "afe08bce-10-" + i0,
+            c: "4598f48f-10-" + i0,
             d: common_vendor.p({
               name: "music",
               size: "32",
@@ -1090,7 +1192,7 @@ const _sfc_main = {
           }, getSongCover(song) ? {
             b: getSongCover(song)
           } : {
-            c: "afe08bce-11-" + i0,
+            c: "4598f48f-11-" + i0,
             d: common_vendor.p({
               name: "music",
               size: "24",
@@ -1098,7 +1200,7 @@ const _sfc_main = {
             }),
             e: generateGradientBackground(song.name, "song")
           }, {
-            f: "afe08bce-12-" + i0,
+            f: "4598f48f-12-" + i0,
             g: common_vendor.t(song.name),
             h: common_vendor.t(song.type || "歌曲"),
             i: common_vendor.t(formatArtists(song)),
@@ -1117,29 +1219,75 @@ const _sfc_main = {
           color: "#8a8a8a"
         }),
         F: common_vendor.o(viewAllDeleted, "f3"),
-        G: common_vendor.s(safeBottomStyle.value),
-        H: common_vendor.s(scrollContainerStyle.value),
-        I: showImportModal.value
+        G: dislikeList.value.length > 0
+      }, dislikeList.value.length > 0 ? common_vendor.e({
+        H: common_vendor.t(dislikeList.value.length),
+        I: common_vendor.p({
+          name: "trash-can",
+          size: "14",
+          color: "#ff4444"
+        }),
+        J: common_vendor.o(handleClearDislikeList, "53"),
+        K: common_vendor.f(displayDislikeList.value, (song, index, i0) => {
+          return common_vendor.e({
+            a: getSongCover(song)
+          }, getSongCover(song) ? {
+            b: getSongCover(song)
+          } : {
+            c: "4598f48f-15-" + i0,
+            d: common_vendor.p({
+              name: "music",
+              size: "24",
+              color: "#ffffff"
+            }),
+            e: generateGradientBackground(song.name, "song")
+          }, {
+            f: common_vendor.t(song.name),
+            g: common_vendor.t(song.singer || "未知歌手"),
+            h: common_vendor.t(formatDislikeTime(song.addTime)),
+            i: "4598f48f-16-" + i0,
+            j: common_vendor.o(($event) => handleRemoveFromDislike(song.id), song.id + "_" + index),
+            k: song.id + "_" + index,
+            l: common_vendor.o(($event) => playSong(song), song.id + "_" + index)
+          });
+        }),
+        L: common_vendor.p({
+          name: "xmark",
+          size: "16",
+          color: "#999999"
+        }),
+        M: dislikeList.value.length > 5
+      }, dislikeList.value.length > 5 ? {
+        N: common_vendor.p({
+          name: "chevron-right",
+          size: "12",
+          color: "#8a8a8a"
+        }),
+        O: common_vendor.o(viewAllDisliked, "24")
+      } : {}) : {}, {
+        P: common_vendor.s(safeBottomStyle.value),
+        Q: common_vendor.s(scrollContainerStyle.value),
+        R: showImportModal.value
       }, showImportModal.value ? {
-        J: common_vendor.t(importModalTitle.value),
-        K: common_vendor.p({
+        S: common_vendor.t(importModalTitle.value),
+        T: common_vendor.p({
           name: "xmark",
           size: "20",
           color: "#999"
         }),
-        L: common_vendor.o(closeImportModal, "53"),
-        M: importLink.value,
-        N: common_vendor.o(($event) => importLink.value = $event.detail.value, "9a"),
-        O: common_vendor.o(closeImportModal, "a6"),
-        P: common_vendor.o(confirmImport, "7e"),
-        Q: common_vendor.o(() => {
-        }, "e0"),
-        R: common_vendor.o(closeImportModal, "2d")
+        U: common_vendor.o(closeImportModal, "a5"),
+        V: importLink.value,
+        W: common_vendor.o(($event) => importLink.value = $event.detail.value, "27"),
+        X: common_vendor.o(closeImportModal, "5a"),
+        Y: common_vendor.o(confirmImport, "77"),
+        Z: common_vendor.o(() => {
+        }, "88"),
+        aa: common_vendor.o(closeImportModal, "f5")
       } : {}, {
-        S: darkMode.value ? 1 : ""
+        ab: darkMode.value ? 1 : ""
       });
     };
   }
 };
-const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-afe08bce"]]);
+const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-4598f48f"]]);
 exports.MiniProgramPage = MiniProgramPage;

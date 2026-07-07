@@ -143,6 +143,7 @@ const setStatusBarTextColor = (color = "black") => {
 };
 exports.getAppVersion = getAppVersion;
 exports.getDeviceInfo = getDeviceInfo;
+exports.getMenuButtonInfo = getMenuButtonInfo;
 exports.getNavbarHeight = getNavbarHeight;
 exports.getSafeAreaStyle = getSafeAreaStyle;
 exports.getStatusBarHeight = getStatusBarHeight;

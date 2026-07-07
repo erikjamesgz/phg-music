@@ -246,6 +246,7 @@ const _sfc_main = {
         isTablet.value = false;
       }
     };
+    checkIsTablet();
     const emit = __emit;
     const initDarkMode = () => {
       darkMode.value = common_vendor.index.getStorageSync("darkMode") === "true";
@@ -1085,7 +1086,7 @@ const _sfc_main = {
             l: common_vendor.t(song.album)
           } : {}, {
             m: common_vendor.t(formatDuration(song.duration)),
-            n: "7397a893-3-" + i0,
+            n: "6f86b9a0-3-" + i0,
             o: common_vendor.o(($event) => showSongMenu(song, index), song.id || index),
             p: song.id || index,
             q: common_vendor.o(($event) => playSong(song, index), song.id || index),
@@ -1137,19 +1138,19 @@ const _sfc_main = {
         I: common_vendor.p({
           name: "play",
           size: "18",
-          color: "#00d7cd"
+          color: "#6b7280"
         }),
         J: common_vendor.o(playSelectedSong, "66"),
         K: common_vendor.p({
           name: "forward",
           size: "18",
-          color: "#00d7cd"
+          color: "#6b7280"
         }),
         L: common_vendor.o(addToNext, "15"),
         M: common_vendor.p({
           name: "plus",
           size: "18",
-          color: "#00d7cd"
+          color: "#6b7280"
         }),
         N: common_vendor.o(addToPlaylist, "73"),
         O: common_vendor.p({
@@ -1171,5 +1172,5 @@ const _sfc_main = {
     };
   }
 };
-const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-7397a893"]]);
+const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-6f86b9a0"]]);
 exports.MiniProgramPage = MiniProgramPage;

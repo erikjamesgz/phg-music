@@ -119,7 +119,7 @@ const searchApi = {
       vermerge: "1",
       mobi: "1",
       issubtitle: "1"
-    }).then((result) => {
+    }, { loading: false }).then((result) => {
       if (!result || !result.abslist)
         return { source: "kw", list: [] };
       const list = result.abslist.map((item) => {
@@ -188,7 +188,7 @@ const searchApi = {
       iscorrection: 1,
       privilege_filter: 0,
       area_code: 1
-    }).then((result) => {
+    }, { loading: false }).then((result) => {
       if (!result || !result.data || !result.data.lists)
         return { source: "kg", list: [] };
       const list = result.data.lists.map((item) => {
@@ -254,7 +254,8 @@ const searchApi = {
     }, {
       headers: {
         Referer: "https://y.qq.com/portal/player.html"
-      }
+      },
+      loading: false
     }).then((result) => {
       if (!result || !result.req || !result.req.data || !result.req.data.body || !result.req.data.body.song || !result.req.data.body.song.list) {
         return { source: "tx", list: [] };
@@ -312,7 +313,7 @@ const searchApi = {
       offset: (page - 1) * pageSize,
       limit: pageSize,
       csrf_token: ""
-    }).then((result) => {
+    }, { loading: false }).then((result) => {
       if (!result || result.code !== 200) {
         console.error("网易云音乐搜索失败:", result);
         return { source: "wy", list: [] };
@@ -406,6 +407,7 @@ const searchApi = {
     return utils_http.http.request({
       url: searchUrl,
       method: "GET",
+      loading: false,
       header: {
         "uiVersion": "A_music_3.6.1",
         "deviceId": signData.deviceId,

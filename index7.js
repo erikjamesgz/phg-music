@@ -5,6 +5,8 @@ const utils_system = require("./utils/system.js");
 const utils_i18n = require("./utils/i18n.js");
 const utils_config = require("./utils/config.js");
 const utils_version = require("./utils/version.js");
+const composables_useBottomHeight = require("./composables/useBottomHeight.js");
+const composables_useGlobalBottomHeight = require("./composables/useGlobalBottomHeight.js");
 const UpdateModal = () => "./components/common/UpdateModal.js";
 const RocIconPlus = () => "./uni_modules/roc-icon-plus/components/roc-icon-plus/roc-icon-plus.js";
 const _sfc_main = {
@@ -16,6 +18,7 @@ const _sfc_main = {
     return {
       currentTime: "9:41",
       statusBarHeight: utils_system.getStatusBarHeight(),
+      showBackButton: false,
       // 弹窗显示状态
       showLanguagePopup: false,
       showSleepTimerPopup: false,
@@ -64,6 +67,63 @@ const _sfc_main = {
       cleaningLyric: false,
       // 音频文件缓存
       audioFileCacheSize: "0MB",
+      // ========== AI API配置 ==========
+      showAIApiModal: false,
+      activePlatform: "backend",
+      // 当前选中的平台：backend / deepseek / openai / siliconflow / custom
+      apiConfig: {
+        provider: "backend",
+        // 当前使用的平台
+        apiKey: "",
+        // API密钥
+        baseURL: "",
+        // API地址
+        model: ""
+        // 模型名称
+      },
+      // 平台预设配置
+      platformPresets: {
+        backend: {
+          label: "默认后端",
+          iconName: "server",
+          defaultBaseURL: "/api/ai/chat",
+          defaultModel: "",
+          desc: "使用您配置的服务器AI接口，无需额外配置"
+        },
+        deepseek: {
+          label: "DeepSeek",
+          iconName: "brain",
+          defaultBaseURL: "https://api.deepseek.com",
+          defaultModel: "deepseek-chat",
+          desc: "高性价比，适合中文场景"
+        },
+        openai: {
+          label: "OpenAI",
+          iconName: "microchip",
+          defaultBaseURL: "https://api.openai.com/v1",
+          defaultModel: "gpt-4o-mini",
+          desc: "业界标杆，功能强大"
+        },
+        siliconflow: {
+          label: "硅基流动",
+          iconName: "bolt",
+          defaultBaseURL: "https://api.siliconflow.cn/v1",
+          defaultModel: "deepseek-ai/DeepSeek-V3",
+          desc: "国产平台，免费额度多"
+        },
+        custom: {
+          label: "自定义",
+          iconName: "gear",
+          defaultBaseURL: "",
+          defaultModel: "",
+          desc: "支持任意兼容OpenAI的API"
+        }
+      },
+      currentApiUrl: "",
+      currentApiKey: "",
+      currentModelName: "",
+      showApiKey: false,
+      // 是否显示明文密钥
       // 应用信息
       appVersion: "v1.0.0",
       // 语言设置
@@ -74,7 +134,10 @@ const _sfc_main = {
       isAndroid: false,
       isIgnoringBatteryOptimization: true,
       // 本地检测的平板模式状态（用于独立页面时）
-      localIsTablet: false
+      localIsTablet: false,
+      // 底部安全高度（用于平板模式下避免被miniplayer遮挡）
+      totalBottomHeight: 0,
+      isMiniPlayerVisible: false
       // 注意：isTablet 通过 computed 属性合并 inject 和本地检测的值
     };
   },
@@ -136,6 +199,10 @@ const _sfc_main = {
       }
       return minutes;
     },
+    // 是否已配置API密钥
+    hasConfiguredApiKeys() {
+      return !!(this.apiConfig && this.apiConfig.apiKey);
+    },
     // 格式化剩余时间显示
     formatSleepTimerRemaining() {
       const remaining = this.sleepTimerRemaining;
@@ -159,17 +226,49 @@ const _sfc_main = {
     this.startClock();
     this.initLanguageSettings();
     this.checkIsTablet();
+    this.initBottomHeight();
     common_vendor.index.$on("systemThemeChange", this.handleSystemThemeChange);
     common_vendor.index.$on("themeChanged", this.handleThemeChanged);
     console.log("[Settings] created: 已注册主题变化监听");
   },
+  // onLoad 接收页面参数，比 getCurrentPages().options 更可靠（兼容老旧设备）
+  onLoad(options) {
+    if (options && options.showAiConfig === "true") {
+      console.log("[Settings] onLoad: 检测到showAiConfig参数");
+      this.showBackButton = true;
+      this._needOpenAIApiConfig = true;
+    }
+  },
   beforeUnmount() {
     common_vendor.index.$off("systemThemeChange", this.handleSystemThemeChange);
     common_vendor.index.$off("themeChanged", this.handleThemeChanged);
-    console.log("[Settings] beforeUnmount: 已移除主题变化监听");
+    if (this._bottomHeightUnwatch) {
+      this._bottomHeightUnwatch();
+    }
+    console.log("[Settings] beforeUnmount: 已移除监听");
   },
   async onShow() {
     console.log("[Settings] onShow: 页面显示");
+    let needOpenAIApiConfig = this._needOpenAIApiConfig;
+    if (!needOpenAIApiConfig) {
+      try {
+        const pages = getCurrentPages();
+        const currentPage = pages[pages.length - 1];
+        if (currentPage && currentPage.options && currentPage.options.showAiConfig === "true") {
+          needOpenAIApiConfig = true;
+          this.showBackButton = true;
+        }
+      } catch (e) {
+        console.log("[Settings] getCurrentPages 兜底获取参数失败", e);
+      }
+    }
+    if (needOpenAIApiConfig) {
+      console.log("[Settings] 检测到showAiConfig参数，自动打开AI配置弹窗");
+      this._needOpenAIApiConfig = false;
+      setTimeout(() => {
+        this.showAIApiConfig();
+      }, 500);
+    }
     common_vendor.index.$on("sleepTimerUpdate", this.handleSleepTimerUpdate);
     common_vendor.index.onWindowResize(() => {
       console.log("[Settings] 窗口大小变化，重新检测平板模式");
@@ -185,12 +284,191 @@ const _sfc_main = {
       const remaining = app.getSleepTimerRemaining();
       this.sleepTimerRemaining = typeof remaining === "number" && !isNaN(remaining) ? remaining : 0;
     }
+    this.loadAIApiConfig();
   },
   onHide() {
     console.log("[Settings] onHide: 页面隐藏");
     common_vendor.index.$off("sleepTimerUpdate", this.handleSleepTimerUpdate);
   },
   methods: {
+    // ========== 底部安全高度相关方法 ==========
+    // 初始化底部安全高度
+    initBottomHeight() {
+      try {
+        const { totalBottomHeight, isMiniPlayerVisible } = composables_useBottomHeight.useBottomHeight();
+        this.totalBottomHeight = totalBottomHeight.value || 0;
+        this.isMiniPlayerVisible = isMiniPlayerVisible.value || false;
+        if (this._bottomHeightUnwatch) {
+          this._bottomHeightUnwatch();
+        }
+        this._bottomHeightUnwatch = common_vendor.watch(composables_useGlobalBottomHeight.globalBottomHeight.totalBottomHeight, (val) => {
+          this.totalBottomHeight = val || 0;
+        });
+        console.log("[Settings] 初始化底部安全高度:", {
+          totalBottomHeight: this.totalBottomHeight,
+          isMiniPlayerVisible: this.isMiniPlayerVisible
+        });
+      } catch (e) {
+        console.error("[Settings] 初始化底部安全高度失败:", e);
+        this.totalBottomHeight = 0;
+        this.isMiniPlayerVisible = false;
+      }
+    },
+    // 获取平板模式弹窗的完整样式（参考MusicToggleModal：弹窗延伸到屏幕底部，footer通过padding-bottom避让MiniPlayer）
+    getTabletModalStyle() {
+      if (!this.isTablet)
+        return { paddingTop: "0px" };
+      return {
+        paddingTop: this.tabletModalSafeTop,
+        height: "100vh",
+        maxHeight: "100vh"
+      };
+    },
+    // 获取弹窗body高度（scroll-view需要显式高度才能滚动）
+    getModalBodyStyle() {
+      if (this.isTablet) {
+        return {
+          height: "100%"
+        };
+      }
+      return {
+        height: "calc(85vh - 180px)",
+        maxHeight: "calc(85vh - 180px)"
+      };
+    },
+    // 获取平板模式弹窗footer样式（通过padding-bottom避让MiniPlayer，参考MusicToggleModal的confirm-btn margin-bottom）
+    getModalFooterStyle() {
+      if (!this.isTablet)
+        return {};
+      const bottomHeight = this.totalBottomHeight || 0;
+      return {
+        paddingBottom: `${12 + bottomHeight}px`
+      };
+    },
+    // ========== AI API配置相关方法 ==========
+    // 加载已保存的AI API配置
+    loadAIApiConfig() {
+      try {
+        const savedConfig = common_vendor.index.getStorageSync("aiApiConfig");
+        if (savedConfig) {
+          this.apiConfig = {
+            provider: savedConfig.provider || "deepseek",
+            apiKey: savedConfig.apiKey || "",
+            baseURL: savedConfig.baseURL || "",
+            model: savedConfig.model || ""
+          };
+          this.activePlatform = this.apiConfig.provider;
+          console.log("[Settings] ✅ 已加载AI API配置:", {
+            平台: this.apiConfig.provider,
+            已配置密钥: !!this.apiConfig.apiKey
+          });
+        }
+      } catch (e) {
+        console.error("[Settings] ❌ 加载AI API配置失败:", e);
+      }
+    },
+    // 显示AI API配置弹窗
+    // 处理智能推荐点击
+    showAIApiConfig() {
+      console.log("[Settings] 打开AI API配置弹窗");
+      this.showAIApiModal = true;
+      this.activePlatform = this.apiConfig.provider || "backend";
+      this.updateCurrentInputFields();
+    },
+    // 关闭AI API配置弹窗
+    closeAIApiModal() {
+      this.showAIApiModal = false;
+      this.showApiKey = false;
+    },
+    // 选择平台
+    selectPlatform(platform) {
+      console.log("[Settings] 选择平台:", platform);
+      this.activePlatform = platform;
+      this.updateCurrentInputFields();
+    },
+    // 更新当前输入框的内容
+    updateCurrentInputFields() {
+      const preset = this.platformPresets[this.activePlatform];
+      if (preset) {
+        if (this.activePlatform === this.apiConfig.provider) {
+          this.currentApiUrl = this.apiConfig.baseURL || preset.defaultBaseURL || "";
+          this.currentApiKey = this.apiConfig.apiKey || "";
+          this.currentModelName = this.apiConfig.model || preset.defaultModel || "";
+        } else {
+          this.currentApiUrl = preset.defaultBaseURL || "";
+          this.currentApiKey = "";
+          this.currentModelName = preset.defaultModel || "";
+        }
+      }
+    },
+    // 获取当前平台的标签
+    getActivePlatformLabel() {
+      const preset = this.platformPresets[this.activePlatform];
+      return preset ? preset.label : "API";
+    },
+    // 获取API地址占位符
+    getApiUrlPlaceholder() {
+      const preset = this.platformPresets[this.activePlatform];
+      if (this.activePlatform === "custom") {
+        return "请输入API地址（如：https://api.example.com/v1）";
+      }
+      return preset ? preset.defaultBaseURL || "请输入API地址" : "请输入API地址";
+    },
+    // 获取模型名称占位符
+    getModelPlaceholder() {
+      const preset = this.platformPresets[this.activePlatform];
+      if (this.activePlatform === "custom") {
+        return "如：gpt-4、claude-3等";
+      }
+      return preset ? preset.defaultModel || "请选择模型" : "请选择模型";
+    },
+    // 保存当前平台的配置
+    saveCurrentApiConfig() {
+      var _a;
+      if (!this.activePlatform) {
+        common_vendor.index.showToast({ title: "请先选择平台", icon: "none" });
+        return;
+      }
+      const isBackendMode = this.activePlatform === "backend";
+      if (!isBackendMode) {
+        if (!this.currentApiUrl.trim()) {
+          common_vendor.index.showToast({ title: "请输入API地址", icon: "none" });
+          return;
+        }
+        if (!this.currentApiKey.trim()) {
+          common_vendor.index.showToast({ title: "请输入API密钥", icon: "none" });
+          return;
+        }
+        if (!this.currentModelName.trim()) {
+          common_vendor.index.showToast({ title: "请输入模型名称", icon: "none" });
+          return;
+        }
+      }
+      try {
+        const newConfig = {
+          provider: this.activePlatform,
+          baseURL: isBackendMode ? "/api/ai/chat" : this.currentApiUrl.trim(),
+          apiKey: isBackendMode ? "" : this.currentApiKey.trim(),
+          model: isBackendMode ? "" : this.currentModelName.trim() || ((_a = this.platformPresets[this.activePlatform]) == null ? void 0 : _a.defaultModel) || ""
+        };
+        common_vendor.index.setStorageSync("aiApiConfig", newConfig);
+        this.apiConfig = newConfig;
+        console.log("[Settings] ✅ AI API配置已保存:", {
+          平台: newConfig.provider,
+          地址: newConfig.baseURL,
+          模型: newConfig.model
+        });
+        this.closeAIApiModal();
+        common_vendor.index.showToast({
+          title: "配置已保存",
+          icon: "success",
+          duration: 1500
+        });
+      } catch (e) {
+        console.error("[Settings] ❌ 保存AI API配置失败:", e);
+        common_vendor.index.showToast({ title: "保存失败，请重试", icon: "error" });
+      }
+    },
     // 检测是否为平板模式（用于独立页面时）
     checkIsTablet() {
       try {
@@ -1092,18 +1370,18 @@ if (!Math) {
 }
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return common_vendor.e({
-    a: !$options.isTablet
-  }, !$options.isTablet ? {
+    a: !$options.isTablet || $data.showBackButton
+  }, !$options.isTablet || $data.showBackButton ? {
     b: common_vendor.p({
       type: "fas",
       name: "chevron-left",
       size: "20",
       color: "#4b5563"
     }),
-    c: common_vendor.o((...args) => $options.goBack && $options.goBack(...args), "16")
+    c: common_vendor.o((...args) => $options.goBack && $options.goBack(...args), "0a")
   } : {}, {
     d: common_vendor.t($options.$t("settings.settings")),
-    e: $options.isTablet ? 1 : "",
+    e: $options.isTablet && !$data.showBackButton ? 1 : "",
     f: $data.darkMode ? 1 : "",
     g: $options.isTablet ? 1 : "",
     h: common_vendor.s($options.navbarStyle),
@@ -1112,25 +1390,25 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       type: "fas",
       name: "moon",
       size: "16",
-      color: "#00d7cd"
+      color: "#e2e8f0"
     }),
     k: common_vendor.t($options.$t("settings.darkMode")),
     l: $data.darkMode,
-    m: common_vendor.o((...args) => $options.toggleDarkMode && $options.toggleDarkMode(...args), "70"),
+    m: common_vendor.o((...args) => $options.toggleDarkMode && $options.toggleDarkMode(...args), "0e"),
     n: common_vendor.p({
       type: "fas",
       name: "sync-alt",
       size: "16",
-      color: "#00d7cd"
+      color: "#e2e8f0"
     }),
     o: common_vendor.t($options.$t("settings.followSystem")),
     p: $data.followSystem,
-    q: common_vendor.o((...args) => $options.toggleFollowSystem && $options.toggleFollowSystem(...args), "6a"),
+    q: common_vendor.o((...args) => $options.toggleFollowSystem && $options.toggleFollowSystem(...args), "8c"),
     r: common_vendor.p({
       type: "fas",
       name: "language",
       size: "16",
-      color: "#00d7cd"
+      color: "#e2e8f0"
     }),
     s: common_vendor.t($options.$t("settings.language")),
     t: common_vendor.t($options.getCurrentLanguageName()),
@@ -1140,29 +1418,29 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       size: "14",
       color: "#9ca3af"
     }),
-    w: common_vendor.o((...args) => $options.showLanguageSelector && $options.showLanguageSelector(...args), "c7"),
+    w: common_vendor.o((...args) => $options.showLanguageSelector && $options.showLanguageSelector(...args), "88"),
     x: common_vendor.t($options.$t("settings.playbackSettings")),
     y: common_vendor.p({
       type: "fas",
       name: "comments",
       size: "16",
-      color: "#00d7cd"
+      color: "#e2e8f0"
     }),
     z: $data.showCommentDanmaku,
-    A: common_vendor.o((...args) => $options.toggleCommentDanmaku && $options.toggleCommentDanmaku(...args), "5b"),
+    A: common_vendor.o((...args) => $options.toggleCommentDanmaku && $options.toggleCommentDanmaku(...args), "c8"),
     B: common_vendor.p({
       type: "fas",
       name: "desktop",
       size: "16",
-      color: "#00d7cd"
+      color: "#e2e8f0"
     }),
     C: $data.showMiniPlayerDanmaku,
-    D: common_vendor.o((...args) => $options.toggleMiniPlayerDanmaku && $options.toggleMiniPlayerDanmaku(...args), "0a"),
+    D: common_vendor.o((...args) => $options.toggleMiniPlayerDanmaku && $options.toggleMiniPlayerDanmaku(...args), "f6"),
     E: common_vendor.p({
       type: "fas",
       name: "clock",
       size: "16",
-      color: "#00d7cd"
+      color: "#e2e8f0"
     }),
     F: common_vendor.t($options.$t("settings.sleepTimer")),
     G: common_vendor.t($options.getSleepTimerDisplay()),
@@ -1173,12 +1451,12 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       size: "14",
       color: "#9ca3af"
     }),
-    J: common_vendor.o((...args) => $options.showSleepTimerSelector && $options.showSleepTimerSelector(...args), "c3"),
+    J: common_vendor.o((...args) => $options.showSleepTimerSelector && $options.showSleepTimerSelector(...args), "be"),
     K: common_vendor.p({
       type: "fas",
       name: "database",
       size: "16",
-      color: "#00d7cd"
+      color: "#e2e8f0"
     }),
     L: common_vendor.t($data.resourceCacheSize),
     M: common_vendor.p({
@@ -1187,12 +1465,12 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       size: "14",
       color: "#9ca3af"
     }),
-    N: common_vendor.o((...args) => $options.showResourceCache && $options.showResourceCache(...args), "1a"),
+    N: common_vendor.o((...args) => $options.showResourceCache && $options.showResourceCache(...args), "34"),
     O: common_vendor.p({
       type: "fas",
       name: "file-code",
       size: "16",
-      color: "#00d7cd"
+      color: "#e2e8f0"
     }),
     P: common_vendor.t($data.metaCacheSize),
     Q: common_vendor.p({
@@ -1201,13 +1479,13 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       size: "14",
       color: "#9ca3af"
     }),
-    R: common_vendor.o((...args) => $options.showMetaCache && $options.showMetaCache(...args), "00"),
+    R: common_vendor.o((...args) => $options.showMetaCache && $options.showMetaCache(...args), "8b"),
     S: common_vendor.t($options.$t("settings.sourceManagement")),
     T: common_vendor.p({
       type: "fas",
       name: "music",
       size: "16",
-      color: "#00d7cd"
+      color: "#e2e8f0"
     }),
     U: common_vendor.t($options.$t("settings.sourceManagement")),
     V: common_vendor.p({
@@ -1216,12 +1494,12 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       size: "14",
       color: "#9ca3af"
     }),
-    W: common_vendor.o((...args) => $options.goToMusicSources && $options.goToMusicSources(...args), "18"),
+    W: common_vendor.o((...args) => $options.goToMusicSources && $options.goToMusicSources(...args), "71"),
     X: common_vendor.p({
       type: "fas",
       name: "server",
       size: "16",
-      color: "#00d7cd"
+      color: "#e2e8f0"
     }),
     Y: common_vendor.p({
       type: "fas",
@@ -1229,96 +1507,111 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       size: "14",
       color: "#9ca3af"
     }),
-    Z: common_vendor.o((...args) => $options.showServerModal && $options.showServerModal(...args), "8c"),
+    Z: common_vendor.o((...args) => $options.showServerModal && $options.showServerModal(...args), "e8"),
     aa: common_vendor.p({
+      type: "fas",
+      name: "robot",
+      size: "16",
+      color: "#e2e8f0"
+    }),
+    ab: common_vendor.p({
+      type: "fas",
+      name: "chevron-right",
+      size: "14",
+      color: "#9ca3af"
+    }),
+    ac: common_vendor.o((...args) => $options.showAIApiConfig && $options.showAIApiConfig(...args), "72"),
+    ad: common_vendor.p({
       type: "fas",
       name: "bug",
       size: "16",
-      color: "#00d7cd"
+      color: "#e2e8f0"
     }),
-    ab: $data.showDebugLog,
-    ac: common_vendor.o((...args) => $options.toggleDebugLog && $options.toggleDebugLog(...args), "be"),
-    ad: common_vendor.t($options.$t("settings.about")),
-    ae: common_vendor.p({
+    ae: $data.showDebugLog,
+    af: common_vendor.o((...args) => $options.toggleDebugLog && $options.toggleDebugLog(...args), "b6"),
+    ag: common_vendor.t($options.$t("settings.about")),
+    ah: common_vendor.p({
       type: "fas",
       name: "info-circle",
       size: "16",
-      color: "#00d7cd"
+      color: "#e2e8f0"
     }),
-    af: common_vendor.t($options.$t("settings.aboutCeladonMusic")),
-    ag: common_vendor.p({
+    ai: common_vendor.t($options.$t("settings.aboutCeladonMusic")),
+    aj: common_vendor.p({
       type: "fas",
       name: "chevron-right",
       size: "14",
       color: "#9ca3af"
     }),
-    ah: common_vendor.o((...args) => $options.openAboutPage && $options.openAboutPage(...args), "42"),
-    ai: common_vendor.p({
+    ak: common_vendor.o((...args) => $options.openAboutPage && $options.openAboutPage(...args), "a5"),
+    al: common_vendor.p({
       type: "fas",
       name: "file-alt",
       size: "16",
-      color: "#00d7cd"
+      color: "#e2e8f0"
     }),
-    aj: common_vendor.t($options.$t("settings.userAgreement")),
-    ak: common_vendor.p({
+    am: common_vendor.t($options.$t("settings.userAgreement")),
+    an: common_vendor.p({
       type: "fas",
       name: "chevron-right",
       size: "14",
       color: "#9ca3af"
     }),
-    al: common_vendor.o((...args) => $options.openUserAgreement && $options.openUserAgreement(...args), "b8"),
-    am: common_vendor.p({
+    ao: common_vendor.o((...args) => $options.openUserAgreement && $options.openUserAgreement(...args), "84"),
+    ap: common_vendor.p({
       type: "fas",
       name: "question-circle",
       size: "16",
-      color: "#00d7cd"
+      color: "#e2e8f0"
     }),
-    an: common_vendor.t($options.$t("settings.helpAndFeedback")),
-    ao: common_vendor.p({
+    aq: common_vendor.t($options.$t("settings.helpAndFeedback")),
+    ar: common_vendor.p({
       type: "fas",
       name: "chevron-right",
       size: "14",
       color: "#9ca3af"
     }),
-    ap: common_vendor.o((...args) => $options.openHelpAndFeedback && $options.openHelpAndFeedback(...args), "ff"),
-    aq: common_vendor.p({
+    as: common_vendor.o((...args) => $options.openHelpAndFeedback && $options.openHelpAndFeedback(...args), "03"),
+    at: common_vendor.p({
       type: "fas",
       name: "sync",
       size: "16",
-      color: "#00d7cd"
+      color: "#e2e8f0"
     }),
-    ar: common_vendor.t($options.$t("settings.checkForUpdates")),
-    as: common_vendor.t($data.appVersion),
-    at: common_vendor.p({
+    av: common_vendor.t($options.$t("settings.checkForUpdates")),
+    aw: common_vendor.t($data.appVersion),
+    ax: common_vendor.p({
       type: "fas",
       name: "chevron-right",
       size: "14",
       color: "#9ca3af"
     }),
-    av: common_vendor.o((...args) => $options.checkForUpdates && $options.checkForUpdates(...args), "2e"),
-    aw: common_vendor.t($options.$t("app.name")),
-    ax: common_vendor.t($options.$t("app.slogan")),
-    ay: $data.showLanguagePopup
+    ay: common_vendor.o((...args) => $options.checkForUpdates && $options.checkForUpdates(...args), "b6"),
+    az: common_vendor.t($options.$t("app.name")),
+    aA: common_vendor.t($options.$t("app.slogan")),
+    aB: !$data.showAIApiModal,
+    aC: !$data.showAIApiModal,
+    aD: $data.showLanguagePopup
   }, $data.showLanguagePopup ? {
-    az: common_vendor.t($options.$t("settings.selectLanguage")),
-    aA: common_vendor.p({
+    aE: common_vendor.t($options.$t("settings.selectLanguage")),
+    aF: common_vendor.p({
       type: "fas",
       name: "times",
       size: "16",
-      color: "#6b7280"
+      color: "#e2e8f0"
     }),
-    aB: common_vendor.o((...args) => $options.closeLanguagePopup && $options.closeLanguagePopup(...args), "c5"),
-    aC: common_vendor.f($data.supportedLanguages, (lang, k0, i0) => {
+    aG: common_vendor.o((...args) => $options.closeLanguagePopup && $options.closeLanguagePopup(...args), "db"),
+    aH: common_vendor.f($data.supportedLanguages, (lang, k0, i0) => {
       return common_vendor.e({
         a: common_vendor.t(lang.name),
         b: $data.currentLanguage === lang.code
       }, $data.currentLanguage === lang.code ? {
-        c: "45854c89-27-" + i0,
+        c: "45854c89-29-" + i0,
         d: common_vendor.p({
           type: "fas",
           name: "check",
           size: "16",
-          color: "#00d7cd"
+          color: "#e2e8f0"
         })
       } : {}, {
         e: lang.code,
@@ -1326,184 +1619,289 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
         g: common_vendor.o(($event) => $options.selectLanguage(lang.code), lang.code)
       });
     }),
-    aD: common_vendor.t($options.$t("common.confirm")),
-    aE: common_vendor.o((...args) => $options.confirmLanguageSelection && $options.confirmLanguageSelection(...args), "88"),
-    aF: $options.isTablet ? $options.tabletModalSafeTop : "",
-    aG: common_vendor.o(() => {
-    }, "19"),
-    aH: common_vendor.o((...args) => $options.closeLanguagePopup && $options.closeLanguagePopup(...args), "67")
+    aI: common_vendor.t($options.$t("common.confirm")),
+    aJ: common_vendor.o((...args) => $options.confirmLanguageSelection && $options.confirmLanguageSelection(...args), "c1"),
+    aK: $options.isTablet ? $options.tabletModalSafeTop : "",
+    aL: common_vendor.o(() => {
+    }, "55"),
+    aM: common_vendor.o((...args) => $options.closeLanguagePopup && $options.closeLanguagePopup(...args), "3b")
   } : {}, {
-    aI: $data.showSleepTimerPopup
+    aN: $data.showSleepTimerPopup
   }, $data.showSleepTimerPopup ? common_vendor.e({
-    aJ: common_vendor.t($options.$t("settings.sleepTimer")),
-    aK: common_vendor.p({
+    aO: common_vendor.t($options.$t("settings.sleepTimer")),
+    aP: common_vendor.p({
       type: "fas",
       name: "times",
       size: "16",
-      color: "#6b7280"
+      color: "#e2e8f0"
     }),
-    aL: common_vendor.o((...args) => $options.closeSleepTimerPopup && $options.closeSleepTimerPopup(...args), "9e"),
-    aM: $data.sleepTimerRemaining > 0
+    aQ: common_vendor.o((...args) => $options.closeSleepTimerPopup && $options.closeSleepTimerPopup(...args), "8f"),
+    aR: $data.sleepTimerRemaining > 0
   }, $data.sleepTimerRemaining > 0 ? {
-    aN: common_vendor.t($options.formatSleepTimerRemaining),
-    aO: common_vendor.o((...args) => $options.cancelSleepTimer && $options.cancelSleepTimer(...args), "68")
+    aS: common_vendor.t($options.formatSleepTimerRemaining),
+    aT: common_vendor.o((...args) => $options.cancelSleepTimer && $options.cancelSleepTimer(...args), "9e")
   } : {}, {
-    aP: common_vendor.f($options.hourOptions, (hour, index, i0) => {
+    aU: common_vendor.f($options.hourOptions, (hour, index, i0) => {
       return {
         a: common_vendor.t(hour),
         b: index
       };
     }),
-    aQ: common_vendor.f($options.minuteOptions, (minute, index, i0) => {
+    aV: common_vendor.f($options.minuteOptions, (minute, index, i0) => {
       return {
         a: common_vendor.t(minute),
         b: index
       };
     }),
-    aR: $data.sleepTimerPickerValue,
-    aS: common_vendor.o((...args) => $options.onSleepTimerPickerChange && $options.onSleepTimerPickerChange(...args), "b2"),
-    aT: common_vendor.o((...args) => $options.closeSleepTimerPopup && $options.closeSleepTimerPopup(...args), "25"),
-    aU: common_vendor.o((...args) => $options.confirmSleepTimerSelection && $options.confirmSleepTimerSelection(...args), "6e"),
-    aV: $options.isTablet ? $options.tabletModalSafeTop : "",
-    aW: common_vendor.o(() => {
-    }, "82"),
-    aX: common_vendor.o((...args) => $options.closeSleepTimerPopup && $options.closeSleepTimerPopup(...args), "45")
+    aW: $data.sleepTimerPickerValue,
+    aX: common_vendor.o((...args) => $options.onSleepTimerPickerChange && $options.onSleepTimerPickerChange(...args), "ae"),
+    aY: common_vendor.o((...args) => $options.closeSleepTimerPopup && $options.closeSleepTimerPopup(...args), "a1"),
+    aZ: common_vendor.o((...args) => $options.confirmSleepTimerSelection && $options.confirmSleepTimerSelection(...args), "df"),
+    ba: $options.isTablet ? $options.tabletModalSafeTop : "",
+    bb: common_vendor.o(() => {
+    }, "2b"),
+    bc: common_vendor.o((...args) => $options.closeSleepTimerPopup && $options.closeSleepTimerPopup(...args), "8b")
   }) : {}, {
-    aY: $data.showServerModalFlag
+    bd: $data.showServerModalFlag
   }, $data.showServerModalFlag ? common_vendor.e({
-    aZ: common_vendor.p({
+    be: common_vendor.p({
       type: "fas",
       name: "times",
       size: "16",
-      color: "#6b7280"
+      color: "#e2e8f0"
     }),
-    ba: common_vendor.o((...args) => $options.closeServerModal && $options.closeServerModal(...args), "81"),
-    bb: $data.serverAddress,
-    bc: common_vendor.o(($event) => $data.serverAddress = $event.detail.value, "f6"),
-    bd: $data.connectionTestResult
+    bf: common_vendor.o((...args) => $options.closeServerModal && $options.closeServerModal(...args), "90"),
+    bg: $data.serverAddress,
+    bh: common_vendor.o(($event) => $data.serverAddress = $event.detail.value, "e2"),
+    bi: $data.connectionTestResult
   }, $data.connectionTestResult ? {
-    be: common_vendor.p({
+    bj: common_vendor.p({
       type: "fas",
       name: $data.connectionTestResult.success ? "check-circle" : "times-circle",
       size: "16",
       color: $data.connectionTestResult.success ? "#10b981" : "#ef4444"
     }),
-    bf: common_vendor.n($data.connectionTestResult.success ? "success" : "error"),
-    bg: common_vendor.t($data.connectionTestResult.message),
-    bh: common_vendor.n($data.connectionTestResult.success ? "success" : "error")
+    bk: common_vendor.n($data.connectionTestResult.success ? "success" : "error"),
+    bl: common_vendor.t($data.connectionTestResult.message),
+    bm: common_vendor.n($data.connectionTestResult.success ? "success" : "error")
   } : {}, {
-    bi: common_vendor.o((...args) => $options.closeServerModal && $options.closeServerModal(...args), "c2"),
-    bj: $data.testingConnection
+    bn: common_vendor.o((...args) => $options.closeServerModal && $options.closeServerModal(...args), "13"),
+    bo: $data.testingConnection
   }, $data.testingConnection ? {
-    bk: common_vendor.p({
+    bp: common_vendor.p({
       type: "fas",
       name: "spinner",
       size: "14",
-      color: "#6b7280"
+      color: "#e2e8f0"
     })
   } : {}, {
-    bl: common_vendor.t($data.testingConnection ? "测试中..." : "测试"),
-    bm: $data.testingConnection || !$data.serverAddress.trim() ? 1 : "",
-    bn: common_vendor.o((...args) => $options.testServerConnection && $options.testServerConnection(...args), "6c"),
-    bo: common_vendor.o((...args) => $options.confirmServerAddress && $options.confirmServerAddress(...args), "f6"),
-    bp: $options.isTablet ? $options.tabletModalSafeTop : "",
-    bq: common_vendor.o(() => {
-    }, "72"),
-    br: common_vendor.o((...args) => $options.closeServerModal && $options.closeServerModal(...args), "ae")
+    bq: common_vendor.t($data.testingConnection ? "测试中..." : "测试"),
+    br: $data.testingConnection || !$data.serverAddress.trim() ? 1 : "",
+    bs: common_vendor.o((...args) => $options.testServerConnection && $options.testServerConnection(...args), "55"),
+    bt: common_vendor.o((...args) => $options.confirmServerAddress && $options.confirmServerAddress(...args), "54"),
+    bv: $options.isTablet ? $options.tabletModalSafeTop : "",
+    bw: common_vendor.o(() => {
+    }, "5b"),
+    bx: common_vendor.o((...args) => $options.closeServerModal && $options.closeServerModal(...args), "25")
   }) : {}, {
-    bs: $data.showResourceCachePopup
+    by: $data.showResourceCachePopup
   }, $data.showResourceCachePopup ? {
-    bt: common_vendor.p({
+    bz: common_vendor.p({
       type: "fas",
       name: "times",
       size: "16",
-      color: "#6b7280"
+      color: "#e2e8f0"
     }),
-    bv: common_vendor.o((...args) => $options.closeResourceCachePopup && $options.closeResourceCachePopup(...args), "92"),
-    bw: common_vendor.t($data.resourceCacheSize),
-    bx: common_vendor.t($data.appCacheSize),
-    by: common_vendor.t($data.musicUrlCacheSize),
-    bz: common_vendor.t($data.musicUrlCacheCount),
-    bA: common_vendor.t($data.audioFileCacheSize),
-    bB: common_vendor.t($data.cleaningResourceCache ? "清理中..." : "清理缓存"),
-    bC: $data.cleaningResourceCache ? 1 : "",
-    bD: common_vendor.o((...args) => $options.cleanResourceCache && $options.cleanResourceCache(...args), "b7"),
-    bE: $options.isTablet ? $options.tabletModalSafeTop : "",
-    bF: common_vendor.o(() => {
-    }, "e6"),
-    bG: common_vendor.o((...args) => $options.closeResourceCachePopup && $options.closeResourceCachePopup(...args), "bc")
+    bA: common_vendor.o((...args) => $options.closeResourceCachePopup && $options.closeResourceCachePopup(...args), "46"),
+    bB: common_vendor.t($data.resourceCacheSize),
+    bC: common_vendor.t($data.appCacheSize),
+    bD: common_vendor.t($data.musicUrlCacheSize),
+    bE: common_vendor.t($data.musicUrlCacheCount),
+    bF: common_vendor.t($data.audioFileCacheSize),
+    bG: common_vendor.t($data.cleaningResourceCache ? "清理中..." : "清理缓存"),
+    bH: $data.cleaningResourceCache ? 1 : "",
+    bI: common_vendor.o((...args) => $options.cleanResourceCache && $options.cleanResourceCache(...args), "c2"),
+    bJ: $options.isTablet ? $options.tabletModalSafeTop : "",
+    bK: common_vendor.o(() => {
+    }, "b5"),
+    bL: common_vendor.o((...args) => $options.closeResourceCachePopup && $options.closeResourceCachePopup(...args), "eb")
   } : {}, {
-    bH: $data.showMetaCachePopup
+    bM: $data.showMetaCachePopup
   }, $data.showMetaCachePopup ? {
-    bI: common_vendor.p({
+    bN: common_vendor.p({
       type: "fas",
       name: "times",
       size: "16",
-      color: "#6b7280"
+      color: "#e2e8f0"
     }),
-    bJ: common_vendor.o((...args) => $options.closeMetaCachePopup && $options.closeMetaCachePopup(...args), "57"),
-    bK: common_vendor.t($data.metaCacheSize),
-    bL: common_vendor.t($data.otherSourceCacheSize),
-    bM: common_vendor.t($data.lyricCacheSize),
-    bN: common_vendor.t($data.cleaningOtherSource ? "清理中..." : "清理换源歌曲缓存"),
-    bO: $data.cleaningOtherSource ? 1 : "",
-    bP: common_vendor.o((...args) => $options.cleanOtherSourceCache && $options.cleanOtherSourceCache(...args), "7e"),
-    bQ: common_vendor.t($data.cleaningLyric ? "清理中..." : "清理歌词缓存"),
-    bR: $data.cleaningLyric ? 1 : "",
-    bS: common_vendor.o((...args) => $options.cleanLyricCache && $options.cleanLyricCache(...args), "cd"),
-    bT: $options.isTablet ? $options.tabletModalSafeTop : "",
-    bU: common_vendor.o(() => {
-    }, "0a"),
-    bV: common_vendor.o((...args) => $options.closeMetaCachePopup && $options.closeMetaCachePopup(...args), "d1")
+    bO: common_vendor.o((...args) => $options.closeMetaCachePopup && $options.closeMetaCachePopup(...args), "a4"),
+    bP: common_vendor.t($data.metaCacheSize),
+    bQ: common_vendor.t($data.otherSourceCacheSize),
+    bR: common_vendor.t($data.lyricCacheSize),
+    bS: common_vendor.t($data.cleaningOtherSource ? "清理中..." : "清理换源歌曲缓存"),
+    bT: $data.cleaningOtherSource ? 1 : "",
+    bU: common_vendor.o((...args) => $options.cleanOtherSourceCache && $options.cleanOtherSourceCache(...args), "b0"),
+    bV: common_vendor.t($data.cleaningLyric ? "清理中..." : "清理歌词缓存"),
+    bW: $data.cleaningLyric ? 1 : "",
+    bX: common_vendor.o((...args) => $options.cleanLyricCache && $options.cleanLyricCache(...args), "c0"),
+    bY: $options.isTablet ? $options.tabletModalSafeTop : "",
+    bZ: common_vendor.o(() => {
+    }, "23"),
+    ca: common_vendor.o((...args) => $options.closeMetaCachePopup && $options.closeMetaCachePopup(...args), "58")
   } : {}, {
-    bW: $data.showAboutPopup
+    cb: $data.showAIApiModal
+  }, $data.showAIApiModal ? common_vendor.e({
+    cc: common_vendor.p({
+      type: "fas",
+      name: "xmark",
+      size: "20",
+      color: "#999"
+    }),
+    cd: common_vendor.o((...args) => $options.closeAIApiModal && $options.closeAIApiModal(...args), "b9"),
+    ce: common_vendor.p({
+      type: "fas",
+      name: "info-circle",
+      size: "14",
+      color: "#e2e8f0"
+    }),
+    cf: common_vendor.p({
+      type: "fas",
+      name: "server",
+      size: "16",
+      color: "#e2e8f0"
+    }),
+    cg: common_vendor.t($data.platformPresets.backend.label),
+    ch: common_vendor.t($data.platformPresets.backend.desc),
+    ci: $data.apiConfig.provider === "backend"
+  }, $data.apiConfig.provider === "backend" ? {} : {}, {
+    cj: $data.activePlatform === "backend" ? 1 : "",
+    ck: common_vendor.o(($event) => $options.selectPlatform("backend"), "e2"),
+    cl: common_vendor.p({
+      type: "fas",
+      name: "brain",
+      size: "16",
+      color: "#e2e8f0"
+    }),
+    cm: common_vendor.t($data.platformPresets.deepseek.label),
+    cn: common_vendor.t($data.platformPresets.deepseek.desc),
+    co: $data.apiConfig.provider === "deepseek" && $data.apiConfig.apiKey
+  }, $data.apiConfig.provider === "deepseek" && $data.apiConfig.apiKey ? {} : {}, {
+    cp: $data.activePlatform === "deepseek" ? 1 : "",
+    cq: common_vendor.o(($event) => $options.selectPlatform("deepseek"), "26"),
+    cr: common_vendor.p({
+      type: "fas",
+      name: "microchip",
+      size: "16",
+      color: "#e2e8f0"
+    }),
+    cs: common_vendor.t($data.platformPresets.openai.label),
+    ct: common_vendor.t($data.platformPresets.openai.desc),
+    cv: $data.apiConfig.provider === "openai" && $data.apiConfig.apiKey
+  }, $data.apiConfig.provider === "openai" && $data.apiConfig.apiKey ? {} : {}, {
+    cw: $data.activePlatform === "openai" ? 1 : "",
+    cx: common_vendor.o(($event) => $options.selectPlatform("openai"), "39"),
+    cy: common_vendor.p({
+      type: "fas",
+      name: "bolt",
+      size: "16",
+      color: "#e2e8f0"
+    }),
+    cz: common_vendor.t($data.platformPresets.siliconflow.label),
+    cA: common_vendor.t($data.platformPresets.siliconflow.desc),
+    cB: $data.apiConfig.provider === "siliconflow" && $data.apiConfig.apiKey
+  }, $data.apiConfig.provider === "siliconflow" && $data.apiConfig.apiKey ? {} : {}, {
+    cC: $data.activePlatform === "siliconflow" ? 1 : "",
+    cD: common_vendor.o(($event) => $options.selectPlatform("siliconflow"), "43"),
+    cE: common_vendor.p({
+      type: "fas",
+      name: "gear",
+      size: "16",
+      color: "#e2e8f0"
+    }),
+    cF: common_vendor.t($data.platformPresets.custom.label),
+    cG: common_vendor.t($data.platformPresets.custom.desc),
+    cH: $data.apiConfig.provider === "custom" && $data.apiConfig.apiKey
+  }, $data.apiConfig.provider === "custom" && $data.apiConfig.apiKey ? {} : {}, {
+    cI: $data.activePlatform === "custom" ? 1 : "",
+    cJ: common_vendor.o(($event) => $options.selectPlatform("custom"), "5a"),
+    cK: $data.activePlatform && $data.activePlatform !== "backend"
+  }, $data.activePlatform && $data.activePlatform !== "backend" ? {
+    cL: $options.getApiUrlPlaceholder(),
+    cM: $data.currentApiUrl,
+    cN: common_vendor.o(($event) => $data.currentApiUrl = $event.detail.value, "66"),
+    cO: $data.showApiKey ? "text" : "password",
+    cP: $data.currentApiKey,
+    cQ: common_vendor.o(($event) => $data.currentApiKey = $event.detail.value, "f3"),
+    cR: common_vendor.p({
+      type: "fas",
+      name: $data.showApiKey ? "eye-slash" : "eye",
+      size: "16",
+      color: "#9ca3af"
+    }),
+    cS: common_vendor.o(($event) => $data.showApiKey = !$data.showApiKey, "ca"),
+    cT: $options.getModelPlaceholder(),
+    cU: $data.currentModelName,
+    cV: common_vendor.o(($event) => $data.currentModelName = $event.detail.value, "82")
+  } : {}, {
+    cW: common_vendor.s($options.getModalBodyStyle()),
+    cX: common_vendor.t($data.activePlatform === "backend" ? "使用默认后端" : "保存配置"),
+    cY: common_vendor.o((...args) => $options.saveCurrentApiConfig && $options.saveCurrentApiConfig(...args), "24"),
+    cZ: common_vendor.s($options.getModalFooterStyle()),
+    da: common_vendor.s($options.getTabletModalStyle()),
+    db: common_vendor.o(() => {
+    }, "73"),
+    dc: $data.darkMode ? 1 : "",
+    dd: $options.isTablet ? 1 : "",
+    de: common_vendor.o((...args) => $options.closeAIApiModal && $options.closeAIApiModal(...args), "e1")
+  }) : {}, {
+    df: $data.showAboutPopup
   }, $data.showAboutPopup ? {
-    bX: common_vendor.p({
+    dg: common_vendor.p({
       type: "fas",
       name: "wave-square",
       size: "20",
       color: "#ffffff"
     }),
-    bY: common_vendor.t($data.appVersion),
-    bZ: common_vendor.o((...args) => $options.closeAboutPopup && $options.closeAboutPopup(...args), "ca"),
-    ca: common_vendor.o(() => {
-    }, "ab"),
-    cb: common_vendor.o((...args) => $options.closeAboutPopup && $options.closeAboutPopup(...args), "2a")
+    dh: common_vendor.t($data.appVersion),
+    di: common_vendor.o((...args) => $options.closeAboutPopup && $options.closeAboutPopup(...args), "d9"),
+    dj: common_vendor.o(() => {
+    }, "5a"),
+    dk: common_vendor.o((...args) => $options.closeAboutPopup && $options.closeAboutPopup(...args), "31")
   } : {}, {
-    cc: $data.showUserAgreementPopup
+    dl: $data.showUserAgreementPopup
   }, $data.showUserAgreementPopup ? common_vendor.e({
-    cd: $data.pactAgreed
+    dm: $data.pactAgreed
   }, $data.pactAgreed ? {
-    ce: common_vendor.p({
+    dn: common_vendor.p({
       type: "fas",
       name: "check-circle",
       size: "14",
       color: "#10b981"
     })
   } : {}, {
-    cf: $data.pactAgreed
+    dp: $data.pactAgreed
   }, $data.pactAgreed ? {
-    cg: common_vendor.p({
+    dq: common_vendor.p({
       type: "fas",
       name: "info-circle",
       size: "16",
-      color: "#00d7cd"
+      color: "#e2e8f0"
     }),
-    ch: common_vendor.t($options.pactAgreedTime)
+    dr: common_vendor.t($options.pactAgreedTime)
   } : {}, {
-    ci: common_vendor.o((...args) => $options.closeUserAgreementPopup && $options.closeUserAgreementPopup(...args), "0b"),
-    cj: common_vendor.o(() => {
-    }, "7f"),
-    ck: common_vendor.o((...args) => $options.closeUserAgreementPopup && $options.closeUserAgreementPopup(...args), "e9")
+    ds: common_vendor.o((...args) => $options.closeUserAgreementPopup && $options.closeUserAgreementPopup(...args), "d1"),
+    dt: common_vendor.o(() => {
+    }, "cd"),
+    dv: common_vendor.o((...args) => $options.closeUserAgreementPopup && $options.closeUserAgreementPopup(...args), "16")
   }) : {}, {
-    cl: common_vendor.o($options.closeUpdatePopup, "e5"),
-    cm: common_vendor.p({
+    dw: common_vendor.o($options.closeUpdatePopup, "87"),
+    dx: common_vendor.p({
       visible: $data.showUpdatePopup,
       ["update-info"]: $data.updateInfo,
       ["dark-mode"]: $data.darkMode
     }),
-    cn: $data.darkMode ? 1 : "",
-    co: $options.isTablet ? 1 : ""
+    dy: $data.darkMode ? 1 : "",
+    dz: $options.isTablet ? 1 : ""
   });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render]]);

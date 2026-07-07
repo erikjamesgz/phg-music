@@ -206,7 +206,7 @@ const _sfc_main = {
           type: "fas",
           name: "rotate-right",
           size: "16",
-          color: "#00d7cd"
+          color: "#6b7280"
         }),
         d: common_vendor.o(handleRefresh, "90"),
         e: common_vendor.p({
@@ -273,5 +273,5 @@ const _sfc_main = {
     };
   }
 };
-const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-ec74bb2a"]]);
+const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-07a20cab"]]);
 wx.createComponent(Component);

@@ -18,7 +18,7 @@ const _sfc_main = {
   __name: "MiniPlayer",
   setup(__props) {
     common_vendor.useCssVars((_ctx) => ({
-      "4f45f390": miniPlayerBottom.value
+      "95f543c6": miniPlayerBottom.value
     }));
     let instance = null;
     try {
@@ -72,6 +72,11 @@ const _sfc_main = {
       if (!currentSong.value)
         return false;
       return store_modules_list.listStore.isInLoveList(currentSong.value.id);
+    });
+    const isCurrentSongDisliked = common_vendor.computed(() => {
+      if (!currentSong.value)
+        return false;
+      return store_modules_player.playerStore.isDisliked(currentSong.value.id);
     });
     const playModeIcon = common_vendor.computed(() => {
       const modeIcons = {
@@ -128,6 +133,40 @@ const _sfc_main = {
       } else {
         store_modules_list.listStore.addListMusics("love", currentSong.value, "top");
         common_vendor.index.showToast({ title: "已添加到我喜欢的音乐", icon: "success" });
+      }
+    };
+    const handleDislike = () => {
+      if (!currentSong.value) {
+        common_vendor.index.showToast({ title: "没有正在播放的歌曲", icon: "none" });
+        return;
+      }
+      const song = currentSong.value;
+      if (store_modules_player.playerStore.isDisliked(song.id)) {
+        common_vendor.index.showModal({
+          title: "提示",
+          content: `「${song.name}」已在不喜欢列表中，是否移除？`,
+          confirmText: "移除",
+          success: (res) => {
+            if (res.confirm) {
+              store_modules_player.playerStore.removeFromDislikeList(song.id);
+              common_vendor.index.showToast({ title: "已移除", icon: "success" });
+            }
+          }
+        });
+        return;
+      }
+      const success = store_modules_player.playerStore.addToDislikeList(song);
+      if (success) {
+        common_vendor.index.showToast({
+          title: "已加入不喜欢",
+          icon: "none",
+          duration: 1200
+        });
+        setTimeout(() => {
+          playNext();
+        }, 400);
+      } else {
+        common_vendor.index.showToast({ title: "操作失败", icon: "none" });
       }
     };
     const togglePlayMode = () => {
@@ -1263,60 +1302,69 @@ const _sfc_main = {
         }),
         Y: favoriteTooltip.value,
         Z: common_vendor.o(handleFavorite, "4d"),
-        aa: playMode.value === "singleLoop"
-      }, playMode.value === "singleLoop" ? {
+        aa: isTablet.value
+      }, isTablet.value ? {
         ab: common_vendor.p({
+          name: "heart-crack",
+          size: "16",
+          color: isCurrentSongDisliked.value ? "#ff4444" : darkMode.value ? "#ffffff" : "#999999"
+        }),
+        ac: common_vendor.o(handleDislike, "f7")
+      } : {}, {
+        ad: playMode.value === "singleLoop"
+      }, playMode.value === "singleLoop" ? {
+        ae: common_vendor.p({
           name: "rotate-right",
           size: "16",
           color: darkMode.value ? "#ffffff" : "#999999"
         }),
-        ac: darkMode.value ? "#ffffff" : "#999999"
+        af: darkMode.value ? "#ffffff" : "#999999"
       } : {
-        ad: common_vendor.p({
+        ag: common_vendor.p({
           name: playModeIcon.value,
           size: "16",
           color: darkMode.value ? "#ffffff" : "#999999"
         })
       }, {
-        ae: playModeTooltip.value,
-        af: common_vendor.o(togglePlayMode, "1b"),
-        ag: common_vendor.p({
+        ah: playModeTooltip.value,
+        ai: common_vendor.o(togglePlayMode, "82"),
+        aj: common_vendor.p({
           name: "backward-step",
           size: "16",
-          color: "#999999"
+          color: darkMode.value ? "#ffffff" : "#999999"
         }),
-        ah: common_vendor.o(playPrev, "f0"),
-        ai: isLoading.value
+        ak: common_vendor.o(playPrev, "82"),
+        al: isLoading.value
       }, isLoading.value ? {} : {
-        aj: common_vendor.p({
+        am: common_vendor.p({
           name: playing.value ? "pause" : "play",
           size: "16",
           color: "#ffffff"
         })
       }, {
-        ak: isLoading.value ? 1 : "",
-        al: playTooltip.value,
-        am: common_vendor.o(togglePlay, "e9"),
-        an: common_vendor.p({
+        an: isLoading.value ? 1 : "",
+        ao: playTooltip.value,
+        ap: common_vendor.o(togglePlay, "e5"),
+        aq: common_vendor.p({
           name: "forward-step",
           size: "16",
-          color: "#999999"
+          color: darkMode.value ? "#ffffff" : "#999999"
         }),
-        ao: common_vendor.o(playNext, "8c"),
-        ap: common_vendor.t(formatTime(currentTime.value)),
-        aq: isDragging.value ? dragPercent.value + "%" : progressPercent.value + "%",
-        ar: isDragging.value ? dragPercent.value + "%" : progressPercent.value + "%",
-        as: common_vendor.t(formatTime(duration.value)),
-        at: common_vendor.o(onProgressTouchStart, "ba"),
-        av: common_vendor.o(onProgressTouchMove, "a8"),
-        aw: common_vendor.o(onProgressTouchEnd, "9f")
+        ar: common_vendor.o(playNext, "10"),
+        as: common_vendor.t(formatTime(currentTime.value)),
+        at: isDragging.value ? dragPercent.value + "%" : progressPercent.value + "%",
+        av: isDragging.value ? dragPercent.value + "%" : progressPercent.value + "%",
+        aw: common_vendor.t(formatTime(duration.value)),
+        ax: common_vendor.o(onProgressTouchStart, "4b"),
+        ay: common_vendor.o(onProgressTouchMove, "0d"),
+        az: common_vendor.o(onProgressTouchEnd, "73")
       }), {
-        ax: darkMode.value ? 1 : "",
-        ay: isTablet.value ? 1 : "",
-        az: common_vendor.o(openFullPlayer, "3c"),
-        aA: showDanmaku.value && activeDanmaku.value.length > 0
+        aA: darkMode.value ? 1 : "",
+        aB: isTablet.value ? 1 : "",
+        aC: common_vendor.o(openFullPlayer, "3c"),
+        aD: showDanmaku.value && activeDanmaku.value.length > 0
       }, showDanmaku.value && activeDanmaku.value.length > 0 ? {
-        aB: common_vendor.f(activeDanmaku.value, (item, index, i0) => {
+        aE: common_vendor.f(activeDanmaku.value, (item, index, i0) => {
           return {
             a: common_vendor.t(item.userName),
             b: common_vendor.t(item.text),
@@ -1325,16 +1373,16 @@ const _sfc_main = {
             e: common_vendor.o(($event) => onDanmakuEnd($event), item.uniqueId)
           };
         }),
-        aC: darkMode.value ? 1 : "",
-        aD: !playing.value ? 1 : ""
+        aF: darkMode.value ? 1 : "",
+        aG: !playing.value ? 1 : ""
       } : {}, {
-        aE: isTablet.value ? 1 : "",
-        aF: common_vendor.s(_ctx.__cssVars())
+        aH: isTablet.value ? 1 : "",
+        aI: common_vendor.s(_ctx.__cssVars())
       }) : {}, {
-        aG: common_vendor.o(($event) => showFavoritePopup.value = $event, "a2"),
-        aH: common_vendor.o(($event) => showFavoritePopup.value = false, "01"),
-        aI: common_vendor.s(_ctx.__cssVars()),
-        aJ: common_vendor.p({
+        aJ: common_vendor.o(($event) => showFavoritePopup.value = $event, "6a"),
+        aK: common_vendor.o(($event) => showFavoritePopup.value = false, "ed"),
+        aL: common_vendor.s(_ctx.__cssVars()),
+        aM: common_vendor.p({
           visible: showFavoritePopup.value,
           ["dark-mode"]: darkMode.value,
           ["is-tablet"]: isTablet.value
@@ -1343,5 +1391,5 @@ const _sfc_main = {
     };
   }
 };
-const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-9050df25"]]);
+const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-8ab0a2ea"]]);
 wx.createComponent(Component);

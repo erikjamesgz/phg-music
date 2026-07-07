@@ -7,9 +7,9 @@ const utils_musicSwitchSourceStorage = require("../../utils/musicSwitchSourceSto
 const utils_musicParams = require("../../utils/musicParams.js");
 const store_modules_list = require("./list.js");
 const store_modules_user = require("./user.js");
-const store_modules_system = require("./system.js");
 const utils_lyricCache = require("../../utils/lyricCache.js");
 const utils_musicPic = require("../../utils/musicPic.js");
+const utils_aiSongSearch = require("../../utils/aiSongSearch.js");
 const PLAY_MODE_ICONS = {
   [store_modules_list.PLAY_MODE.listLoop]: "repeat",
   // 列表循环 - repeat 图标
@@ -42,6 +42,8 @@ const state = common_vendor.reactive({
   playlist: [],
   // 播放历史
   playHistory: [],
+  // 不喜欢列表（用于AI推荐的负反馈）
+  dislikeList: [],
   // 最近播放歌单历史（记录用户播放过的歌单）
   playListHistory: [],
   // 播放模式 - 默认列表循环，与洛雪音乐移动版一致
@@ -113,6 +115,11 @@ const state = common_vendor.reactive({
   usedCachedUrlForCurrentPlay: false,
   // 是否正在获取播放URL
   isGettingUrl: false,
+  // 🔑 当前 currentSong 的播放URL是否已成功加载到 audioContext.src
+  // 用于区分"currentSong已设置但URL未加载"的不一致状态
+  // 在 playSong 开始时设为 false，audio.src 设置成功后设为 true
+  // isSameSong 判断时检查此标志，避免URL加载失败后误判为"同一首歌继续播放"
+  currentSongUrlLoaded: false,
   // 待播放的歌曲（用于处理快速切换）
   pendingSong: null,
   // 是否显示换源提示（全局状态）
@@ -126,7 +133,9 @@ const state = common_vendor.reactive({
   // 是否已检查过电池优化（App端）
   hasCheckedBatteryOptimization: false,
   // 当前歌曲的音源提供者名称（如 [独家音源]）
-  currentScriptName: ""
+  currentScriptName: "",
+  // 当前歌曲的换源信息（播放时使用新source获取URL，但不修改显示信息）
+  currentSongSwitchInfo: null
 });
 function formatTime(time) {
   time = Math.floor(time);
@@ -196,6 +205,9 @@ const playerStore = {
   get hasSwitchedSource() {
     if (!state.currentSong || !state.originalSong)
       return false;
+    if (state.currentSongSwitchInfo && state.currentSongSwitchInfo.newSource) {
+      return state.currentSongSwitchInfo.newSource !== state.currentSongSwitchInfo.originalSource || state.currentSongSwitchInfo.newSongId !== state.originalSong.id;
+    }
     return state.currentSong.id !== state.originalSong.id || state.currentSong.source !== state.originalSong.source;
   },
   // 显示换源提示
@@ -389,9 +401,45 @@ const playerStore = {
     state.error = null;
     state.playing = false;
   },
+  /**
+   * 🔑 关键功能：同步AI推荐歌曲信息到临时列表
+   * 问题：播放成功后，虽然更新了 recommendations 数组，但临时列表中的歌曲对象还是旧的
+   * 导致再次播放同一首歌时，从临时列表获取的还是AI临时ID和错误的音源
+   * 
+   * @param {Object} song 当前播放的歌曲对象（包含 _isAiSong, _isSearched, _realId 等字段）
+   * @param {string} realId 真实的歌曲ID（用于请求播放链接的ID）
+   * @param {string} realSource 真实的音源（tx/kg/kw/wy/mg）
+   */
+  updateSongInTempList(oldId, newId, newSource) {
+    try {
+      const state2 = this.state;
+      console.log("[updateSongInTempList] 🔄 更新临时列表中的歌曲ID...");
+      console.log("[updateSongInTempList]", oldId, "→", newId, "[", newSource, "]");
+      if (state2.playerListId !== store_modules_list.LIST_IDS.TEMP) {
+        console.log("[updateSongInTempList] ℹ️ 当前不是临时列表，跳过");
+        return;
+      }
+      const tempList = store_modules_list.listStore.state.lists[store_modules_list.LIST_IDS.TEMP];
+      if (!tempList || !tempList.list) {
+        console.log("[updateSongInTempList] ⚠️ 临时列表不存在");
+        return;
+      }
+      const targetIndex = tempList.list.findIndex((item) => item.id === oldId);
+      if (targetIndex === -1) {
+        console.log("[updateSongInTempList] ⚠️ 未找到ID为", oldId, "的歌曲");
+        return;
+      }
+      tempList.list[targetIndex].id = newId;
+      tempList.list[targetIndex].source = newSource;
+      tempList.list[targetIndex].sourceId = newSource;
+      console.log("[updateSongInTempList] ✅ 更新完成！临时列表中的歌曲已更新为真实ID:", newId);
+    } catch (error) {
+      console.error("[updateSongInTempList] ❌ 更新失败:", error);
+    }
+  },
   // 播放指定歌曲
   async playSong(song) {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _A, _B, _C, _D, _E, _F;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _A, _B, _C, _D, _E, _F, _G, _H, _I;
     console.log("[playSong] ========== playSong 被调用 ==========");
     if (!song) {
       console.error("[playSong] song is null or undefined");
@@ -400,6 +448,10 @@ const playerStore = {
     if (state.isGettingUrl) {
       console.log("[playSong] ⚠️ 检测到 isGettingUrl=true，立即重置为 false");
       state.isGettingUrl = false;
+    }
+    if (state.isRefreshingUrl) {
+      console.log("[playSong] ⚠️ 检测到 isRefreshingUrl=true，立即重置为 false");
+      state.isRefreshingUrl = false;
     }
     if (state.pendingSong && state.pendingSong.id !== song.id) {
       console.log("[playSong] 发现待播放歌曲，使用待播放歌曲:", state.pendingSong.name);
@@ -501,7 +553,7 @@ const playerStore = {
     console.log("[playSong] state.currentSong?.id:", (_c = state.currentSong) == null ? void 0 : _c.id);
     console.log("[playSong] song.id:", song.id);
     console.log("[playSong] song.url:", song.url ? "有" : "无");
-    const isSameSong = state.currentSong && state.currentSong.id === song.id && !song.url && !song.playUrl;
+    const isSameSong = state.currentSong && state.currentSong.id === song.id && !song.url && !song.playUrl && state.currentSongUrlLoaded;
     console.log("[playSong] isSameSong:", isSameSong);
     if (isSameSong) {
       console.log("[playSong] 是同一首歌，检查是否需要继续播放");
@@ -530,6 +582,7 @@ const playerStore = {
     state.lastRefreshSongId = song.id;
     state.protocolSwitchCount = 0;
     state.isUsingCachedUrl = false;
+    state.currentSongUrlLoaded = false;
     state.usedCachedUrlForCurrentPlay = false;
     state.currentFailingSongId = null;
     state.isUserManualSwitch = false;
@@ -562,16 +615,15 @@ const playerStore = {
       const switchInfo = utils_musicSwitchSourceStorage.getMusicSwitchSourceById(songKey);
       if (switchInfo && switchInfo.newSource) {
         console.log("[playSong] 发现保存的换源信息, 原source:", song.source, "换源后:", switchInfo.newSource);
-        song.source = switchInfo.newSource;
-        if (switchInfo.newSongId) {
-          song.id = switchInfo.newSongId;
-        }
-        if (switchInfo.newSongName) {
-          song.name = switchInfo.newSongName;
-        }
-        if (switchInfo.newSongSinger) {
-          song.singer = switchInfo.newSongSinger;
-        }
+        state.currentSongSwitchInfo = {
+          originalSource: song.source,
+          newSource: switchInfo.newSource,
+          newSongId: switchInfo.newSongId || null,
+          newSongName: switchInfo.newSongName || null,
+          newSongSinger: switchInfo.newSongSinger || null,
+          newSongData: null
+          // 从存储恢复的换源信息没有完整newSong数据，用switchInfo字段构建
+        };
         const sourceNameMap = {
           "tx": "QQ音乐",
           "wy": "网易云音乐",
@@ -581,6 +633,8 @@ const playerStore = {
         };
         const newSourceName = sourceNameMap[switchInfo.newSource] || switchInfo.newSource;
         this.setStatusText(`已恢复换源: ${newSourceName}`, 3e3);
+      } else {
+        state.currentSongSwitchInfo = null;
       }
       if (!playUrl && (song.url || song.playUrl)) {
         playUrl = song.url || song.playUrl;
@@ -591,7 +645,14 @@ const playerStore = {
         state.usedCachedUrlForCurrentPlay = true;
       }
       if (!playUrl) {
-        const cachedUrl = await utils_musicUrlCache.getCachedMusicUrl(song.id, actualQuality, song.source);
+        let cacheLookupId = song.id;
+        let cacheLookupSource = song.source;
+        if (switchInfo && switchInfo.newSource) {
+          cacheLookupId = switchInfo.newSongId || song.id;
+          cacheLookupSource = switchInfo.newSource;
+          console.log("[playSong] 换源场景，使用新source/id查找URL缓存:", cacheLookupId, cacheLookupSource);
+        }
+        const cachedUrl = await utils_musicUrlCache.getCachedMusicUrl(cacheLookupId, actualQuality, cacheLookupSource);
         if (cachedUrl) {
           console.log("[playSong] 使用缓存的播放URL:", cachedUrl);
           playUrl = cachedUrl;
@@ -619,6 +680,7 @@ const playerStore = {
         state.audioContext.coverImgUrl = coverImgUrl;
         state.audioContext.epname = ((_q = song.al) == null ? void 0 : _q.name) || ((_r = song.album) == null ? void 0 : _r.name) || "未知专辑";
         state.audioContext.src = secureUrl;
+        state.currentSongUrlLoaded = true;
         this.startLoadTimeout();
         if (state.isUsingCachedUrl) {
           this.startQuickCheckTimeout();
@@ -634,11 +696,69 @@ const playerStore = {
         state.isLoading = false;
         state.isGettingUrl = false;
       } else {
+        const isAiTempId = String(song.id || "").startsWith("ai_recommend_");
+        console.log("[playSong] 🔍 检查是否需要搜索:", {
+          name: song.name,
+          id: song.id,
+          source: song.source,
+          isAiTempId
+        });
+        if (isAiTempId) {
+          console.log("[playSong] 🎵 检测到AI临时ID，开始搜索真实音源...");
+          state.isLoading = true;
+          this.setStatusText(`🔍 正在搜索：${song.name} - ${song.singer}`);
+          try {
+            const searchedSong = await utils_aiSongSearch.searchAiSongSource(song, (text) => this.setStatusText(text));
+            console.log("[playSong] ✅ 搜索成功:", searchedSong.name, "[真实ID:", searchedSong.id, ", 音源:", searchedSong.source, "]");
+            const oldId = song.id;
+            const oldSource = song.source;
+            song.id = searchedSong.id;
+            song.source = searchedSong.source;
+            song.songmid = searchedSong.songmid || song.songmid;
+            song.hash = searchedSong.hash || song.hash;
+            state.currentSong = song;
+            this.setStatusText("");
+            console.log("[playSong] 📝 ID已更新:", oldId, "→", song.id);
+            console.log("[playSong] 📝 音源已更新:", oldSource, "→", song.source);
+            this.updateSongInTempList(oldId, song.id, song.source);
+          } catch (searchError) {
+            console.error("[playSong] ❌ AI歌曲搜索失败:", searchError);
+            state.isLoading = false;
+            state.isGettingUrl = false;
+            this.setStatusText(`❌ 搜索失败：${searchError.message || "无法找到歌曲音源"}`);
+            setTimeout(() => {
+              this.clearStatusText();
+              console.log("[playSong] AI歌曲搜索失败，自动切换到下一首...");
+              this.playNext();
+            }, 2e3);
+            return;
+          }
+        }
         console.log("[playSong] 歌曲没有已有URL，调用API获取");
         console.log("[playSong] 用户选择的音质:", state.audioQuality);
         console.log("[playSong] 实际使用的音质:", actualQuality);
         this.setStatusText("正在获取播放链接...", 0);
-        const result = await utils_api_music.getMusicUrl(song, actualQuality);
+        let songForUrl = song;
+        if (state.currentSongSwitchInfo && state.currentSongSwitchInfo.newSource) {
+          if (state.currentSongSwitchInfo.newSongData) {
+            songForUrl = { ...state.currentSongSwitchInfo.newSongData };
+            songForUrl.source = state.currentSongSwitchInfo.newSource;
+            console.log("[playSong] 使用换源newSongData获取URL, 显示原歌曲:", song.name, "获取URL用source:", songForUrl.source);
+          } else {
+            songForUrl = { ...song };
+            songForUrl.source = state.currentSongSwitchInfo.newSource;
+            if (state.currentSongSwitchInfo.newSongId) {
+              songForUrl.id = state.currentSongSwitchInfo.newSongId;
+            }
+            if (state.currentSongSwitchInfo.originalSource !== state.currentSongSwitchInfo.newSource) {
+              songForUrl.songmid = "";
+              songForUrl.hash = "";
+              songForUrl.copyrightId = "";
+            }
+            console.log("[playSong] 使用换源信息获取URL(无newSongData), 显示原歌曲:", song.name, "获取URL用source:", songForUrl.source);
+          }
+        }
+        const result = await utils_api_music.getMusicUrl(songForUrl, actualQuality);
         console.log("[playSong] API获取成功");
         console.log("[playSong] URL:", result.url);
         console.log("[playSong] 音质:", result.type);
@@ -677,40 +797,41 @@ const playerStore = {
           const originalName = sourceNameMap[result.fallback.originalSource] || result.fallback.originalSource;
           const newName = sourceNameMap[result.fallback.newSource] || result.fallback.newSource;
           this.setStatusText(`已从${originalName}换源到${newName}`, 3e3);
-          const updatedSong = {
-            ...song,
-            source: result.fallback.newSource,
-            _toggleMusicInfo: {
+          state.currentSongSwitchInfo = {
+            originalSource: result.fallback.originalSource,
+            newSource: result.fallback.newSource,
+            newSongId: ((_t = result.fallback.matchedSong) == null ? void 0 : _t.id) || null,
+            newSongName: ((_u = result.fallback.matchedSong) == null ? void 0 : _u.name) || null,
+            newSongSinger: ((_v = result.fallback.matchedSong) == null ? void 0 : _v.singer) || null
+          };
+          if (state.currentSong) {
+            state.currentSong._toggleMusicInfo = {
               originalSource: result.fallback.originalSource,
               newSource: result.fallback.newSource,
               matchedSong: result.fallback.matchedSong,
               toggleTime: Date.now()
-            }
-          };
-          if (result.fallback.matchedSong) {
-            updatedSong.songmid = result.fallback.matchedSong.songmid || song.songmid;
-            updatedSong.hash = result.fallback.matchedSong.hash || song.hash;
-            updatedSong.copyrightId = result.fallback.matchedSong.copyrightId || song.copyrightId;
-            updatedSong.id = result.fallback.matchedSong.id || song.id;
+            };
           }
-          state.currentSong = updatedSong;
-          console.log("[playSong] 已更新歌曲换源信息");
+          console.log("[playSong] 已记录换源信息（不修改显示信息）");
           this.showSourceSwitchHintMessage();
           const originalSongId = String(song.id).replace(/^(tx|wy|kg|kw|mg)_/, "") || song.id;
           const switchInfo2 = {
             originalSource: result.fallback.originalSource,
             newSource: result.fallback.newSource,
-            newSongId: ((_t = result.fallback.matchedSong) == null ? void 0 : _t.id) || song.id,
-            newSongName: ((_u = result.fallback.matchedSong) == null ? void 0 : _u.name) || song.name,
-            newSongSinger: ((_v = result.fallback.matchedSong) == null ? void 0 : _v.singer) || song.singer,
+            newSongId: ((_w = result.fallback.matchedSong) == null ? void 0 : _w.id) || song.id,
+            newSongName: ((_x = result.fallback.matchedSong) == null ? void 0 : _x.name) || song.name,
+            newSongSinger: ((_y = result.fallback.matchedSong) == null ? void 0 : _y.singer) || song.singer,
             quality: actualQuality
           };
           utils_musicSwitchSourceStorage.saveMusicSwitchSource(originalSongId, switchInfo2);
           console.log("[playSong] 已保存换源信息到本地存储:", result.fallback.originalSource, "->", result.fallback.newSource);
         }
-        const cacheSongId = ((_x = (_w = result.fallback) == null ? void 0 : _w.matchedSong) == null ? void 0 : _x.id) || song.id;
-        const cacheSource = ((_z = (_y = result.fallback) == null ? void 0 : _y.matchedSong) == null ? void 0 : _z.source) || song.source;
+        const cacheSongId = ((_A = (_z = result.fallback) == null ? void 0 : _z.matchedSong) == null ? void 0 : _A.id) || song.id;
+        const cacheSource = ((_C = (_B = result.fallback) == null ? void 0 : _B.matchedSong) == null ? void 0 : _C.source) || song.source;
         await utils_musicUrlCache.setCachedMusicUrl(cacheSongId, actualQuality, result.url, cacheSource);
+        if (song._isAiSong && song._isSearched) {
+          this.syncAiSongInfoToTempList(song, cacheSongId, cacheSource);
+        }
         state.currentSong = {
           ...state.currentSong,
           url: result.url,
@@ -718,7 +839,7 @@ const playerStore = {
         };
         console.log("[playSong] 已更新当前歌曲URL到state.currentSong");
         const secureUrl = result.url;
-        let coverImgUrl = ((_A = song.al) == null ? void 0 : _A.picUrl) || ((_B = song.album) == null ? void 0 : _B.picUrl) || song.img || "";
+        let coverImgUrl = ((_D = song.al) == null ? void 0 : _D.picUrl) || ((_E = song.album) == null ? void 0 : _E.picUrl) || song.img || "";
         if (coverImgUrl) {
           coverImgUrl = coverImgUrl.replace(/^http:/, "https:");
         }
@@ -726,14 +847,15 @@ const playerStore = {
           title: song.name || "未知歌曲",
           singer: this.formatArtists(song),
           coverImgUrl,
-          epname: ((_C = song.al) == null ? void 0 : _C.name) || ((_D = song.album) == null ? void 0 : _D.name) || "未知专辑",
+          epname: ((_F = song.al) == null ? void 0 : _F.name) || ((_G = song.album) == null ? void 0 : _G.name) || "未知专辑",
           src: secureUrl
         });
         state.audioContext.title = song.name || "未知歌曲";
         state.audioContext.singer = this.formatArtists(song);
         state.audioContext.coverImgUrl = coverImgUrl;
-        state.audioContext.epname = ((_E = song.al) == null ? void 0 : _E.name) || ((_F = song.album) == null ? void 0 : _F.name) || "未知专辑";
+        state.audioContext.epname = ((_H = song.al) == null ? void 0 : _H.name) || ((_I = song.album) == null ? void 0 : _I.name) || "未知专辑";
         state.audioContext.src = secureUrl;
+        state.currentSongUrlLoaded = true;
         this.startLoadTimeout();
         console.log("[playSong] 背景音频src已设置，开始播放");
       }
@@ -976,6 +1098,9 @@ const playerStore = {
     var _a, _b, _c;
     console.log("[playerStore] ========== 播放结束处理开始 ==========");
     console.log("[playerStore] 当前模式:", state.playMode);
+    if (state.currentSong && state.currentSong.id) {
+      this.recordPlayCompletion(state.currentSong);
+    }
     console.log("[playerStore] PLAY_MODE.singleLoop:", store_modules_list.PLAY_MODE.singleLoop);
     console.log("[playerStore] 模式是否匹配 singleLoop:", state.playMode === store_modules_list.PLAY_MODE.singleLoop);
     console.log("[playerStore] 当前歌曲:", (_a = state.currentSong) == null ? void 0 : _a.name, "ID:", (_b = state.currentSong) == null ? void 0 : _b.id);
@@ -1033,69 +1158,11 @@ const playerStore = {
       if (nextSongInfo && nextSongInfo.musicInfo) {
         console.log("[playerStore] 自动播放下一首:", nextSongInfo.musicInfo.name, "ID:", nextSongInfo.musicInfo.id);
         console.log("[playerStore] 下一首列表ID:", nextSongInfo.listId, "是否临时:", nextSongInfo.isTempPlay);
-        const quality = store_modules_system.systemStore.getState().audioQuality || "128k";
-        const cachedUrl = await utils_musicUrlCache.getCachedMusicUrl(nextSongInfo.musicInfo.id, quality, nextSongInfo.musicInfo.source);
-        let playUrl = cachedUrl;
-        let lyricData = null;
-        if (!cachedUrl) {
-          const requestSource = nextSongInfo.musicInfo.source || "tx";
-          const isTx = requestSource === "tx";
-          const songId = isTx && nextSongInfo.musicInfo.songmid ? nextSongInfo.musicInfo.songmid : nextSongInfo.musicInfo.id;
-          console.log("[playerStore] handlePlayEnded 构建请求参数:");
-          console.log("[playerStore] musicInfo.source:", nextSongInfo.musicInfo.source);
-          console.log("[playerStore] musicInfo.id:", nextSongInfo.musicInfo.id);
-          console.log("[playerStore] musicInfo.songmid:", nextSongInfo.musicInfo.songmid);
-          console.log("[playerStore] 使用的 songId:", songId);
-          const requestData = {
-            source: requestSource,
-            musicInfo: {
-              id: songId,
-              name: nextSongInfo.musicInfo.name,
-              singer: nextSongInfo.musicInfo.singer || (nextSongInfo.musicInfo.ar ? nextSongInfo.musicInfo.ar.map((a) => a.name).join("/") : ""),
-              source: requestSource,
-              interval: utils_musicParams.formatDuration(nextSongInfo.musicInfo.dt || nextSongInfo.musicInfo.duration || nextSongInfo.musicInfo.interval),
-              meta: {
-                songId,
-                albumName: ((_c = nextSongInfo.musicInfo.al) == null ? void 0 : _c.name) || nextSongInfo.musicInfo.albumName || ""
-              }
-            },
-            quality
-          };
-          if (requestSource === "kg") {
-            requestData.musicInfo.meta.hash = nextSongInfo.musicInfo.hash || nextSongInfo.musicInfo.id;
-          }
-          console.log("[playerStore] requestData:", JSON.stringify(requestData));
-          const musicUrlData = await utils_api_music.getMusicUrl(requestData);
-          playUrl = musicUrlData.url;
-          await utils_musicUrlCache.setCachedMusicUrl(nextSongInfo.musicInfo.id, quality, playUrl, nextSongInfo.musicInfo.source);
-          lyricData = {
-            lyric: musicUrlData.lyric || "",
-            tlyric: musicUrlData.tlyric || "",
-            rlyric: musicUrlData.rlyric || "",
-            lxlyric: musicUrlData.lxlyric || ""
-          };
-        } else {
-          const lyricSource = nextSongInfo.musicInfo.source || "tx";
-          const cachedLyric = await utils_lyricCache.getCachedLyric(nextSongInfo.musicInfo.id, lyricSource);
-          lyricData = cachedLyric || {};
+        if (nextSongInfo.listId && ((_c = nextSongInfo.musicInfo) == null ? void 0 : _c.id)) {
+          store_modules_list.listStore.updatePlayIndexByListId(nextSongInfo.listId, nextSongInfo.musicInfo.id);
+          console.log("[playerStore] ✅ 已更新 playIndex 到歌曲:", nextSongInfo.musicInfo.name, "ID:", nextSongInfo.musicInfo.id);
         }
-        const updatedSong = {
-          ...nextSongInfo.musicInfo,
-          url: playUrl,
-          playUrl,
-          quality,
-          lyric: lyricData.lyric || "",
-          tlyric: lyricData.tlyric || "",
-          rlyric: lyricData.rlyric || "",
-          lxlyric: lyricData.lxlyric || ""
-        };
-        store_modules_list.listStore.setPlayMusicInfo(nextSongInfo.listId, updatedSong, nextSongInfo.isTempPlay);
-        store_modules_list.listStore.addPlayedList({
-          listId: nextSongInfo.listId,
-          musicInfo: updatedSong,
-          isTempPlay: nextSongInfo.isTempPlay
-        });
-        this.playSong(updatedSong);
+        this.playSong(nextSongInfo.musicInfo);
       } else {
         console.log("[playerStore] 没有下一首歌曲可播放");
       }
@@ -1192,7 +1259,7 @@ const playerStore = {
       state.playHistory.splice(existsIndex, 1);
     }
     state.playHistory.unshift(cleanSong);
-    if (state.playHistory.length > 200) {
+    if (state.playHistory.length > 2e3) {
       state.playHistory.pop();
     }
     common_vendor.index.setStorageSync("playHistory", state.playHistory);
@@ -1231,6 +1298,128 @@ const playerStore = {
     }
     common_vendor.index.setStorageSync("playListHistory", state.playListHistory);
     console.log("[playerStore] 最近播放歌单已更新，当前数量:", state.playListHistory.length);
+  },
+  // ========== 不喜欢列表管理（用于AI推荐负反馈）==========
+  // 添加歌曲到不喜欢列表
+  addToDislikeList(song) {
+    var _a, _b;
+    if (!song || !song.id) {
+      console.warn("[playerStore] addToDislikeList - 无效的歌曲信息");
+      return false;
+    }
+    const songId = String(song.id);
+    const existsIndex = state.dislikeList.findIndex((item) => item.id === songId);
+    if (existsIndex !== -1) {
+      console.log("[playerStore] 歌曲已在不喜欢列表中:", song.name);
+      return false;
+    }
+    const dislikeRecord = {
+      id: songId,
+      name: song.name,
+      singer: this.formatSingerName(song.singer || song.ar || song.artists),
+      album: ((_a = song.album) == null ? void 0 : _a.name) || ((_b = song.al) == null ? void 0 : _b.name) || "",
+      source: song.source || "",
+      duration: song.duration || 0,
+      addTime: Date.now(),
+      reason: "manual",
+      // manual(手动点击) / auto_skip(快速跳过)
+      playedDuration: state.currentTime || 0,
+      // 播放了多久就切换了
+      totalDuration: state.duration || 0
+    };
+    state.dislikeList.unshift(dislikeRecord);
+    if (state.dislikeList.length > 500) {
+      state.dislikeList.pop();
+    }
+    common_vendor.index.setStorageSync("dislikeList", state.dislikeList);
+    console.log("[playerStore] ✅ 已添加到不喜欢列表:", song.name, "当前数量:", state.dislikeList.length);
+    return true;
+  },
+  // 从不喜欢列表移除
+  removeFromDislikeList(songId) {
+    if (!songId)
+      return false;
+    const index = state.dislikeList.findIndex((item) => item.id === String(songId));
+    if (index === -1) {
+      console.log("[playerStore] 歌曲不在不喜欢列表中");
+      return false;
+    }
+    const removed = state.dislikeList.splice(index, 1)[0];
+    common_vendor.index.setStorageSync("dislikeList", state.dislikeList);
+    console.log("[playerStore] ✅ 已从不喜欢列表移除:", removed.name);
+    return true;
+  },
+  // 检查歌曲是否在不喜欢列表中
+  isDisliked(songId) {
+    if (!songId)
+      return false;
+    return state.dislikeList.some((item) => item.id === String(songId));
+  },
+  // 获取不喜欢列表
+  getDislikeList() {
+    return state.dislikeList;
+  },
+  // 清空不喜欢列表
+  clearDislikeList() {
+    state.dislikeList = [];
+    common_vendor.index.removeStorageSync("dislikeList");
+    console.log("[playerStore] ✅ 已清空不喜欢列表");
+  },
+  // 格式化歌手名称（兼容多种数据结构）
+  formatSingerName(singerData) {
+    if (!singerData)
+      return "未知歌手";
+    if (typeof singerData === "string")
+      return singerData;
+    if (Array.isArray(singerData)) {
+      return singerData.map((s) => typeof s === "string" ? s : s.name).join("、");
+    }
+    return singerData.name || "未知歌手";
+  },
+  // ========== 完播率记录（用于AI推荐）==========
+  // 记录播放完成信息（包含完播率）
+  recordPlayCompletion(song) {
+    if (!song || !song.id)
+      return;
+    const songId = String(song.id);
+    const completionRate = state.duration > 0 ? state.currentTime / state.duration : 0;
+    let playRecord = common_vendor.index.getStorageSync(`playRecord_${songId}`);
+    if (!playRecord) {
+      playRecord = {
+        id: songId,
+        name: song.name,
+        singer: this.formatSingerName(song.singer || song.ar || song.artists),
+        source: song.source || "",
+        firstPlayTime: Date.now(),
+        lastPlayTime: Date.now(),
+        playCount: 0,
+        fullPlayCount: 0,
+        totalPlayedDuration: 0,
+        completions: []
+        // 历史完播率记录
+      };
+    }
+    playRecord.lastPlayTime = Date.now();
+    playRecord.playCount++;
+    playRecord.totalPlayedDuration += state.currentTime || 0;
+    playRecord.completions.push({
+      time: Date.now(),
+      rate: completionRate,
+      duration: state.currentTime || 0,
+      totalDuration: state.duration || 0
+    });
+    if (completionRate >= 0.8) {
+      playRecord.fullPlayCount++;
+    }
+    if (playRecord.completions.length > 50) {
+      playRecord.completions = playRecord.completions.slice(-50);
+    }
+    common_vendor.index.setStorageSync(`playRecord_${songId}`, playRecord);
+    console.log("[playerStore] 📊 记录播放完成:", song.name, {
+      完播率: `${(completionRate * 100).toFixed(1)}%`,
+      总播放次数: playRecord.playCount,
+      完整播放次数: playRecord.fullPlayCount
+    });
   },
   // 清除音乐URL缓存
   async clearMusicUrlCache(song) {
@@ -1327,7 +1516,7 @@ const playerStore = {
   // 刷新播放URL（参考洛雪音乐桌面版实现）
   // 当播放出错或超时时，尝试重新获取播放链接
   async refreshMusicUrl() {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r;
     let song = state.currentSong;
     if (!song || !song.id) {
       console.log("[refreshMusicUrl] 没有当前播放的歌曲");
@@ -1380,6 +1569,26 @@ const playerStore = {
           hash: ((_b = song._toggleMusicInfo.matchedSong) == null ? void 0 : _b.hash) || song.hash,
           copyrightId: ((_c = song._toggleMusicInfo.matchedSong) == null ? void 0 : _c.copyrightId) || song.copyrightId
         };
+      } else if (state.currentSongSwitchInfo && state.currentSongSwitchInfo.newSource) {
+        console.log("[refreshMusicUrl] 使用 state.currentSongSwitchInfo 换源信息:", {
+          originalSource: state.currentSongSwitchInfo.originalSource,
+          newSource: state.currentSongSwitchInfo.newSource
+        });
+        if (state.currentSongSwitchInfo.newSongData) {
+          songToRefresh = { ...state.currentSongSwitchInfo.newSongData };
+          songToRefresh.source = state.currentSongSwitchInfo.newSource;
+        } else {
+          songToRefresh = { ...song };
+          songToRefresh.source = state.currentSongSwitchInfo.newSource;
+          if (state.currentSongSwitchInfo.newSongId) {
+            songToRefresh.id = state.currentSongSwitchInfo.newSongId;
+          }
+          if (state.currentSongSwitchInfo.originalSource !== state.currentSongSwitchInfo.newSource) {
+            songToRefresh.songmid = "";
+            songToRefresh.hash = "";
+            songToRefresh.copyrightId = "";
+          }
+        }
       }
       console.log("[refreshMusicUrl] 歌曲信息:", {
         id: songToRefresh.id,
@@ -1417,41 +1626,37 @@ const playerStore = {
           originalSource: result.fallback.originalSource,
           newSource: result.fallback.newSource
         });
-        const updatedSong = {
-          ...song,
-          source: result.fallback.newSource,
-          _toggleMusicInfo: {
+        state.currentSongSwitchInfo = {
+          originalSource: result.fallback.originalSource,
+          newSource: result.fallback.newSource,
+          newSongId: ((_e = result.fallback.matchedSong) == null ? void 0 : _e.id) || null,
+          newSongName: ((_f = result.fallback.matchedSong) == null ? void 0 : _f.name) || null,
+          newSongSinger: ((_g = result.fallback.matchedSong) == null ? void 0 : _g.singer) || null
+        };
+        if (state.currentSong) {
+          state.currentSong._toggleMusicInfo = {
             originalSource: result.fallback.originalSource,
             newSource: result.fallback.newSource,
             matchedSong: result.fallback.matchedSong,
             toggleTime: Date.now()
-          }
-        };
-        if (result.fallback.matchedSong) {
-          updatedSong.songmid = result.fallback.matchedSong.songmid || song.songmid;
-          updatedSong.hash = result.fallback.matchedSong.hash || song.hash;
-          updatedSong.copyrightId = result.fallback.matchedSong.copyrightId || song.copyrightId;
-          updatedSong.id = result.fallback.matchedSong.id || song.id;
+          };
         }
-        state.currentSong = updatedSong;
-        console.log("[refreshMusicUrl] 已更新歌曲换源信息");
+        console.log("[refreshMusicUrl] 已记录换源信息（不修改显示信息）");
         this.showSourceSwitchHintMessage();
         const originalSongId = String(song.id).replace(/^(tx|wy|kg|kw|mg)_/, "") || song.id;
         const switchInfo = {
           originalSource: result.fallback.originalSource,
           newSource: result.fallback.newSource,
-          newSongId: ((_e = result.fallback.matchedSong) == null ? void 0 : _e.id) || song.id,
-          newSongName: ((_f = result.fallback.matchedSong) == null ? void 0 : _f.name) || song.name,
-          newSongSinger: ((_g = result.fallback.matchedSong) == null ? void 0 : _g.singer) || song.singer,
+          newSongId: ((_h = result.fallback.matchedSong) == null ? void 0 : _h.id) || song.id,
+          newSongName: ((_i = result.fallback.matchedSong) == null ? void 0 : _i.name) || song.name,
+          newSongSinger: ((_j = result.fallback.matchedSong) == null ? void 0 : _j.singer) || song.singer,
           quality: state.audioQuality
         };
         utils_musicSwitchSourceStorage.saveMusicSwitchSource(originalSongId, switchInfo);
         console.log("[refreshMusicUrl] 已保存换源信息到本地存储:", result.fallback.originalSource, "->", result.fallback.newSource);
-        song = updatedSong;
-        store_modules_list.listStore.updateSongInList(updatedSong);
       }
-      const cacheSongId = ((_i = (_h = result.fallback) == null ? void 0 : _h.matchedSong) == null ? void 0 : _i.id) || song.id;
-      const cacheSource = ((_k = (_j = result.fallback) == null ? void 0 : _j.matchedSong) == null ? void 0 : _k.source) || song.source;
+      const cacheSongId = ((_l = (_k = result.fallback) == null ? void 0 : _k.matchedSong) == null ? void 0 : _l.id) || song.id;
+      const cacheSource = ((_n = (_m = result.fallback) == null ? void 0 : _m.matchedSong) == null ? void 0 : _n.source) || song.source;
       const qualities = ["128k", "320k", "flac"];
       for (const q of qualities) {
         await utils_musicUrlCache.setCachedMusicUrl(cacheSongId, q, result.url, cacheSource);
@@ -1464,12 +1669,13 @@ const playerStore = {
       }
       const secureUrl = result.url;
       if (state.audioContext) {
-        const coverImgUrl = ((_l = song.al) == null ? void 0 : _l.picUrl) || ((_m = song.album) == null ? void 0 : _m.picUrl) || song.img || "/static/images/default-cover.png";
+        const coverImgUrl = ((_o = song.al) == null ? void 0 : _o.picUrl) || ((_p = song.album) == null ? void 0 : _p.picUrl) || song.img || "/static/images/default-cover.png";
         state.audioContext.title = song.name || "未知歌曲";
         state.audioContext.singer = this.formatArtists(song);
         state.audioContext.coverImgUrl = coverImgUrl;
-        state.audioContext.epname = ((_n = song.al) == null ? void 0 : _n.name) || ((_o = song.album) == null ? void 0 : _o.name) || "未知专辑";
+        state.audioContext.epname = ((_q = song.al) == null ? void 0 : _q.name) || ((_r = song.album) == null ? void 0 : _r.name) || "未知专辑";
         state.audioContext.src = secureUrl;
+        state.currentSongUrlLoaded = true;
         console.log("[refreshMusicUrl] 已更新背景音频src，等待自动播放");
       }
       console.log("[refreshMusicUrl] 刷新URL成功，当前重试次数:", state.retryNum);
@@ -1483,6 +1689,127 @@ const playerStore = {
         icon: "none"
       });
       this.handlePlayErrorFallback();
+    }
+  },
+  // 🔑 手动换源专用方法（从换源弹窗确认后调用）
+  // 保持 state.currentSong 显示为原歌曲信息，使用 newSong 的完整数据获取播放URL
+  async switchToSource(originalSong, newSong) {
+    var _a, _b, _c, _d, _e, _f, _g;
+    console.log("[switchToSource] 手动换源:", {
+      originalName: originalSong.name,
+      originalSource: originalSong.source,
+      newName: newSong.name,
+      newSource: newSong.source
+    });
+    if (!newSong || !newSong.source) {
+      console.error("[switchToSource] 新歌曲信息无效");
+      common_vendor.index.showToast({ title: "换源失败：歌曲信息无效", icon: "none" });
+      return;
+    }
+    state.isRefreshingUrl = false;
+    state.retryNum = 0;
+    state.lastRefreshSongId = newSong.id;
+    state.currentSongSwitchInfo = {
+      originalSource: originalSong.source,
+      newSource: newSong.source,
+      newSongId: newSong.id || null,
+      newSongName: newSong.name || null,
+      newSongSinger: newSong.singer || null,
+      // 保存完整的newSong数据，用于获取URL（包含songmid/hash/copyrightId等）
+      newSongData: { ...newSong }
+    };
+    if (state.currentSong) {
+      state.currentSong._toggleMusicInfo = {
+        originalSource: originalSong.source,
+        newSource: newSong.source,
+        matchedSong: newSong,
+        toggleTime: Date.now()
+      };
+    }
+    this.showSourceSwitchHintMessage();
+    this.setStatusText("正在切换音源...", 0);
+    try {
+      const qualityMap = {
+        "standard": "320k",
+        "high": "flac",
+        "lossless": "flac24bit",
+        "low": "128k"
+      };
+      const actualQuality = qualityMap[state.audioQuality] || "320k";
+      if (originalSong.id) {
+        await this.clearMusicUrlCache(originalSong.id, actualQuality, originalSong.source);
+      }
+      const songForUrl = {
+        ...newSong,
+        source: newSong.source || newSong.sourceId
+      };
+      console.log("[switchToSource] 使用新歌曲信息获取URL:", {
+        id: songForUrl.id,
+        source: songForUrl.source,
+        songmid: songForUrl.songmid,
+        hash: songForUrl.hash
+      });
+      let playUrl = newSong.url || newSong.playUrl;
+      let result = null;
+      if (!playUrl) {
+        const requestData = utils_musicParams.buildMusicRequestParams(songForUrl, actualQuality);
+        if (!requestData) {
+          throw new Error("构建请求参数失败");
+        }
+        result = await utils_api_music.getMusicUrl(requestData);
+        playUrl = result.url;
+        console.log("[switchToSource] 获取到URL:", playUrl);
+        if (result.lyric || result.tlyric || result.rlyric || result.lxlyric) {
+          this.setLyrics({
+            lyric: result.lyric || "",
+            tlyric: result.tlyric || "",
+            rlyric: result.rlyric || "",
+            lxlyric: result.lxlyric || ""
+          });
+        }
+      }
+      if (!playUrl) {
+        throw new Error("未获取到播放URL");
+      }
+      const cacheSongId = newSong.id || originalSong.id;
+      const cacheSource = newSong.source || newSong.sourceId;
+      const qualities = ["128k", "320k", "flac"];
+      for (const q of qualities) {
+        await utils_musicUrlCache.setCachedMusicUrl(cacheSongId, q, playUrl, cacheSource);
+      }
+      if (state.currentSong.id !== originalSong.id) {
+        console.log("[switchToSource] 歌曲已更换，不更新播放");
+        return;
+      }
+      const displaySong = { ...newSong };
+      if (((_a = originalSong.al) == null ? void 0 : _a.picUrl) && !((_b = displaySong.al) == null ? void 0 : _b.picUrl)) {
+        displaySong.al = { ...displaySong.al, picUrl: originalSong.al.picUrl };
+      }
+      if (originalSong.img && !displaySong.img) {
+        displaySong.img = originalSong.img;
+      }
+      state.currentSong = displaySong;
+      console.log("[switchToSource] 已更新 state.currentSong 为换源后的歌曲（用于显示）");
+      if (state.audioContext) {
+        const coverImgUrl = ((_c = displaySong.al) == null ? void 0 : _c.picUrl) || ((_d = displaySong.album) == null ? void 0 : _d.picUrl) || displaySong.img || ((_e = originalSong.al) == null ? void 0 : _e.picUrl) || originalSong.img || "/static/images/default-cover.png";
+        state.audioContext.title = displaySong.name || "未知歌曲";
+        state.audioContext.singer = this.formatArtists(displaySong);
+        state.audioContext.coverImgUrl = coverImgUrl;
+        state.audioContext.epname = ((_f = displaySong.al) == null ? void 0 : _f.name) || ((_g = displaySong.album) == null ? void 0 : _g.name) || "未知专辑";
+        state.audioContext.src = playUrl;
+        state.currentSongUrlLoaded = true;
+        console.log("[switchToSource] 已更新背景音频src，使用换源后歌曲显示信息");
+      }
+      this.clearStatusText();
+      console.log("[switchToSource] 换源成功");
+    } catch (error) {
+      console.error("[switchToSource] 换源失败:", error);
+      state.isRefreshingUrl = false;
+      this.clearStatusText();
+      common_vendor.index.showToast({
+        title: "换源失败：" + (error.message || "未知错误"),
+        icon: "none"
+      });
     }
   },
   // 清除音乐URL缓存
@@ -1700,6 +2027,10 @@ const playerStore = {
     }
     if (playHistory)
       state.playHistory = playHistory;
+    const dislikeList = common_vendor.index.getStorageSync("dislikeList");
+    if (dislikeList)
+      state.dislikeList = dislikeList;
+    console.log("[playerStore] restoreState - 不喜欢列表数量:", state.dislikeList.length);
     const playListHistory = common_vendor.index.getStorageSync("playListHistory");
     if (playListHistory)
       state.playListHistory = playListHistory;

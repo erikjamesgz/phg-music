@@ -1,9 +1,25 @@
-/* 主题颜色变量 */
+/* 主题颜色变量 — 拼好歌 Celadon 青色系 */
 
-// 主色调
-$uni-color-primary: #7b68ee;
-$uni-color-primary-light: #9f91f2;
-$uni-color-primary-dark: #5a4ebd;
+// 核心规则：#00d7cd 仅用于渐变，禁止作为纯色文字/边框/背景使用
+// 文字统一使用黑白灰中性色（Slate 色板）
+
+// 品牌主色 — 青色渐变系（来自 Logo，仅用于 gradient！）
+$uni-color-primary: #00d7cd;
+$uni-color-primary-light: #00afff;
+$uni-color-primary-dark: #00b8a9;
+
+// 品牌色衍生 — 改为中性色（不再使用 #00d7cd 纯色）
+$uni-color-primary-bg: rgba(241, 245, 249, 0.8);
+$uni-color-primary-bg-hover: rgba(226, 232, 240, 0.9);
+$uni-color-primary-border: #94a3b8;
+
+// 中性文本色（Slate 色板）— 替代原来的品牌色文字
+$uni-text-ink: #1e293b;           // 主文本 - 深墨
+$uni-text-ink-bold: #0f172a;      // 强调文本 - 更深
+$uni-text-ink-secondary: #334155; // 次要文本
+$uni-text-body: #374151;          // 正文
+$uni-text-secondary: #6b7280;     // 辅助文字
+$uni-text-muted: #9ca3af;         // 弱化文字
 
 // 辅助色
 $uni-color-success: #4cd964;
@@ -11,7 +27,7 @@ $uni-color-warning: #f0ad4e;
 $uni-color-error: #dd524d;
 $uni-color-info: #909399;
 
-// 文本颜色
+// 文本颜色（向后兼容）
 $uni-text-color: #333333;
 $uni-text-color-inverse: #ffffff;
 $uni-text-color-grey: #999999;
@@ -26,6 +42,7 @@ $uni-bg-color-mask: rgba(0, 0, 0, 0.4);
 
 // 边框颜色
 $uni-border-color: #e5e5e5;
+$uni-border-focus: #93c5fd;       // 聚焦态 - 淡蓝灰
 
 // 尺寸变量
 
@@ -97,4 +114,3 @@ $uni-screen-sm: 480px;
 $uni-screen-md: 768px;
 $uni-screen-lg: 992px;
 $uni-screen-xl: 1200px;
-

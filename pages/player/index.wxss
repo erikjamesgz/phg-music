@@ -406,7 +406,7 @@
   align-items: center;
   justify-content: center;
   z-index: 1;
-  animation: turntableRotate 20s linear infinite;
+  animation: turntableRotate 8s linear infinite;
   animation-play-state: paused;
   will-change: transform;
 }
@@ -1036,7 +1036,7 @@ to {
 }
 .lyrics-scroll-wrapper {
   width: 100%;
-  height: var(--14f32965);
+  height: var(--4d762a0a);
   overflow: hidden;
 }
 .lyrics-scroll-view {
@@ -1071,13 +1071,13 @@ to {
 }
 .lyric-line-content .lyric-text {
   font-size: 28rpx;
-  color: #9ca3af;
+  color: #475569;
   line-height: 1.5;
   transition: all 0.2s ease;
 }
 .lyric-line-content .lyric-translation {
   font-size: 22rpx;
-  color: #b0b5ba;
+  color: #94a3b8;
   line-height: 1.4;
   margin-top: 4rpx;
   transition: all 0.2s ease;
@@ -1088,11 +1088,19 @@ to {
 }
 .lyric-line-content.lyric-line--active .lyric-text {
   font-weight: 700;
-  color: #00b4a8;
   font-size: 34rpx;
+  background: linear-gradient(135deg, #00d7cd 0%, #00afff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
 }
 .lyric-line-content.lyric-line--active .lyric-translation {
-  color: #00b4a8;
+  background: linear-gradient(135deg, #00d7cd 0%, #00afff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
   opacity: 0.95;
 }
 .lyrics-empty {
@@ -1110,10 +1118,10 @@ to {
 
 /* 暗黑模式下的歌词 */
 .player-page.dark-mode .lyric-line-content .lyric-text {
-  color: #d1d5db;
+  color: #94a3b8;
 }
 .player-page.dark-mode .lyric-line-content .lyric-translation {
-  color: #9ca3af;
+  color: #64748b;
 }
 .player-page.dark-mode .lyrics-empty__text {
   color: #9ca3af;
@@ -1663,7 +1671,7 @@ to {
 .extra-buttons {
   display: flex;
   align-items: center;
-  justify-content: space-around;
+  justify-content: space-between;
 }
 .extra-btn {
   width: 80rpx;
@@ -1719,8 +1727,14 @@ to {
 .player-page.dark-mode .extra-btn {
   background: rgba(255, 255, 255, 0.1);
 }
+.fav-btn {
+  position: relative;
+}
 .favorite-btn-wrapper {
   position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 .favorite-bubble {
   position: absolute;
@@ -1869,6 +1883,26 @@ to {
   font-weight: 500;
 }
 
+/* 不喜欢按钮 */
+.dislike-btn {
+  transition: all 0.3s ease;
+}
+.dislike-btn.is-disliked {
+  background: rgba(255, 68, 68, 0.1);
+  border: 2rpx solid rgba(255, 68, 68, 0.3);
+  animation: dislikePulse 0.5s ease;
+}
+@keyframes dislikePulse {
+0% {
+    transform: scale(1);
+}
+50% {
+    transform: scale(1.2);
+}
+100% {
+    transform: scale(1);
+}
+}
 /* 定时停止播放弹窗 */
 .sleep-timer-modal-overlay {
   position: fixed;
@@ -2358,12 +2392,12 @@ to {
 .player-page--tablet .tablet-lyrics-list .lyric-line-content .lyric-text {
   font-size: 15px;
   line-height: 1.65;
-  color: #9ca3af;
+  color: #6b7280;
   transition: all 0.25s ease;
 }
 .player-page--tablet .tablet-lyrics-list .lyric-line-content .lyric-translation {
   font-size: 13px;
-  color: #b0b5ba;
+  color: #9ca3af;
   line-height: 1.5;
   margin-top: 2px;
 }
@@ -2373,11 +2407,19 @@ to {
 }
 .player-page--tablet .tablet-lyrics-list .lyric-line-content.lyric-line--active .lyric-text {
   font-weight: 700;
-  color: #00b4a8;
   font-size: 18px;
+  background: linear-gradient(135deg, #00d7cd 0%, #00afff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
 }
 .player-page--tablet .tablet-lyrics-list .lyric-line-content.lyric-line--active .lyric-translation {
-  color: #00b4a8;
+  background: linear-gradient(135deg, #00d7cd 0%, #00afff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
   opacity: 0.9;
 }
 .player-page--tablet .music-toggle-modal-overlay {
@@ -2408,10 +2450,10 @@ to {
   color: #f3f4f6;
 }
 .player-page.dark-mode.player-page--tablet .tablet-lyrics-list .lyric-line-content .lyric-text {
-  color: #d1d5db;
+  color: #9ca3af;
 }
 .player-page.dark-mode.player-page--tablet .tablet-lyrics-list .lyric-line-content .lyric-translation {
-  color: #9ca3af;
+  color: #6b7280;
 }
 .player-page.dark-mode.player-page--tablet .danmaku-container .danmaku-item {
   background-color: rgba(0, 0, 0, 0.5);

@@ -151,12 +151,12 @@ const _sfc_main = {
           type: "fas",
           name: "plus",
           size: "18",
-          color: "#00d7cd"
+          color: "#6b7280"
         }),
         e: common_vendor.o(createNewList, "0c"),
         f: common_vendor.f(availableLists.value, (list, k0, i0) => {
           return {
-            a: "b6bbb481-2-" + i0,
+            a: "34cda06f-2-" + i0,
             b: common_vendor.p({
               type: "fas",
               name: getListIcon(list.type),
@@ -182,5 +182,5 @@ const _sfc_main = {
     };
   }
 };
-const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-b6bbb481"]]);
+const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-34cda06f"]]);
 wx.createComponent(Component);

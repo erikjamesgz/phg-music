@@ -15,6 +15,7 @@ if (!Math) {
   "./pages/player/index.js";
   "./pages/rank/index.js";
   "./pages/my/index.js";
+  "./pages/ai-recommend/index.js";
   "./pages/settings/index.js";
   "./pages/sharelist/index.js";
   "./pages/songlist-list/index.js";
@@ -118,6 +119,7 @@ const _sfc_main = {
     console.log("[App] 应用显示");
     this.syncBackgroundAudioState();
     this.checkSystemTheme();
+    common_vendor.index.$emit("app-show");
   },
   onHide: function() {
     var _a, _b, _c, _d, _e, _f, _g;

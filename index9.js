@@ -49,6 +49,7 @@ const _sfc_main = {
         isTablet.value = false;
       }
     };
+    checkIsTablet();
     common_vendor.ref(null);
     const itemsPerRow = common_vendor.ref(3);
     const getItemHeightClass = (index) => {
@@ -799,7 +800,7 @@ const _sfc_main = {
             b: common_vendor.o(($event) => handleSonglistImageError($event, item), item.id + index),
             c: item.play_count
           }, item.play_count ? {
-            d: "d4e358da-2-" + i0,
+            d: "a531cdfa-2-" + i0,
             e: common_vendor.p({
               name: "play",
               size: "10",
@@ -809,7 +810,7 @@ const _sfc_main = {
           } : {}, {
             g: item.total
           }, item.total ? {
-            h: "d4e358da-3-" + i0,
+            h: "a531cdfa-3-" + i0,
             i: common_vendor.p({
               name: "music",
               size: "10",
@@ -886,5 +887,5 @@ const _sfc_main = {
     };
   }
 };
-const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-d4e358da"]]);
+const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-a531cdfa"]]);
 exports.MiniProgramPage = MiniProgramPage;

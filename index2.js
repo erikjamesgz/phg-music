@@ -1218,8 +1218,8 @@ const _sfc_main = {
       const playerListId = store_modules_list.listStore.state.playInfo.playerListId;
       const playIndex = store_modules_list.listStore.state.playInfo.playIndex;
       if (playIndex === songIndex && playerListId === listId) {
-        console.log("[handleToggleConfirm] 更新播放器中的歌曲信息");
-        store_modules_player.playerStore.updateCurrentSong(newSong);
+        console.log("[handleToggleConfirm] 当前正在播放此歌曲，调用switchToSource");
+        store_modules_player.playerStore.switchToSource(originalSong, newSong);
       }
       common_vendor.index.showToast({
         title: "换源成功",
@@ -1629,7 +1629,7 @@ const _sfc_main = {
         i: common_vendor.p({
           name: "music",
           size: "20",
-          color: "#00d7cd"
+          color: "#6b7280"
         }),
         j: common_vendor.t(trialListCount.value),
         k: currentPlaylistId.value === "trial" ? 1 : "",
@@ -1651,7 +1651,7 @@ const _sfc_main = {
             c: common_vendor.t(playlist.name),
             d: common_vendor.t(playlist.trackCount || 0),
             e: common_vendor.t(playlist.platform),
-            f: "6c9974e0-3-" + i0,
+            f: "0c5154c0-3-" + i0,
             g: common_vendor.o(($event) => showPlaylistContextMenu(playlist, index, "imported"), playlist.id),
             h: playlist.id,
             i: currentPlaylistId.value === playlist.id ? 1 : "",
@@ -1671,7 +1671,7 @@ const _sfc_main = {
             b: common_vendor.o(($event) => handlePlaylistImageError($event, playlist), playlist.id),
             c: common_vendor.t(playlist.name),
             d: common_vendor.t(playlist.trackCount || 0),
-            e: "6c9974e0-4-" + i0,
+            e: "0c5154c0-4-" + i0,
             f: common_vendor.o(($event) => showPlaylistContextMenu(playlist, index, "custom"), playlist.id),
             g: playlist.id,
             h: currentPlaylistId.value === playlist.id ? 1 : "",
@@ -1695,7 +1695,7 @@ const _sfc_main = {
         }),
         C: common_vendor.unref(totalBottomHeight) + 20 + "px",
         D: common_vendor.o(locateCurrentSong, "ef"),
-        E: common_vendor.sr(virtualListRef, "6c9974e0-6", {
+        E: common_vendor.sr(virtualListRef, "0c5154c0-6", {
           "k": "virtualListRef"
         }),
         F: common_vendor.o(onScrollToLower, "b4"),
@@ -1836,5 +1836,5 @@ const _sfc_main = {
     };
   }
 };
-const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-6c9974e0"]]);
+const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-0c5154c0"]]);
 exports.MiniProgramPage = MiniProgramPage;

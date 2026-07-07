@@ -51,6 +51,22 @@ const _sfc_main = {
     const appName = common_vendor.computed(() => APP_NAMES[currentAppNameIndex.value]);
     let lastClickTime = 0;
     const showMiniPlayer = common_vendor.computed(() => store_modules_player.playerStore.getState().showMiniPlayer);
+    const hasConfiguredAI = common_vendor.ref(false);
+    common_vendor.ref(false);
+    common_vendor.ref(null);
+    const checkAIConfig = () => {
+      const config = common_vendor.index.getStorageSync("aiApiConfig");
+      if (config) {
+        if (config.provider === "backend") {
+          hasConfiguredAI.value = true;
+        } else {
+          hasConfiguredAI.value = !!(config && config.apiKey);
+        }
+      } else {
+        hasConfiguredAI.value = false;
+      }
+    };
+    checkAIConfig();
     const { bottomPaddingStyle, bottomMarginStyle, totalBottomHeight, isMiniPlayerVisible, checkMiniPlayerStatus: checkMiniPlayerStatusFromComposable } = composables_useBottomHeight.useBottomHeight();
     const scrollViewStyle = common_vendor.computed(() => {
       console.log("[Index] scrollViewStyle 计算:", { totalBottomHeight: totalBottomHeight.value, isMiniPlayerVisible: isMiniPlayerVisible.value });
@@ -66,6 +82,7 @@ const _sfc_main = {
     const newSongs = common_vendor.ref([]);
     const newAlbums = common_vendor.ref([]);
     const topArtists = common_vendor.ref([]);
+    const bannerAutoplay = common_vendor.ref(true);
     const isTablet = common_vendor.ref(false);
     const showBannerNav = common_vendor.ref(false);
     const showPlaylistNav = common_vendor.ref(false);
@@ -204,6 +221,16 @@ const _sfc_main = {
       common_vendor.index.$off("systemThemeChange", handleSystemThemeChange);
       common_vendor.index.$off("tabletModeChanged", handleTabletModeChanged);
       console.log("[Index] 已移除监听: themeChanged, systemThemeChange, tabletModeChanged");
+    });
+    common_vendor.onShow(() => {
+      common_vendor.nextTick$1(() => {
+        setTimeout(() => {
+          bannerAutoplay.value = true;
+        }, 300);
+      });
+    });
+    common_vendor.onHide(() => {
+      bannerAutoplay.value = false;
     });
     const handleThemeChanged = (data) => {
       console.log("[Index] 收到主题变化事件 (themeChanged):", data);
@@ -1225,6 +1252,26 @@ const _sfc_main = {
         common_vendor.index.hideLoading();
       }
     };
+    const handleAIRecommend = async () => {
+      console.log("[Index] 跳转到AI推荐页面（用户数据由ai-recommend页面内处理）");
+      navigateToAIRecommendPage(null);
+    };
+    const navigateToAIRecommendPage = (recommendations) => {
+      console.log(
+        "[Index] navigateToAIRecommendPage 调用, recommendations:",
+        recommendations ? `有数据(${recommendations.length}首)` : "null(需要在页面内生成)"
+      );
+      common_vendor.index.setStorageSync("aiRecommendData", {
+        recommendations: recommendations || [],
+        // ✅ 防止null值
+        generateTime: Date.now(),
+        totalCount: recommendations ? recommendations.length : 0
+        // ✅ 安全读取length
+      });
+      common_vendor.index.navigateTo({
+        url: "/pages/ai-recommend/index"
+      });
+    };
     const searchBarStyle = common_vendor.computed(() => utils_system.getSafeAreaStyle());
     const onBannerChange = (e) => {
       currentBannerIndex.value = e.detail.current;
@@ -1530,21 +1577,21 @@ const _sfc_main = {
     return (_ctx, _cache) => {
       return common_vendor.e({
         a: common_vendor.s(statusBarStyle.value),
-        b: common_vendor.o(handleStatusBarClick, "66"),
+        b: common_vendor.o(handleStatusBarClick, "b9"),
         c: common_vendor.p({
           name: "wave-square",
           size: "20",
           color: "#ffffff"
         }),
         d: common_vendor.t(appName.value),
-        e: common_vendor.o(handleAppLogoClick, "0c"),
+        e: common_vendor.o(handleAppLogoClick, "85"),
         f: common_vendor.p({
           type: "fas",
           name: "search",
           size: "16",
           color: "#9ca3af"
         }),
-        g: common_vendor.o(goToSearch, "42"),
+        g: common_vendor.o(goToSearch, "47"),
         h: common_vendor.s(searchBarStyle.value),
         i: banners.value.length > 0
       }, banners.value.length > 0 ? {
@@ -1573,9 +1620,11 @@ const _sfc_main = {
           size: "18",
           color: "#ffffff"
         }),
-        m: currentBannerIndex.value,
-        n: common_vendor.o(onBannerChange, "01"),
-        o: common_vendor.f(banners.value, (item, index, i0) => {
+        m: bannerAutoplay.value,
+        n: banners.value.length > 1,
+        o: currentBannerIndex.value,
+        p: common_vendor.o(onBannerChange, "d4"),
+        q: common_vendor.f(banners.value, (item, index, i0) => {
           return {
             a: item.targetId || index,
             b: common_vendor.n({
@@ -1584,60 +1633,67 @@ const _sfc_main = {
           };
         })
       } : {}, {
-        p: common_vendor.p({
+        r: common_vendor.p({
+          name: "robot",
+          size: "22",
+          color: "#ffffff"
+        }),
+        s: common_vendor.o(handleAIRecommend, "2d"),
+        t: common_vendor.p({
           name: "heart",
           size: "22",
           color: "#ffffff"
         }),
-        q: common_vendor.o(goToDailyRecommend, "74"),
-        r: common_vendor.p({
+        v: common_vendor.o(goToDailyRecommend, "a6"),
+        w: common_vendor.p({
           name: "ranking-star",
           size: "22",
           color: "#ffffff"
         }),
-        s: common_vendor.o(($event) => navigateTo("/pages/rank/index"), "0b"),
-        t: common_vendor.p({
+        x: common_vendor.o(($event) => navigateTo("/pages/rank/index"), "de"),
+        y: common_vendor.p({
           name: "fire",
           size: "20",
           color: "#ffffff"
         }),
-        v: common_vendor.o(goToHotSongs, "d1"),
-        w: common_vendor.p({
+        z: common_vendor.o(goToHotSongs, "c7"),
+        A: common_vendor.p({
           name: "list",
           size: "20",
           color: "#ffffff"
         }),
-        x: common_vendor.o(($event) => navigateTo("/pages/songlist-list/index"), "fd"),
-        y: common_vendor.p({
+        B: common_vendor.o(($event) => navigateTo("/pages/songlist-list/index"), "4e"),
+        C: isTablet.value ? 1 : "",
+        D: common_vendor.p({
           name: "chevron-right",
           size: "12",
           color: "#999999"
         }),
-        z: common_vendor.o(($event) => navigateTo("/pages/songlist-list/index"), "e9"),
-        A: common_vendor.f(recommendPlaylists.value, (playlist, index, i0) => {
+        E: common_vendor.o(($event) => navigateTo("/pages/songlist-list/index"), "74"),
+        F: common_vendor.f(recommendPlaylists.value, (playlist, index, i0) => {
           return {
             a: playlist.coverImgUrl,
             b: common_vendor.o(($event) => handlePlaylistImageError($event, playlist), playlist.id),
-            c: "31670c42-9-" + i0,
+            c: "31670c42-10-" + i0,
             d: common_vendor.t(playlist.name),
             e: playlist.id,
             f: common_vendor.o(($event) => goToPlaylistDetail(playlist), playlist.id)
           };
         }),
-        B: common_vendor.p({
+        G: common_vendor.p({
           name: "play",
           size: "12",
           color: "#ffffff"
         }),
-        C: playlistScrollLeft.value,
-        D: common_vendor.o(onPlaylistScroll, "d2"),
-        E: common_vendor.p({
+        H: playlistScrollLeft.value,
+        I: common_vendor.o(onPlaylistScroll, "6d"),
+        J: common_vendor.p({
           name: "chevron-right",
           size: "12",
           color: "#999999"
         }),
-        F: common_vendor.o(goToNewSongRank, "3c"),
-        G: common_vendor.f(newSongs.value, (song, index, i0) => {
+        K: common_vendor.o(goToNewSongRank, "80"),
+        L: common_vendor.f(newSongs.value, (song, index, i0) => {
           return {
             a: song.img,
             b: common_vendor.t(song.name),
@@ -1647,7 +1703,7 @@ const _sfc_main = {
             f: common_vendor.o(($event) => playNewSong(song, index), song.id)
           };
         }),
-        H: common_vendor.f(topArtists.value, (artist, index, i0) => {
+        M: common_vendor.f(topArtists.value, (artist, index, i0) => {
           return {
             a: artist.picUrl,
             b: common_vendor.t(artist.name),
@@ -1655,13 +1711,14 @@ const _sfc_main = {
             d: common_vendor.o(($event) => goToSearchWithArtist(artist.name), artist.id)
           };
         }),
-        I: artistScrollLeft.value,
-        J: common_vendor.o(onArtistScroll, "de"),
-        K: common_vendor.s(safeBottomStyle.value),
-        L: common_vendor.s(scrollViewStyle.value),
-        M: isRefreshing.value,
-        N: common_vendor.o(onRefresh, "48"),
-        O: isDarkMode.value ? 1 : ""
+        N: artistScrollLeft.value,
+        O: common_vendor.o(onArtistScroll, "a2"),
+        P: common_vendor.s(safeBottomStyle.value),
+        Q: common_vendor.s(scrollViewStyle.value),
+        R: isRefreshing.value,
+        S: common_vendor.o(onRefresh, "d6"),
+        T: isDarkMode.value ? 1 : "",
+        U: isTablet.value ? 1 : ""
       });
     };
   }

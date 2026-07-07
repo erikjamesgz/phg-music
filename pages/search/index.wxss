@@ -428,8 +428,8 @@ to {
 }
 .song-quality {
   font-size: 10px;
-  color: #00d7cd;
-  background-color: rgba(0, 215, 205, 0.1);
+  color: #475569;
+  background-color: rgba(241, 245, 249, 0.8);
   padding: 1px 4px;
   border-radius: 2px;
   border: 1px solid rgba(0, 215, 205, 0.3);
@@ -936,7 +936,7 @@ to {
   color: #9ca3af;
 }
 .search-container.dark-mode .search-types .search-type-item.active {
-  color: #00d7cd;
+  color: #9ca3af;
 }
 .search-container.dark-mode .search-content {
   background-color: #1f2937;
@@ -973,14 +973,14 @@ to {
   color: #9ca3af;
 }
 .search-container.dark-mode .refresh-hot {
-  color: #00d7cd;
+  color: #64748b;
 }
 .search-container.dark-mode .loading {
   color: #f0f0f0;
 }
 .search-container.dark-mode .loading-spinner {
   border-color: rgba(0, 215, 205, 0.3);
-  border-top-color: #00d7cd;
+  border-top-color: #94a3b8;
 }
 .search-container.dark-mode .no-result .no-result-text,
 .search-container.dark-mode .no-result .no-result-tips {
@@ -1035,6 +1035,6 @@ to {
   color: #9ca3af;
 }
 .search-container.dark-mode .search-error .retry-button {
-  background-color: #00d7cd;
+  background-color: #475569;
   color: #1f2937;
 }

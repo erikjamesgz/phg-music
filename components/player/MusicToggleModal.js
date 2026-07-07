@@ -464,7 +464,7 @@ const _sfc_main = {
           } : {}, {
             e: common_vendor.t(getSourceName(song.source)),
             f: common_vendor.t(song.interval || formatDuration(song.duration)),
-            g: "fa1b6fee-1-" + i0,
+            g: "013d7be0-1-" + i0,
             h: common_vendor.o(($event) => previewSong(song), song.id || index),
             i: song.id || index,
             j: selectedSong.value && selectedSong.value.id === song.id ? 1 : "",
@@ -513,5 +513,5 @@ const _sfc_main = {
     };
   }
 };
-const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-fa1b6fee"]]);
+const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-013d7be0"]]);
 wx.createComponent(Component);
