@@ -1,12 +1,12 @@
 {
-  "version": "1.0.08",
-  "versionCode": 1008,
-  "desc": "1. 发布Windows、Mac、Linux客户端 有需要的用户可以前往项目开源厂库下载使用\n2.服务器环境发布了Cloudflare平台版本，每天10万次调用，强烈推荐大家切换到此版本\n3.微信小程序/Android客户端进行了深度适配平板模式\n4. 修复若干小问题\n\n---开发规划（有时间的话😄）---\n1.下个版本上线云端数据同步，不同设备可以实现歌单、音乐脚本、播放历史记录实现无缝同步 \n2.远期版本Android/windows/mac/linux客户端脱离服务器在本地执行脚本获取音乐播放链接\n3.优化每日推荐功能，实现根据真实用户喜好推荐歌曲",
+  "version": "1.0.09",
+  "versionCode": 1009,
+  "desc": "发布1.0.09版\n1.新增AI推荐歌曲功能（服务器需搭配升cloudflare 平台服务器的最新版代码）\n2.修复首页banner 异常滑动问题\n3.修复换源异常问题\n4.修复Android客户端升级异常问题\n5.修复部分设备APP后台运行后无法切换歌曲问题\n6.修复部分样式问题\n———————————————————————\n下个版本1.0.10开发计划：\n1.发布服务器共享计划，不会搭建服务器的用户可以直接使用其他用户分享的服务器算力运行音源脚本插件\n2.提高歌词和专辑图片获取的成功率\n3.优化UI交互",
   "releaseUrl": "",
   "projectUrl": "https://github.com/erikjamesgz/phg-music",
   "platforms": {
     "android": {
-      "downloadUrl": "https://github.com/erikjamesgz/phg-music/releases/download/phg-music-v1.0.08-release/phg-music-android-v1.0.08-release-20260508.apk"
+      "downloadUrl": "https://github.com/erikjamesgz/phg-music/releases/download/phg-music-v1.0.09-release/phg-music-android-v1.0.09-release-20260707.apk"
     },
     "ios": {
       "downloadUrl": ""
