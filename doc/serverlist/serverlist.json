@@ -1,0 +1,6 @@
+{
+  "mesh_server_urls": [
+    "https://mesh.pinhaoge.indevs.in",
+    "https://cf-phg-server-mesh-backup.erikjamesgz01.workers.dev"
+  ]
+}
