@@ -1,12 +1,12 @@
 {
-  "version": "1.0.09",
-  "versionCode": 1009,
-  "desc": "发布1.0.09版\n1.新增AI推荐歌曲功能（服务器需搭配升cloudflare 平台服务器的最新版代码）\n2.修复首页banner 异常滑动问题\n3.修复换源异常问题\n4.修复Android客户端升级异常问题\n5.修复部分设备APP后台运行后无法切换歌曲问题\n6.修复部分样式问题\n———————————————————————\n下个版本1.0.10开发计划：\n1.发布服务器共享计划，不会搭建服务器的用户可以直接使用其他用户分享的服务器算力运行音源脚本插件\n2.提高歌词和专辑图片获取的成功率\n3.优化UI交互",
+  "version": "1.0.10",
+  "versionCode": 1010,
+  "desc": "发布1.0.10版\n1.发布服务器共享功能（服务器需搭配升cloudflare 平台服务器的最新版代码）\n2.修复若干bug\n3.修复部分样式问题\n———————————————————————\n下个版本1.0.11开发计划：\n1.修复已知bug,完善现有功能",
   "releaseUrl": "",
   "projectUrl": "https://github.com/erikjamesgz/phg-music",
   "platforms": {
     "android": {
-      "downloadUrl": "https://github.com/erikjamesgz/phg-music/releases/download/phg-music-v1.0.09-release/phg-music-android-v1.0.09-release-20260707.apk"
+      "downloadUrl": "https://github.com/erikjamesgz/phg-music/releases/download/phg-music-v1.0.10-release/phg-music-android-v1.0.10-release-20260722.apk"
     },
     "ios": {
       "downloadUrl": ""
