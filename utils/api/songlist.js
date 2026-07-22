@@ -1,6 +1,7 @@
 "use strict";
 const common_vendor = require("../../common/vendor.js");
 const utils_config = require("../config.js");
+const utils_mesh_meshApi = require("../mesh/meshApi.js");
 const platformNameMap = {
   "wy": "网易云音乐",
   "kg": "酷狗音乐",
@@ -11,31 +12,42 @@ const platformNameMap = {
 async function getListDetail(source, link, page = 1) {
   var _a, _b, _c, _d, _e, _f;
   try {
-    const response = await new Promise((resolve, reject) => {
-      common_vendor.index.request({
-        url: `${utils_config.getServerUrl()}/api/songlist/detail/by-link`,
-        method: "POST",
-        header: {
-          "Content-Type": "application/json"
-        },
-        data: {
-          link,
-          source
-        },
-        success: (res) => {
-          var _a2;
-          if (res.statusCode === 200 && res.data) {
-            resolve(res.data);
-          } else {
-            reject(new Error(((_a2 = res.data) == null ? void 0 : _a2.message) || "获取歌单失败"));
+    let data;
+    const mode = utils_config.getMeshMode();
+    if (mode === "free") {
+      console.log("[songlist.js] 免费模式，走 Mesh 节点获取歌单详情");
+      const meshResult = await utils_mesh_meshApi.getSonglistDetailFromMesh(link, source);
+      if (!meshResult) {
+        throw new Error("公共服务器获取歌单失败，请稍后重试");
+      }
+      data = meshResult;
+    } else {
+      const response = await new Promise((resolve, reject) => {
+        common_vendor.index.request({
+          url: `${utils_config.getServerUrl()}/api/songlist/detail/by-link`,
+          method: "POST",
+          header: {
+            "Content-Type": "application/json"
+          },
+          data: {
+            link,
+            source
+          },
+          success: (res) => {
+            var _a2;
+            if (res.statusCode === 200 && res.data) {
+              resolve(res.data);
+            } else {
+              reject(new Error(((_a2 = res.data) == null ? void 0 : _a2.message) || "获取歌单失败"));
+            }
+          },
+          fail: (err) => {
+            reject(new Error("网络请求失败: " + (err.errMsg || "未知错误")));
           }
-        },
-        fail: (err) => {
-          reject(new Error("网络请求失败: " + (err.errMsg || "未知错误")));
-        }
+        });
       });
-    });
-    const data = response.data || response;
+      data = response.data || response;
+    }
     const songList = data.list || data.songs || [];
     if (songList.length > 0) {
       console.log("[songlist.js] 第一首歌完整数据:", JSON.stringify(songList[0]));

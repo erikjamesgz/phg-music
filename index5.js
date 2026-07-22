@@ -6,6 +6,7 @@ const utils_crypto_wy = require("./utils/crypto/wy.js");
 const utils_system = require("./utils/system.js");
 const utils_musicPic = require("./utils/musicPic.js");
 const utils_crypto_wbd = require("./utils/crypto/wbd.js");
+require("./utils/mesh/meshApi.js");
 const utils_imageProxy = require("./utils/imageProxy.js");
 const utils_playSong = require("./utils/playSong.js");
 if (!Math) {

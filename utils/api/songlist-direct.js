@@ -80,14 +80,15 @@ async function getKuwoListDetail(id, page = 1) {
               }
             }
             types.reverse();
+            const albumStr = typeof item.album === "string" ? item.album : item.album && typeof item.album === "object" ? item.album.name || "" : "";
             return {
               id: item.id,
               name: item.name,
               singer: item.artist,
               ar: item.artist ? item.artist.split("、").map((name) => ({ name })) : [],
-              album: item.album,
-              al: { name: item.album, picUrl: item.albumPic || item.pic },
-              albumName: item.album,
+              album: albumStr,
+              al: { name: albumStr, picUrl: item.albumPic || item.pic },
+              albumName: albumStr,
               albumPic: item.albumPic || item.pic,
               songmid: item.id,
               source: "kw",

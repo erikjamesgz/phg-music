@@ -1,5 +1,5 @@
 {
-  "navigationBarTitleText": "音源管理",
+  "navigationBarTitleText": "音源插件管理",
   "navigationStyle": "custom",
   "launchMode": "singleTask",
   "usingComponents": {

@@ -223,6 +223,8 @@
   overflow: hidden;
   animation: slideUp 0.3s ease-out;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
 .modal-sheet--large {
   max-height: 70vh;
@@ -256,12 +258,15 @@
   padding: 10px 15px;
   max-height: 50vh;
   box-sizing: border-box;
+  flex: 1;
+  min-height: 0;
 }
 .modal-sheet__footer {
   padding: 10px 15px 20px;
   border-top: 1px solid #f3f4f6;
   display: flex;
   box-sizing: border-box;
+  flex-shrink: 0;
 }
 .modal-sheet__footer .modal-btn {
   margin-right: 10px;
@@ -288,9 +293,26 @@
   max-height: 100vh;
   border-radius: 0;
   animation: slideIn 0.3s ease-out;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
 .tablet-mode .modal-sheet__body {
-  max-height: calc(100vh - 120px);
+  max-height: none;
+  flex: 1;
+  min-height: 0;
+}
+.tablet-mode .modal-sheet .cache-summary {
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+.tablet-mode .modal-sheet .cache-summary__label {
+  font-size: 13px;
+  margin-right: 8px;
+}
+.tablet-mode .modal-sheet .cache-summary__value {
+  font-size: 15px;
 }
 @keyframes slideIn {
 from {
@@ -382,6 +404,15 @@ to {
 .modal-dialog__footer .modal-btn--secondary:last-child,
 .modal-dialog__footer .modal-btn--primary:last-child {
   margin-right: 0;
+}
+.modal-dialog__tutorial {
+  margin-top: 12px;
+  text-align: center;
+}
+.modal-dialog__tutorial-text {
+  font-size: 13px;
+  color: #00afff;
+  text-decoration: underline;
 }
 .tablet-mode .modal-dialog {
   width: 320px;
@@ -482,8 +513,8 @@ to {
   align-items: center;
   padding: 15px;
   background: linear-gradient(135deg, rgba(0, 215, 205, 0.1) 0%, rgba(0, 175, 255, 0.1) 100%);
-  border-radius: 8px;
-  margin-bottom: 10px;
+  border-radius: 10px;
+  margin-bottom: 16px;
   width: 100%;
   box-sizing: border-box;
 }
@@ -494,12 +525,132 @@ to {
   margin-right: 10px;
 }
 .cache-summary__value {
-  font-size: 18px;
+  font-size: 15px;
   color: #1e293b;
   font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.achievement-panel {
+  margin: 12px 0;
+  padding: 14px;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.05) 0%, rgba(0, 215, 205, 0.05) 100%);
+  border: 1px solid rgba(0, 215, 205, 0.15);
+  border-radius: 10px;
+}
+.share-prompt-box {
+  margin: 12px 0;
+  padding: 14px;
+  background: linear-gradient(135deg, rgba(0, 215, 205, 0.08) 0%, rgba(0, 175, 255, 0.08) 100%);
+  border-radius: 10px;
+}
+.share-prompt-box .share-prompt-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 6px;
+  text-align: center;
+}
+.share-prompt-box .share-prompt-desc {
+  display: block;
+  font-size: 11px;
+  color: #6b7280;
+  line-height: 1.5;
+  margin-bottom: 8px;
+  text-align: left;
+}
+.share-prompt-box .share-prompt-benefits {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 4px;
+}
+.share-prompt-box .share-prompt-benefit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.share-prompt-box .share-prompt-benefit-item {
+  display: block;
+  font-size: 10px;
+  color: #6b7280;
+  line-height: 1.5;
+}
+.slider-section {
+  padding: 12px 15px 0;
+  background: #ffffff;
+  flex-shrink: 0;
+}
+.slider-section.dark-mode {
+  background: #1f2937;
+}
+.share-slider-wrapper {
+  padding: 12px 0;
+  margin: 0 6px;
+  touch-action: none;
+  -ms-touch-action: none;
+}
+.share-slider-track {
+  position: relative;
+  width: 100%;
+  height: 6px;
+  background: rgba(203, 213, 225, 0.6);
+  border-radius: 3px;
+}
+.share-slider-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00d7cd 0%, #00afff 100%);
+  border-radius: 3px;
+  transition: width 0.05s linear;
+}
+.share-slider-handle {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  border: 2px solid #00afff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+  transition: left 0.05s linear;
+}
+.slider-label {
+  font-size: 14px;
+  color: #374151;
+}
+.dark-mode .slider-label {
+  color: #e5e7eb;
+}
+.slider-value {
+  font-size: 14px;
+  color: #00d7cd;
+  font-weight: 600;
+}
+.slider-min-max {
+  font-size: 11px;
+  color: #9ca3af;
+}
+.dark-mode .slider-min-max {
+  color: #6b7280;
+}
+.slider-divider {
+  height: 1px;
+  background: #f3f4f6;
+}
+.dark-mode .slider-divider {
+  background: #374151;
+}
+.dark-mode .share-slider-track {
+  background: rgba(75, 85, 99, 0.6);
+}
+.dark-mode .share-slider-handle {
+  background-color: #1f2937;
+  border-color: #00afff;
 }
 .cache-list {
   display: flex;
@@ -1418,4 +1569,78 @@ to {
 }
 .dark-mode .toggle-key-visibility:active {
   background: rgba(255, 255, 255, 0.05);
+}
+.custom-toast-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  pointer-events: none;
+}
+.custom-toast-box {
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 10px;
+  padding: 12px 20px;
+  max-width: 80%;
+}
+.custom-toast-text {
+  font-size: 14px;
+  color: #ffffff;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* 版本兼容性弹窗（z-index 99999，高于所有 modal-overlay 的 5000） */
+.compat-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+}
+.compat-modal-box {
+  width: 80%;
+  max-width: 320px;
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+.compat-modal-title {
+  padding: 20px 16px 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+  text-align: center;
+}
+.compat-modal-content {
+  padding: 8px 16px 20px;
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.6;
+  text-align: center;
+}
+.compat-modal-btn {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #00d7cd 0%, #00afff 100%);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 500;
+  border-radius: 0 0 12px 12px;
+}
+.compat-modal-btn:active {
+  opacity: 0.8;
 }

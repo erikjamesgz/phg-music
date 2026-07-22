@@ -39,9 +39,9 @@ const playSongCommon = async (song, options = {}) => {
       albumNameForList = song.album;
     } else if (song.album && typeof song.album === "object") {
       albumNameForList = song.album.name || "";
-    } else if (song.albumName) {
+    } else if (typeof song.albumName === "string" && song.albumName) {
       albumNameForList = song.albumName;
-    } else if (song.al && song.al.name) {
+    } else if (song.al && typeof song.al.name === "string" && song.al.name) {
       albumNameForList = song.al.name;
     }
     console.log("[playSongCommon] 提取的专辑名称:", albumNameForList);
@@ -71,7 +71,7 @@ const playSongCommon = async (song, options = {}) => {
         name: song.name,
         singer: singerStr,
         ar: singerArr,
-        album: albumNameForList || song.albumName || ((_b = song.al) == null ? void 0 : _b.name) || "",
+        album: albumNameForList || (typeof song.albumName === "string" ? song.albumName : "") || (typeof ((_b = song.al) == null ? void 0 : _b.name) === "string" ? song.al.name : "") || "",
         al: alObjForList,
         duration: song.dt || song.interval || song.duration,
         source,
@@ -95,6 +95,10 @@ const playSongCommon = async (song, options = {}) => {
       albumName = song.album;
     } else if (song.album && typeof song.album === "object") {
       albumName = song.album.name || "";
+    } else if (typeof song.albumName === "string" && song.albumName) {
+      albumName = song.albumName;
+    } else if (song.al && typeof song.al.name === "string" && song.al.name) {
+      albumName = song.al.name;
     }
     let alObj = null;
     if (song.al && typeof song.al === "object") {
@@ -109,7 +113,7 @@ const playSongCommon = async (song, options = {}) => {
       name: song.name,
       singer: singerStr,
       ar: singerArr,
-      album: albumName || song.albumName || ((_d = song.al) == null ? void 0 : _d.name) || "",
+      album: albumName || (typeof song.albumName === "string" ? song.albumName : "") || (typeof ((_d = song.al) == null ? void 0 : _d.name) === "string" ? song.al.name : "") || "",
       al: alObj,
       duration: song.dt || song.interval || song.duration,
       source,

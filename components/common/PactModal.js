@@ -93,13 +93,13 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   }, !$props.isAgreed ? {} : {}, {
     d: !$props.isAgreed
   }, !$props.isAgreed ? {
-    e: common_vendor.o((...args) => $options.handleReject && $options.handleReject(...args), "a0")
+    e: common_vendor.o((...args) => $options.handleReject && $options.handleReject(...args), "62")
   } : {}, {
     f: common_vendor.t($data.countdown > 0 ? `接受（${$data.countdown}）` : "接受"),
     g: $data.countdown > 0 ? 1 : "",
-    h: common_vendor.o((...args) => $options.handleAccept && $options.handleAccept(...args), "90"),
+    h: common_vendor.o((...args) => $options.handleAccept && $options.handleAccept(...args), "d5"),
     i: $data.isDarkMode ? 1 : ""
   }) : {});
 }
-const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-ff0c6728"]]);
+const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-3835d65a"]]);
 wx.createComponent(Component);

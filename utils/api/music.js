@@ -2,10 +2,11 @@
 const common_vendor = require("../../common/vendor.js");
 const utils_config = require("../config.js");
 const utils_musicParams = require("../musicParams.js");
+const utils_mesh_meshApi = require("../mesh/meshApi.js");
 const utils_lyricCache = require("../lyricCache.js");
 const pendingMusicUrlRequests = /* @__PURE__ */ new Map();
 const MAX_REQUEST_REUSE_AGE = 1e4;
-const REQUEST_TIMEOUT = 15e3;
+const REQUEST_TIMEOUT = 3e4;
 let requestIdCounter = 0;
 let lastRequestInfo = {
   requestId: 0,
@@ -14,6 +15,28 @@ let lastRequestInfo = {
 };
 function getMusicUrl(params, quality = "320k") {
   var _a, _b, _c;
+  try {
+    const mode = utils_config.getMeshMode();
+    if (!mode) {
+      console.log("[getMusicUrl] Mesh 模式未选择，触发弹窗检查");
+      common_vendor.index.$emit("checkMeshModeBeforeRequest");
+      return Promise.reject(new Error("请先选择服务器模式"));
+    } else if (mode === "own") {
+      if (!utils_config.hasOwnServer()) {
+        console.log("[getMusicUrl] own 模式但未设置服务器地址，触发弹窗检查");
+        common_vendor.index.$emit("checkMeshModeBeforeRequest");
+        return Promise.reject(new Error("请先设置服务器地址"));
+      }
+    } else if (mode === "free") {
+      if (!utils_config.hasLocalScripts()) {
+        console.log("[getMusicUrl] free 模式但无本地脚本，触发弹窗检查");
+        common_vendor.index.$emit("checkMeshModeBeforeRequest");
+        return Promise.reject(new Error("请先导入音源插件"));
+      }
+    }
+  } catch (e) {
+    console.log("[getMusicUrl] Mesh 检查异常:", e);
+  }
   let requestParams = params;
   if (!params.musicInfo) {
     requestParams = utils_musicParams.buildMusicRequestParams(params, quality);
@@ -65,22 +88,86 @@ function getMusicUrl(params, quality = "320k") {
     var _a2;
     let timeoutTimer = null;
     let isResolved = false;
-    timeoutTimer = setTimeout(() => {
-      if (!isResolved) {
-        console.log("[getMusicUrl] 请求超时:", requestKey);
-        if (lastRequestInfo.requestId === currentRequestId) {
-          isResolved = true;
-          pendingMusicUrlRequests.delete(requestKey);
-          reject(new Error("请求超时，请重试"));
+    const resetTimeout = () => {
+      if (timeoutTimer)
+        clearTimeout(timeoutTimer);
+      console.log(`[getMusicUrl] 🔄 重置超时计时器: ${REQUEST_TIMEOUT / 1e3}秒 (节点切换)`);
+      timeoutTimer = setTimeout(() => {
+        if (!isResolved) {
+          console.log("[getMusicUrl] 请求超时:", requestKey);
+          if (lastRequestInfo.requestId === currentRequestId) {
+            isResolved = true;
+            pendingMusicUrlRequests.delete(requestKey);
+            reject(new Error("请求超时，请重试"));
+          }
         }
-      }
-    }, REQUEST_TIMEOUT);
+      }, REQUEST_TIMEOUT);
+    };
+    resetTimeout();
     console.log("[getMusicUrl] 创建新请求:", requestKey, "interval:", (_a2 = requestParams.musicInfo) == null ? void 0 : _a2.interval);
     console.log("[getMusicUrl] 实际发送的请求参数:", JSON.stringify(requestParams));
+    const mode = utils_config.getMeshMode();
+    if (mode === "free") {
+      console.log("[getMusicUrl] 免费模式，走 Mesh 节点");
+      if (!utils_config.hasLocalScripts()) {
+        if (isResolved)
+          return;
+        isResolved = true;
+        if (timeoutTimer)
+          clearTimeout(timeoutTimer);
+        resolve({ url: null, error: true, errorMsg: "无可用本地音源脚本" });
+        return;
+      }
+      utils_mesh_meshApi.getMusicUrlFromMesh(requestParams, null, "shared", null, resetTimeout).then((meshResult) => {
+        var _a3;
+        if (isResolved)
+          return;
+        isResolved = true;
+        if (timeoutTimer)
+          clearTimeout(timeoutTimer);
+        if (meshResult && meshResult.url) {
+          console.log("[getMusicUrl] 免费模式获取成功:", meshResult.nodeUrl);
+          if (meshResult.lyric || meshResult.tlyric || meshResult.rlyric || meshResult.lxlyric) {
+            const lyricSongId = requestParams.originalSongId || ((_a3 = requestParams.musicInfo) == null ? void 0 : _a3.id) || requestParams.id;
+            const lyricSource = meshResult.source || requestParams.source;
+            utils_lyricCache.setCachedLyric(lyricSongId, lyricSource, {
+              lyric: meshResult.lyric || "",
+              tlyric: meshResult.tlyric || "",
+              rlyric: meshResult.rlyric || "",
+              lxlyric: meshResult.lxlyric || ""
+            }).then(() => {
+              console.log("[getMusicUrl] 免费模式歌词已缓存:", lyricSongId, lyricSource);
+            }).catch((e) => {
+              console.error("[getMusicUrl] 免费模式歌词缓存失败:", e);
+            });
+          }
+          resolve({
+            url: meshResult.url,
+            lyric: meshResult.lyric || "",
+            tlyric: meshResult.tlyric || "",
+            rlyric: meshResult.rlyric || "",
+            lxlyric: meshResult.lxlyric || "",
+            fallback: { toggled: meshResult.source !== requestParams.source, originalSource: requestParams.source, newSource: meshResult.source, fromMesh: true },
+            fromMesh: true,
+            meshNodeUrl: meshResult.nodeUrl,
+            meshContributor: meshResult.contributorName,
+            scriptName: meshResult.scriptName || ""
+          });
+        } else {
+          resolve({ url: null, error: true, errorMsg: "公共服务器获取失败，请稍后重试" });
+        }
+      }).catch((err) => {
+        if (isResolved)
+          return;
+        isResolved = true;
+        if (timeoutTimer)
+          clearTimeout(timeoutTimer);
+        resolve({ url: null, error: true, errorMsg: err.message || "公共服务器请求失败" });
+      });
+      return;
+    }
     common_vendor.index.request({
-      //   url: `https://erikjamesgz-dn-phg-musi-39.deno.dev/api/music/url`,
       url: `${utils_config.getServerUrl()}/api/music/url`,
-      // url: `http://localhost:8080/api/music/url`,
       method: "POST",
       data: requestParams,
       header: {
@@ -164,11 +251,46 @@ function getMusicUrl(params, quality = "320k") {
             scriptName: ((_e = res.data.data) == null ? void 0 : _e.scriptName) || ""
           });
         } else {
+          console.log("[getMusicUrl] 自有服务器返回错误:", res.statusCode, (_f = res.data) == null ? void 0 : _f.msg, "尝试 Mesh 降级");
+          const statusCode = res.statusCode;
+          const isNoScripts = statusCode === 410;
+          const isSourceUnsupported = statusCode === 411 || statusCode === 412;
+          if (isNoScripts) {
+            console.log("[getMusicUrl] 服务器未导入任何音源脚本，触发导入提醒");
+            common_vendor.index.$emit("needImportScripts");
+          }
+          if (!isNoScripts && !isSourceUnsupported) {
+            if (utils_config.hasLocalScripts()) {
+              try {
+                const meshResult = await utils_mesh_meshApi.getMusicUrlFromMesh(requestParams, null, "shared", null, resetTimeout);
+                if (meshResult && meshResult.url) {
+                  console.log("[getMusicUrl] Mesh 降级成功（服务器返回错误后）:", meshResult.nodeUrl);
+                  resolve({
+                    url: meshResult.url,
+                    lyric: meshResult.lyric || "",
+                    tlyric: meshResult.tlyric || "",
+                    rlyric: meshResult.rlyric || "",
+                    lxlyric: meshResult.lxlyric || "",
+                    fallback: { toggled: meshResult.source !== requestParams.source, originalSource: requestParams.source, newSource: meshResult.source, fromMesh: true },
+                    fromMesh: true,
+                    meshNodeUrl: meshResult.nodeUrl,
+                    meshContributor: meshResult.contributorName,
+                    scriptName: meshResult.scriptName || ""
+                  });
+                  return;
+                }
+              } catch (meshErr) {
+                console.log("[getMusicUrl] Mesh 降级异常（服务器返回错误后）:", meshErr);
+              }
+            }
+          }
           resolve({
             url: null,
             error: true,
-            errorMsg: ((_f = res.data) == null ? void 0 : _f.msg) || "获取播放URL失败",
-            errorData: ((_g = res.data) == null ? void 0 : _g.data) || null
+            errorMsg: ((_g = res.data) == null ? void 0 : _g.msg) || "获取播放URL失败",
+            errorStatusCode: statusCode,
+            needImportScripts: isNoScripts,
+            sourceUnsupported: isSourceUnsupported
           });
         }
       },
@@ -186,7 +308,34 @@ function getMusicUrl(params, quality = "320k") {
         if (timeoutTimer) {
           clearTimeout(timeoutTimer);
         }
-        reject(new Error(err.errMsg || "网络请求失败"));
+        console.log("[getMusicUrl] 自有服务器请求失败，尝试 Mesh 降级:", err.errMsg);
+        if (utils_config.hasLocalScripts()) {
+          utils_mesh_meshApi.getMusicUrlFromMesh(requestParams, null, "shared", null, resetTimeout).then((meshResult) => {
+            if (meshResult && meshResult.url) {
+              console.log("[getMusicUrl] Mesh 降级成功，来源节点:", meshResult.nodeUrl);
+              resolve({
+                url: meshResult.url,
+                lyric: meshResult.lyric || "",
+                tlyric: meshResult.tlyric || "",
+                rlyric: meshResult.rlyric || "",
+                lxlyric: meshResult.lxlyric || "",
+                fallback: { toggled: meshResult.source !== requestParams.source, originalSource: requestParams.source, newSource: meshResult.source, fromMesh: true },
+                fromMesh: true,
+                meshNodeUrl: meshResult.nodeUrl,
+                meshContributor: meshResult.contributorName,
+                scriptName: meshResult.scriptName || ""
+              });
+            } else {
+              console.log("[getMusicUrl] Mesh 降级也失败");
+              reject(new Error(err.errMsg || "网络请求失败"));
+            }
+          }).catch((meshErr) => {
+            console.log("[getMusicUrl] Mesh 降级异常:", meshErr);
+            reject(new Error(err.errMsg || "网络请求失败"));
+          });
+        } else {
+          reject(new Error(err.errMsg || "网络请求失败"));
+        }
       }
     });
   }).finally(() => {

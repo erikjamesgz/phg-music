@@ -1227,7 +1227,7 @@ const _sfc_main = {
       });
     };
     const handleTogglePreview = async (song) => {
-      var _a;
+      var _a, _b, _c;
       console.log("[handleTogglePreview] 预览歌曲:", song.name);
       console.log("[handleTogglePreview] 歌曲信息:", JSON.stringify(song));
       showLoadingToast.value = true;
@@ -1257,21 +1257,26 @@ const _sfc_main = {
           lxlyric: musicUrlData.lxlyric || ""
         };
         if (musicUrlData.fallback && musicUrlData.fallback.toggled) {
-          updatedSong.source = musicUrlData.fallback.newSource;
+          const fallbackSong = musicUrlData.fallback.matchedSong;
+          if (fallbackSong && fallbackSong.id) {
+            updatedSong.source = musicUrlData.fallback.newSource;
+            updatedSong.id = fallbackSong.id;
+            updatedSong.songmid = fallbackSong.songmid || "";
+            updatedSong.hash = fallbackSong.hash || "";
+            updatedSong.copyrightId = fallbackSong.copyrightId || "";
+          } else {
+            console.warn("[handleTogglePreview] matchedSong 不完整，保持原始 source/id");
+          }
           updatedSong._toggleMusicInfo = {
             originalSource: musicUrlData.fallback.originalSource,
             newSource: musicUrlData.fallback.newSource,
             matchedSong: musicUrlData.fallback.matchedSong,
             toggleTime: Date.now()
           };
-          if (musicUrlData.fallback.matchedSong) {
-            updatedSong.songmid = musicUrlData.fallback.matchedSong.songmid || song.songmid;
-            updatedSong.hash = musicUrlData.fallback.matchedSong.hash || song.hash;
-            updatedSong.copyrightId = musicUrlData.fallback.matchedSong.copyrightId || song.copyrightId;
-          }
         }
-        const cacheSource = ((_a = musicUrlData.fallback) == null ? void 0 : _a.newSource) || source;
-        await utils_musicUrlCache.setCachedMusicUrl(song.id, "320k", musicUrlData.url, cacheSource);
+        const cacheSongId = ((_b = (_a = musicUrlData.fallback) == null ? void 0 : _a.matchedSong) == null ? void 0 : _b.id) || song.id;
+        const cacheSource = ((_c = musicUrlData.fallback) == null ? void 0 : _c.newSource) || source;
+        await utils_musicUrlCache.setCachedMusicUrl(cacheSongId, "320k", musicUrlData.url, cacheSource);
         console.log("[handleTogglePreview] 播放URL已缓存:", song.id, "source:", cacheSource);
         store_modules_player.playerStore.playSong(updatedSong);
         showLoadingToast.value = false;
@@ -1651,7 +1656,7 @@ const _sfc_main = {
             c: common_vendor.t(playlist.name),
             d: common_vendor.t(playlist.trackCount || 0),
             e: common_vendor.t(playlist.platform),
-            f: "0c5154c0-3-" + i0,
+            f: "0f7c1d02-3-" + i0,
             g: common_vendor.o(($event) => showPlaylistContextMenu(playlist, index, "imported"), playlist.id),
             h: playlist.id,
             i: currentPlaylistId.value === playlist.id ? 1 : "",
@@ -1671,7 +1676,7 @@ const _sfc_main = {
             b: common_vendor.o(($event) => handlePlaylistImageError($event, playlist), playlist.id),
             c: common_vendor.t(playlist.name),
             d: common_vendor.t(playlist.trackCount || 0),
-            e: "0c5154c0-4-" + i0,
+            e: "0f7c1d02-4-" + i0,
             f: common_vendor.o(($event) => showPlaylistContextMenu(playlist, index, "custom"), playlist.id),
             g: playlist.id,
             h: currentPlaylistId.value === playlist.id ? 1 : "",
@@ -1695,7 +1700,7 @@ const _sfc_main = {
         }),
         C: common_vendor.unref(totalBottomHeight) + 20 + "px",
         D: common_vendor.o(locateCurrentSong, "ef"),
-        E: common_vendor.sr(virtualListRef, "0c5154c0-6", {
+        E: common_vendor.sr(virtualListRef, "0f7c1d02-6", {
           "k": "virtualListRef"
         }),
         F: common_vendor.o(onScrollToLower, "b4"),
@@ -1836,5 +1841,5 @@ const _sfc_main = {
     };
   }
 };
-const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-0c5154c0"]]);
+const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-0f7c1d02"]]);
 exports.MiniProgramPage = MiniProgramPage;

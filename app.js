@@ -12,13 +12,13 @@ if (!Math) {
   "./pages/playlist/index.js";
   "./pages/search/index.js";
   "./pages/music-sources/index.js";
-  "./pages/player/index.js";
   "./pages/rank/index.js";
   "./pages/my/index.js";
   "./pages/ai-recommend/index.js";
   "./pages/settings/index.js";
   "./pages/sharelist/index.js";
   "./pages/songlist-list/index.js";
+  "./pages/player/index.js";
 }
 const _sfc_main = {
   name: "App",
@@ -117,6 +117,7 @@ const _sfc_main = {
   },
   onShow: function() {
     console.log("[App] 应用显示");
+    store_modules_player.playerStore.checkStuckUrlFetch();
     this.syncBackgroundAudioState();
     this.checkSystemTheme();
     common_vendor.index.$emit("app-show");
@@ -209,6 +210,22 @@ const _sfc_main = {
           if (state2)
             state2.isUsingCachedUrl = false;
           this.playStartTime = Date.now();
+          if (state2 && state2.currentScriptName) {
+            setTimeout(() => {
+              if (state2.playing && state2.currentScriptName) {
+                store_modules_player.playerStore.setStatusText(`此歌曲音乐服务由 ${state2.currentScriptName} 提供`, 5e3);
+                console.log("[BackgroundAudio] 显示音源提供者信息:", state2.currentScriptName);
+              }
+            }, 1e4);
+          }
+          if (state2 && state2.currentMeshContributor) {
+            setTimeout(() => {
+              if (state2.playing && state2.currentMeshContributor) {
+                store_modules_player.playerStore.setStatusText(`由 ${state2.currentMeshContributor} 提供算力支持`, 5e3);
+                console.log("[BackgroundAudio] 显示公共服务器分享者信息:", state2.currentMeshContributor);
+              }
+            }, 15e3);
+          }
           if (state2 && state2._pendingSeekTime > 0 && state2.duration > 0) {
             const currentSongId = (_a = state2.currentSong) == null ? void 0 : _a.id;
             const pendingSongId = state2._pendingSeekSongId;

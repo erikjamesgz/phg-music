@@ -146,6 +146,15 @@ const _sfc_main = {
     const isCurrentPlaying = (index) => {
       return props.currentPlayIndex === index;
     };
+    const getAlbumName = (item) => {
+      var _a;
+      const raw = ((_a = item.al) == null ? void 0 : _a.name) || item.album || item.albumName;
+      if (!raw)
+        return "";
+      if (typeof raw === "string")
+        return raw;
+      return raw && typeof raw === "object" && typeof raw.name === "string" ? raw.name : "";
+    };
     const formatSinger = (singers, nameKey = "name", join = "、") => {
       if (!singers)
         return "未知歌手";
@@ -217,20 +226,19 @@ const _sfc_main = {
       return common_vendor.e({
         a: topPlaceholderHeight.value + "px",
         b: common_vendor.f(visibleItems.value, (item, i, i0) => {
-          var _a, _b, _c;
           return common_vendor.e({
             a: common_vendor.t(startIndex.value + i + 1),
             b: common_vendor.t(item.name),
             c: hasHighQuality(item)
           }, hasHighQuality(item) ? {} : {}, {
             d: common_vendor.t(formatSinger(item.ar || item.singer)),
-            e: ((_a = item.al) == null ? void 0 : _a.name) || item.album || item.albumName
-          }, ((_b = item.al) == null ? void 0 : _b.name) || item.album || item.albumName ? {
-            f: common_vendor.t(((_c = item.al) == null ? void 0 : _c.name) || item.album || item.albumName)
+            e: getAlbumName(item)
+          }, getAlbumName(item) ? {
+            f: common_vendor.t(getAlbumName(item))
           } : {}, {
             g: isCurrentPlaying(startIndex.value + i) && __props.isPlaying
           }, isCurrentPlaying(startIndex.value + i) && __props.isPlaying ? {
-            h: "318098aa-0-" + i0,
+            h: "1528b7ef-0-" + i0,
             i: common_vendor.p({
               name: "play",
               size: "18"
@@ -238,7 +246,7 @@ const _sfc_main = {
           } : {}, {
             j: common_vendor.t(formatDuration(item.dt || item.interval || item.duration))
           }, __props.showMoreButton ? {
-            k: "318098aa-1-" + i0,
+            k: "1528b7ef-1-" + i0,
             l: common_vendor.p({
               name: "ellipsis-vertical",
               size: "18"
@@ -278,5 +286,5 @@ const _sfc_main = {
     };
   }
 };
-const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-318098aa"]]);
+const Component = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-1528b7ef"]]);
 wx.createComponent(Component);

@@ -4,7 +4,7 @@ const zhCN = {
   settings: {
     internalStorage: "内部存储",
     qualityAutoDesc: "自动根据网络状况选择最佳音质",
-    sourceManagement: "音源管理",
+    sourceManagement: "音源插件管理",
     importSource: "导入音源",
     importSourceDesc: "从本地或网络导入音源",
     sourceList: "音源列表",
@@ -30,9 +30,9 @@ const zhCN = {
     recent_played: "最近播放",
     today_duration: "今日时长(h)"
   },
-  // 音源管理
+  // 音源插件管理
   musicSources: {
-    sourceManagement: "音源管理",
+    sourceManagement: "音源插件管理",
     mySources: "我的音源",
     noSources: "暂无音源",
     importSourceTip: "请通过下方导入功能添加音源",

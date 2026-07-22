@@ -1,6 +1,6 @@
 "use strict";
 const jaJP = {
-  // 音源管理
+  // 音源插件管理
   musicSources: {
     sourceManagement: "ソース管理",
     mySources: "マイソース",

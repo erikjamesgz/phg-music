@@ -4,6 +4,7 @@ const common_assets = require("./common/assets.js");
 require("./store/modules/list.js");
 const store_modules_player = require("./store/modules/player.js");
 const services_api = require("./services/api.js");
+require("./utils/mesh/meshApi.js");
 const utils_storage = require("./utils/storage.js");
 const utils_system = require("./utils/system.js");
 const utils_imageProxy = require("./utils/imageProxy.js");

@@ -23,20 +23,20 @@
 /* 垂直间距 */
 /* 透明度 */
 /* 文章场景相关 */
-.virtual-list.data-v-318098aa {
+.virtual-list.data-v-1528b7ef {
   width: 100%;
   height: 100%;
 }
-.virtual-list.show-top-radius.data-v-318098aa {
+.virtual-list.show-top-radius.data-v-1528b7ef {
   border-radius: 25px 25px 0 0;
   overflow: hidden;
 }
-.virtual-list.dark-mode.data-v-318098aa {
+.virtual-list.dark-mode.data-v-1528b7ef {
   background-color: #1f2937;
 }
 
 /* 歌曲项样式 - 与 SongListItem 保持一致 */
-.song-item.data-v-318098aa {
+.song-item.data-v-1528b7ef {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -46,19 +46,19 @@
   /* 确保在 Android 上 flex 布局正常工作 */
   box-sizing: border-box;
 }
-.song-item.playing.data-v-318098aa {
+.song-item.playing.data-v-1528b7ef {
   background-color: rgba(0, 215, 205, 0.1);
 }
-.song-item.playing .song-name.data-v-318098aa {
+.song-item.playing .song-name.data-v-1528b7ef {
   color: #999;
 }
-.song-item.playing .song-index.data-v-318098aa {
+.song-item.playing .song-index.data-v-1528b7ef {
   color: #999;
 }
-.song-item.data-v-318098aa:active {
+.song-item.data-v-1528b7ef:active {
   background-color: #f5f5f5;
 }
-.song-index.data-v-318098aa {
+.song-index.data-v-1528b7ef {
   width: 30px;
   text-align: center;
   font-size: 14px;
@@ -70,7 +70,7 @@
   display: inline-block;
   line-height: 1;
 }
-.song-info.data-v-318098aa {
+.song-info.data-v-1528b7ef {
   flex: 1;
   display: flex;
   flex-direction: row;
@@ -80,7 +80,7 @@
   /* 确保在 Android 上 flex 布局正常工作 */
   box-sizing: border-box;
 }
-.song-main-info.data-v-318098aa {
+.song-main-info.data-v-1528b7ef {
   flex: 1;
   min-width: 0;
   margin-right: 10px;
@@ -89,7 +89,7 @@
   flex-direction: column;
   justify-content: center;
 }
-.song-name.data-v-318098aa {
+.song-name.data-v-1528b7ef {
   font-size: 15px;
   color: #333;
   display: block;
@@ -100,7 +100,7 @@
   /* 确保在 Android 上显示正确 */
   width: 100%;
 }
-.song-artist.data-v-318098aa {
+.song-artist.data-v-1528b7ef {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -112,12 +112,12 @@
   /* 确保在 Android 上显示正确 */
   width: 100%;
 }
-.album-name.data-v-318098aa {
+.album-name.data-v-1528b7ef {
   margin-left: 2px;
   color: #999;
   font-size: 12px;
 }
-.quality-tag.data-v-318098aa {
+.quality-tag.data-v-1528b7ef {
   display: inline-block;
   padding: 1px 4px;
   background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
@@ -127,7 +127,7 @@
   margin-right: 4px;
   flex-shrink: 0;
 }
-.song-actions.data-v-318098aa {
+.song-actions.data-v-1528b7ef {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -135,87 +135,87 @@
   /* 确保在 Android 上 flex 布局正常工作 */
   box-sizing: border-box;
 }
-.play-icon.data-v-318098aa {
+.play-icon.data-v-1528b7ef {
   color: #ccc;
   margin-right: 8px;
 }
-.play-icon.playing-icon.data-v-318098aa {
-  animation: pulse-318098aa 1s infinite;
+.play-icon.playing-icon.data-v-1528b7ef {
+  animation: pulse-1528b7ef 1s infinite;
 }
-.song-duration.data-v-318098aa {
+.song-duration.data-v-1528b7ef {
   font-size: 12px;
   color: #999;
   margin-right: 10px;
   min-width: 40px;
   text-align: right;
 }
-.action-btn.data-v-318098aa {
+.action-btn.data-v-1528b7ef {
   padding: 5px;
 }
-.action-btn.data-v-318098aa:active {
+.action-btn.data-v-1528b7ef:active {
   opacity: 0.7;
 }
-.more-icon.data-v-318098aa {
+.more-icon.data-v-1528b7ef {
   color: #ccc;
 }
 
 /* 暗黑模式样式 */
-.song-item.dark-mode.data-v-318098aa {
+.song-item.dark-mode.data-v-1528b7ef {
   background-color: #1f2937;
   border-bottom-color: #374151;
 }
-.song-item.dark-mode .song-name.data-v-318098aa {
+.song-item.dark-mode .song-name.data-v-1528b7ef {
   color: #f0f0f0;
 }
-.song-item.dark-mode .song-artist.data-v-318098aa {
+.song-item.dark-mode .song-artist.data-v-1528b7ef {
   color: #9ca3af;
 }
-.song-item.dark-mode .album-name.data-v-318098aa {
+.song-item.dark-mode .album-name.data-v-1528b7ef {
   color: #9ca3af;
 }
-.song-item.dark-mode .song-index.data-v-318098aa {
+.song-item.dark-mode .song-index.data-v-1528b7ef {
   color: #9ca3af;
 }
-.song-item.dark-mode .song-duration.data-v-318098aa {
+.song-item.dark-mode .song-duration.data-v-1528b7ef {
   color: #9ca3af;
 }
-.song-item.dark-mode .more-icon.data-v-318098aa {
+.song-item.dark-mode .more-icon.data-v-1528b7ef {
   color: #9ca3af;
 }
-.song-item.dark-mode.data-v-318098aa:active {
+.song-item.dark-mode.data-v-1528b7ef:active {
   background-color: #374151;
 }
-.song-item.dark-mode.playing.data-v-318098aa {
+.song-item.dark-mode.playing.data-v-1528b7ef {
   background-color: rgba(0, 215, 205, 0.1);
 }
-.song-item.dark-mode.playing .song-name.data-v-318098aa {
+.song-item.dark-mode.playing .song-name.data-v-1528b7ef {
   color: #9ca3af;
 }
-.song-item.dark-mode.playing .song-index.data-v-318098aa {
+.song-item.dark-mode.playing .song-index.data-v-1528b7ef {
   color: #9ca3af;
 }
 
 /* 空状态样式 */
-.virtual-empty.data-v-318098aa {
+.virtual-empty.data-v-1528b7ef {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 60px 20px;
 }
-.empty-icon.data-v-318098aa {
+.empty-icon.data-v-1528b7ef {
   margin-bottom: 12px;
 }
-.empty-text.data-v-318098aa {
+.empty-text.data-v-1528b7ef {
   font-size: 16px;
 }
-.empty-tip.data-v-318098aa {
+.empty-tip.data-v-1528b7ef {
   font-size: 12px;
   margin-top: 8px;
 }
 
 /* 加载中样式 */
-.virtual-loading.data-v-318098aa {
+.virtual-loading.data-v-1528b7ef {
   text-align: center;
   padding: 15px 0;
   color: #999;
@@ -223,7 +223,7 @@
 }
 
 /* 定义脉动动画 */
-@keyframes pulse-318098aa {
+@keyframes pulse-1528b7ef {
 0% {
     opacity: 0.6;
 }

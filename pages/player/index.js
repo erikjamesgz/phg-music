@@ -24,7 +24,7 @@ const _sfc_main = {
   __name: "index",
   setup(__props) {
     common_vendor.useCssVars((_ctx) => ({
-      "4ce6d7af": lyricsContainerHeight.value + "rpx"
+      "0edc9ae9": lyricsContainerHeight.value + "rpx"
     }));
     const instance = common_vendor.getCurrentInstance();
     const statusBarHeight = common_vendor.ref(utils_system.getStatusBarHeight());
@@ -1321,6 +1321,12 @@ const _sfc_main = {
     });
     common_vendor.watch(() => store_modules_player.playerStore.state.lyric, updateCachedLyricsForStatus, { immediate: true });
     common_vendor.watch(() => store_modules_player.playerStore.state.lxlyric, updateCachedLyricsForStatus);
+    common_vendor.watch(() => store_modules_player.playerStore.state.lyric, (newLyric) => {
+      if (newLyric && newLyric.length > 0 && lyrics.value.length === 0 && !isLoadingLyrics.value) {
+        console.log("[player] store 歌词更新且歌词页面为空，重新加载歌词");
+        loadLyrics();
+      }
+    });
     common_vendor.watch(() => store_modules_player.playerStore.state.currentTime, updateCurrentLyricTextForStatus);
     common_vendor.watch(() => store_modules_player.playerStore.state.statusText, () => {
       updateCurrentLyricTextForStatus();

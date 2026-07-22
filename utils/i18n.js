@@ -412,7 +412,7 @@ const languagePacks = {
       cacheManagement: "缓存管理",
       downloadLocation: "下载位置",
       internalStorage: "内部存储",
-      sourceManagement: "音源管理",
+      sourceManagement: "音源插件管理",
       sourceList: "音源列表",
       sourceListDesc: "管理已安装的音源",
       aboutCeladonMusic: "关于拼好歌",

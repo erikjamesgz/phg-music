@@ -57,13 +57,13 @@ const getSingerName = (song) => {
   return "";
 };
 const getAlbumName = (song) => {
-  if (song.album)
+  if (typeof song.album === "string" && song.album)
     return song.album;
-  if (song.albumName)
+  if (typeof song.albumName === "string" && song.albumName)
     return song.albumName;
-  if (song.al && song.al.name)
+  if (song.al && typeof song.al.name === "string" && song.al.name)
     return song.al.name;
-  if (song.album && typeof song.album === "object" && song.album.name) {
+  if (song.album && typeof song.album === "object" && typeof song.album.name === "string" && song.album.name) {
     return song.album.name;
   }
   return "";

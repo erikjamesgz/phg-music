@@ -15,6 +15,7 @@
     "rank-page": "../rank/index",
     "songlist-list-page": "../songlist-list/index",
     "music-sources-page": "../music-sources/index",
+    "a-i-recommend-page": "../ai-recommend/index",
     "mini-player": "../../components/player/MiniPlayer",
     "custom-tab-bar": "../../components/common/CustomTabBar",
     "pact-modal": "../../components/common/PactModal",

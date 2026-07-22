@@ -134,8 +134,12 @@ const state = common_vendor.reactive({
   hasCheckedBatteryOptimization: false,
   // 当前歌曲的音源提供者名称（如 [独家音源]）
   currentScriptName: "",
+  // 当前歌曲的公共服务器分享者名称（仅公共服务器模式有值）
+  currentMeshContributor: "",
   // 当前歌曲的换源信息（播放时使用新source获取URL，但不修改显示信息）
-  currentSongSwitchInfo: null
+  currentSongSwitchInfo: null,
+  // URL获取开始时间戳（用于检测iOS后台卡死）
+  urlFetchStartTime: 0
 });
 function formatTime(time) {
   time = Math.floor(time);
@@ -180,6 +184,27 @@ const playerStore = {
   setGettingUrl(isGetting) {
     state.isGettingUrl = isGetting;
     console.log("[playerStore] 设置isGettingUrl:", isGetting);
+  },
+  // 🔑 检测iOS后台卡死的URL获取（App返回前台时调用）
+  // iOS微信小程序在后台时JS执行暂停，setTimeout和uni.request回调不触发
+  // 导致锁屏切歌时getMusicUrl的Promise永远pending，播放器卡死
+  checkStuckUrlFetch() {
+    if (!state.urlFetchStartTime)
+      return false;
+    const elapsed = Date.now() - state.urlFetchStartTime;
+    if (elapsed > 1e4) {
+      console.log("[playerStore] 检测到卡死的URL获取，已耗时", Math.round(elapsed / 1e3) + "s，尝试恢复");
+      state.urlFetchStartTime = 0;
+      state.isLoading = false;
+      state.isGettingUrl = false;
+      this.clearLoadTimeout();
+      this.clearQuickCheckTimeout();
+      this.clearStatusText();
+      console.log("[playerStore] 恢复：自动切到下一首");
+      this.playNext();
+      return true;
+    }
+    return false;
   },
   // 播放进度百分比
   get progressPercent() {
@@ -272,6 +297,14 @@ const playerStore = {
             console.log("[BackgroundAudio] 显示音源提供者信息:", state.currentScriptName);
           }
         }, 1e4);
+      }
+      if (state.currentMeshContributor) {
+        setTimeout(() => {
+          if (state.playing && state.currentMeshContributor) {
+            this.setStatusText(`由 ${state.currentMeshContributor} 提供算力支持`, 5e3);
+            console.log("[BackgroundAudio] 显示公共服务器分享者信息:", state.currentMeshContributor);
+          }
+        }, 15e3);
       }
       if (state._pendingSeekTime > 0 && state.duration > 0) {
         const currentSongId = (_a = state.currentSong) == null ? void 0 : _a.id;
@@ -369,24 +402,46 @@ const playerStore = {
       this.playNext();
     });
     audio.onError((err) => {
+      var _a, _b;
       console.error("[BackgroundAudio] onError:", err);
       state.error = err.errMsg || "播放错误";
       state.isLoading = false;
       state.playing = false;
       this.setStatusText("播放出错，正在重试...", 0);
       this.clearLoadTimeout();
-      console.log("[BackgroundAudio] onError - 错误码:", err.errCode);
-      if (err.errCode !== 1 && state.retryNum < 2) {
-        console.log("[BackgroundAudio] onError - 准备刷新URL");
-        this.refreshMusicUrl();
+      this.clearQuickCheckTimeout();
+      const errorCode = err.errCode;
+      console.log("[BackgroundAudio] onError - 错误码:", errorCode, "重试次数:", state.retryNum);
+      console.log("[BackgroundAudio] onError - usedCachedUrlForCurrentPlay:", state.usedCachedUrlForCurrentPlay);
+      if (!state.usedCachedUrlForCurrentPlay) {
+        console.warn("[BackgroundAudio] onError - ❌ 非缓存URL播放失败，直接切换下一首");
+        this.handlePlayErrorFallback();
+        return;
+      }
+      console.log("[BackgroundAudio] onError - 🔄 检测到缓存URL播放失败，准备刷新...");
+      if (state.retryNum === 0) {
+        state.isUsingCachedUrl = false;
+        state.usedCachedUrlForCurrentPlay = false;
+        const currentSongId = (_a = state.currentSong) == null ? void 0 : _a.id;
+        const currentSongSource = ((_b = state.currentSong) == null ? void 0 : _b.source) || "tx";
+        if (currentSongId) {
+          const qualities = ["128k", "320k", "flac"];
+          for (const quality of qualities) {
+            utils_musicUrlCache.removeCachedMusicUrl(currentSongId, quality, currentSongSource).catch((e) => {
+              console.error("[BackgroundAudio] onError - 清除缓存失败:", quality, e);
+            });
+          }
+          console.log("[BackgroundAudio] onError - ✅ 已发起缓存清除:", currentSongId);
+        }
+        if (errorCode !== 1 && state.retryNum < 1) {
+          console.log("[BackgroundAudio] onError - 刷新URL (retry:", state.retryNum, "/1)");
+          this.refreshMusicUrl();
+        } else {
+          this.handlePlayErrorFallback();
+        }
       } else {
-        common_vendor.index.showToast({
-          title: "播放失败，正在切换下一首...",
-          icon: "none"
-        });
-        setTimeout(() => {
-          this.handlePlayEndedWithRetry();
-        }, 1500);
+        console.log("[BackgroundAudio] onError - 重试次数用完，切换下一首");
+        this.handlePlayErrorFallback();
       }
     });
   },
@@ -439,7 +494,7 @@ const playerStore = {
   },
   // 播放指定歌曲
   async playSong(song) {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _A, _B, _C, _D, _E, _F, _G, _H, _I;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _A, _B, _C, _D, _E, _F, _G, _H;
     console.log("[playSong] ========== playSong 被调用 ==========");
     if (!song) {
       console.error("[playSong] song is null or undefined");
@@ -662,6 +717,26 @@ const playerStore = {
       }
       if (playUrl) {
         console.log("[playSong] 最终使用播放URL:", playUrl);
+        if (!playUrl.startsWith("file://") && this.isUnsupportedAudioFormat(playUrl)) {
+          const formatMatch = playUrl.match(/\.(\w+)(?:\?|$)/);
+          const formatExt = formatMatch ? "." + formatMatch[1] : "未知格式";
+          console.warn(`[playSong] ❌ 检测到不支持的音频格式: ${formatExt}，跳过播放`);
+          const clearSongId = song.id;
+          const clearSource = song.source || "tx";
+          const qualities = ["128k", "320k", "flac"];
+          for (const q of qualities) {
+            utils_musicUrlCache.removeCachedMusicUrl(clearSongId, q, clearSource).catch((e) => {
+              console.error("[playSong] 清除缓存失败:", q, e);
+            });
+          }
+          common_vendor.index.showToast({
+            title: `不支持${formatExt}格式，切换下一首`,
+            icon: "none",
+            duration: 2e3
+          });
+          this.handlePlayErrorFallback();
+          return;
+        }
         this.setStatusText("尝试播放歌曲...", 0);
         const secureUrl = playUrl;
         let coverImgUrl = ((_m = song.al) == null ? void 0 : _m.picUrl) || ((_n = song.album) == null ? void 0 : _n.picUrl) || song.img || "";
@@ -738,27 +813,63 @@ const playerStore = {
         console.log("[playSong] 用户选择的音质:", state.audioQuality);
         console.log("[playSong] 实际使用的音质:", actualQuality);
         this.setStatusText("正在获取播放链接...", 0);
+        state.urlFetchStartTime = Date.now();
+        const currentSongIdForUrlFetch = song.id;
         let songForUrl = song;
         if (state.currentSongSwitchInfo && state.currentSongSwitchInfo.newSource) {
           if (state.currentSongSwitchInfo.newSongData) {
             songForUrl = { ...state.currentSongSwitchInfo.newSongData };
             songForUrl.source = state.currentSongSwitchInfo.newSource;
             console.log("[playSong] 使用换源newSongData获取URL, 显示原歌曲:", song.name, "获取URL用source:", songForUrl.source);
-          } else {
+          } else if (state.currentSongSwitchInfo.newSongId) {
             songForUrl = { ...song };
             songForUrl.source = state.currentSongSwitchInfo.newSource;
-            if (state.currentSongSwitchInfo.newSongId) {
-              songForUrl.id = state.currentSongSwitchInfo.newSongId;
-            }
+            songForUrl.id = state.currentSongSwitchInfo.newSongId;
             if (state.currentSongSwitchInfo.originalSource !== state.currentSongSwitchInfo.newSource) {
               songForUrl.songmid = "";
               songForUrl.hash = "";
               songForUrl.copyrightId = "";
             }
-            console.log("[playSong] 使用换源信息获取URL(无newSongData), 显示原歌曲:", song.name, "获取URL用source:", songForUrl.source);
+            console.log("[playSong] 使用换源信息获取URL(无newSongData), 显示原歌曲:", song.name, "获取URL用source:", songForUrl.source, "id:", songForUrl.id);
+          } else {
+            console.warn("[playSong] 换源信息不完整（无 newSongData 且无 newSongId），使用原始source");
+            state.currentSongSwitchInfo = null;
           }
         }
         const result = await utils_api_music.getMusicUrl(songForUrl, actualQuality);
+        state.urlFetchStartTime = 0;
+        if (((_s = state.currentSong) == null ? void 0 : _s.id) !== currentSongIdForUrlFetch) {
+          console.log("[playSong] URL获取期间歌曲已变更（iOS后台恢复或用户切换），放弃当前结果");
+          return;
+        }
+        if (result && result.needImportScripts) {
+          console.log("[playSong] 服务器未导入任何音源脚本(410)，停止播放");
+          state.isLoading = false;
+          state.isGettingUrl = false;
+          state.playing = false;
+          state.playNextRetryCount = 0;
+          state.currentFailingSongId = null;
+          this.clearLoadTimeout();
+          this.clearQuickCheckTimeout();
+          common_vendor.index.$emit("needImportScripts");
+          return;
+        }
+        if (result && result.error && !result.url) {
+          console.log("[playSong] 获取URL失败:", result.errorMsg, "statusCode:", result.errorStatusCode);
+          state.isLoading = false;
+          state.isGettingUrl = false;
+          state.playing = false;
+          state.playNextRetryCount = 0;
+          state.currentFailingSongId = null;
+          this.clearLoadTimeout();
+          this.clearQuickCheckTimeout();
+          common_vendor.index.showToast({
+            title: result.errorMsg || "获取播放链接失败",
+            icon: "none",
+            duration: 3e3
+          });
+          return;
+        }
         console.log("[playSong] API获取成功");
         console.log("[playSong] URL:", result.url);
         console.log("[playSong] 音质:", result.type);
@@ -767,7 +878,7 @@ const playerStore = {
           hasTlyric: !!result.tlyric,
           hasRlyric: !!result.rlyric,
           hasLxlyric: !!result.lxlyric,
-          lyricLength: (_s = result.lyric) == null ? void 0 : _s.length
+          lyricLength: (_t = result.lyric) == null ? void 0 : _t.length
         });
         this.clearStatusText();
         state.isGettingUrl = false;
@@ -776,6 +887,12 @@ const playerStore = {
           console.log("[playSong] 保存音源提供者名称:", result.scriptName);
         } else {
           state.currentScriptName = "";
+        }
+        if (result.meshContributor) {
+          state.currentMeshContributor = result.meshContributor;
+          console.log("[playSong] 保存公共服务器分享者名称:", result.meshContributor);
+        } else {
+          state.currentMeshContributor = "";
         }
         if (result.lyric || result.tlyric || result.rlyric || result.lxlyric) {
           this.setLyrics({
@@ -797,40 +914,84 @@ const playerStore = {
           const originalName = sourceNameMap[result.fallback.originalSource] || result.fallback.originalSource;
           const newName = sourceNameMap[result.fallback.newSource] || result.fallback.newSource;
           this.setStatusText(`已从${originalName}换源到${newName}`, 3e3);
+          const fallbackMatchedSong = result.fallback.matchedSong;
+          const hasValidMatchedSong = fallbackMatchedSong && fallbackMatchedSong.id;
           state.currentSongSwitchInfo = {
             originalSource: result.fallback.originalSource,
             newSource: result.fallback.newSource,
-            newSongId: ((_t = result.fallback.matchedSong) == null ? void 0 : _t.id) || null,
-            newSongName: ((_u = result.fallback.matchedSong) == null ? void 0 : _u.name) || null,
-            newSongSinger: ((_v = result.fallback.matchedSong) == null ? void 0 : _v.singer) || null
+            newSongId: (fallbackMatchedSong == null ? void 0 : fallbackMatchedSong.id) || null,
+            newSongName: (fallbackMatchedSong == null ? void 0 : fallbackMatchedSong.name) || null,
+            newSongSinger: (fallbackMatchedSong == null ? void 0 : fallbackMatchedSong.singer) || null,
+            // 保存完整的换源后歌曲数据，供 refreshMusicUrl 使用（避免 id/source 不匹配）
+            newSongData: hasValidMatchedSong ? {
+              id: fallbackMatchedSong.id,
+              name: fallbackMatchedSong.name || song.name,
+              singer: fallbackMatchedSong.singer || song.singer,
+              source: result.fallback.newSource,
+              songmid: fallbackMatchedSong.songmid || "",
+              hash: fallbackMatchedSong.hash || "",
+              copyrightId: fallbackMatchedSong.copyrightId || "",
+              interval: fallbackMatchedSong.interval || song.interval,
+              duration: fallbackMatchedSong.duration || song.duration,
+              dt: fallbackMatchedSong.dt || song.dt,
+              album: fallbackMatchedSong.album || song.album,
+              albumName: fallbackMatchedSong.albumName || song.albumName,
+              al: fallbackMatchedSong.al || song.al
+            } : null
           };
           if (state.currentSong) {
             state.currentSong._toggleMusicInfo = {
               originalSource: result.fallback.originalSource,
               newSource: result.fallback.newSource,
-              matchedSong: result.fallback.matchedSong,
+              matchedSong: fallbackMatchedSong,
               toggleTime: Date.now()
             };
           }
           console.log("[playSong] 已记录换源信息（不修改显示信息）");
           this.showSourceSwitchHintMessage();
-          const originalSongId = String(song.id).replace(/^(tx|wy|kg|kw|mg)_/, "") || song.id;
-          const switchInfo2 = {
-            originalSource: result.fallback.originalSource,
-            newSource: result.fallback.newSource,
-            newSongId: ((_w = result.fallback.matchedSong) == null ? void 0 : _w.id) || song.id,
-            newSongName: ((_x = result.fallback.matchedSong) == null ? void 0 : _x.name) || song.name,
-            newSongSinger: ((_y = result.fallback.matchedSong) == null ? void 0 : _y.singer) || song.singer,
-            quality: actualQuality
-          };
-          utils_musicSwitchSourceStorage.saveMusicSwitchSource(originalSongId, switchInfo2);
-          console.log("[playSong] 已保存换源信息到本地存储:", result.fallback.originalSource, "->", result.fallback.newSource);
+          if (hasValidMatchedSong) {
+            const originalSongId = String(song.id).replace(/^(tx|wy|kg|kw|mg)_/, "") || song.id;
+            const switchInfo2 = {
+              originalSource: result.fallback.originalSource,
+              newSource: result.fallback.newSource,
+              newSongId: fallbackMatchedSong.id,
+              newSongName: fallbackMatchedSong.name || song.name,
+              newSongSinger: fallbackMatchedSong.singer || song.singer,
+              quality: actualQuality
+            };
+            utils_musicSwitchSourceStorage.saveMusicSwitchSource(originalSongId, switchInfo2);
+            console.log("[playSong] 已保存换源信息到本地存储:", result.fallback.originalSource, "->", result.fallback.newSource);
+          } else {
+            console.warn("[playSong] matchedSong 不完整，跳过保存换源信息到本地存储");
+          }
         }
-        const cacheSongId = ((_A = (_z = result.fallback) == null ? void 0 : _z.matchedSong) == null ? void 0 : _A.id) || song.id;
-        const cacheSource = ((_C = (_B = result.fallback) == null ? void 0 : _B.matchedSong) == null ? void 0 : _C.source) || song.source;
+        const cacheSongId = ((_v = (_u = result.fallback) == null ? void 0 : _u.matchedSong) == null ? void 0 : _v.id) || song.id;
+        const cacheSource = ((_x = (_w = result.fallback) == null ? void 0 : _w.matchedSong) == null ? void 0 : _x.source) || song.source;
         await utils_musicUrlCache.setCachedMusicUrl(cacheSongId, actualQuality, result.url, cacheSource);
         if (song._isAiSong && song._isSearched) {
           this.syncAiSongInfoToTempList(song, cacheSongId, cacheSource);
+        }
+        if (this.isUnsupportedAudioFormat(result.url)) {
+          const formatMatch = result.url.match(/\.(\w+)(?:\?|$)/);
+          const formatExt = formatMatch ? "." + formatMatch[1] : "未知格式";
+          console.warn(`[playSong] ❌ API返回的URL格式不支持: ${formatExt}，切换下一首`);
+          const clearSongId = ((_z = (_y = result.fallback) == null ? void 0 : _y.matchedSong) == null ? void 0 : _z.id) || song.id;
+          const clearSource = ((_B = (_A = result.fallback) == null ? void 0 : _A.matchedSong) == null ? void 0 : _B.source) || song.source;
+          const qualities = ["128k", "320k", "flac"];
+          for (const q of qualities) {
+            utils_musicUrlCache.removeCachedMusicUrl(clearSongId, q, clearSource).catch((e) => {
+              console.error("[playSong] 清除缓存失败:", q, e);
+            });
+          }
+          state.isLoading = false;
+          state.isGettingUrl = false;
+          common_vendor.index.showToast({
+            title: `不支持${formatExt}格式，切换下一首`,
+            icon: "none",
+            duration: 2e3
+          });
+          this.handlePlayErrorFallback();
+          return;
         }
         state.currentSong = {
           ...state.currentSong,
@@ -839,7 +1000,7 @@ const playerStore = {
         };
         console.log("[playSong] 已更新当前歌曲URL到state.currentSong");
         const secureUrl = result.url;
-        let coverImgUrl = ((_D = song.al) == null ? void 0 : _D.picUrl) || ((_E = song.album) == null ? void 0 : _E.picUrl) || song.img || "";
+        let coverImgUrl = ((_C = song.al) == null ? void 0 : _C.picUrl) || ((_D = song.album) == null ? void 0 : _D.picUrl) || song.img || "";
         if (coverImgUrl) {
           coverImgUrl = coverImgUrl.replace(/^http:/, "https:");
         }
@@ -847,13 +1008,13 @@ const playerStore = {
           title: song.name || "未知歌曲",
           singer: this.formatArtists(song),
           coverImgUrl,
-          epname: ((_F = song.al) == null ? void 0 : _F.name) || ((_G = song.album) == null ? void 0 : _G.name) || "未知专辑",
+          epname: ((_E = song.al) == null ? void 0 : _E.name) || ((_F = song.album) == null ? void 0 : _F.name) || "未知专辑",
           src: secureUrl
         });
         state.audioContext.title = song.name || "未知歌曲";
         state.audioContext.singer = this.formatArtists(song);
         state.audioContext.coverImgUrl = coverImgUrl;
-        state.audioContext.epname = ((_H = song.al) == null ? void 0 : _H.name) || ((_I = song.album) == null ? void 0 : _I.name) || "未知专辑";
+        state.audioContext.epname = ((_G = song.al) == null ? void 0 : _G.name) || ((_H = song.album) == null ? void 0 : _H.name) || "未知专辑";
         state.audioContext.src = secureUrl;
         state.currentSongUrlLoaded = true;
         this.startLoadTimeout();
@@ -900,9 +1061,18 @@ const playerStore = {
       console.error("[playSong] 错误信息:", error.message);
       state.isLoading = false;
       state.error = error.message || "播放失败";
+      state.urlFetchStartTime = 0;
       state.isGettingUrl = false;
       this.clearLoadTimeout();
       this.clearQuickCheckTimeout();
+      const configErrors = ["请先选择服务器模式", "请先设置服务器地址", "请先导入音源插件"];
+      if (configErrors.includes(error.message)) {
+        console.log("[playSong] 配置类错误，不自动切歌，直接停止");
+        state.playing = false;
+        state.playNextRetryCount = 0;
+        state.currentFailingSongId = null;
+        return;
+      }
       console.log("[playSong] 播放失败，调用 handlePlayErrorFallback 进行失败处理");
       this.handlePlayErrorFallback();
     }
@@ -1029,7 +1199,19 @@ const playerStore = {
       return song.id === ((_a2 = state.currentSong) == null ? void 0 : _a2.id);
     });
     console.log("[playNext] 当前索引:", currentIndex);
-    if (state.playMode === store_modules_list.PLAY_MODE.random) {
+    if (currentIndex === -1) {
+      console.log("[playNext] 当前歌曲不在 state.playlist 中（可能正在播放临时列表），使用 listStore 获取下一首");
+      const nextSongInfo = store_modules_list.listStore.getNextSong(togglePlayMethod, false);
+      if (nextSongInfo && nextSongInfo.musicInfo) {
+        console.log("[playNext] 从 listStore 获取到下一首:", nextSongInfo.musicInfo.name);
+        store_modules_list.listStore.setPlayMusicInfo(nextSongInfo.listId, nextSongInfo.musicInfo, nextSongInfo.isTempPlay);
+        await this.playSong(nextSongInfo.musicInfo);
+        return;
+      } else {
+        console.log("[playNext] listStore 也无法获取下一首，从头开始");
+        nextIndex = 0;
+      }
+    } else if (state.playMode === store_modules_list.PLAY_MODE.random) {
       nextIndex = Math.floor(Math.random() * state.playlist.length);
       console.log("[playNext] 随机模式，下一首索引:", nextIndex);
     } else {
@@ -1079,7 +1261,19 @@ const playerStore = {
       return song.id === ((_a2 = state.currentSong) == null ? void 0 : _a2.id);
     });
     console.log("[playPrev] 当前索引:", currentIndex);
-    if (state.playMode === store_modules_list.PLAY_MODE.random) {
+    if (currentIndex === -1) {
+      console.log("[playPrev] 当前歌曲不在 state.playlist 中（可能正在播放临时列表），使用 listStore 获取上一首");
+      const prevSongInfo = store_modules_list.listStore.getPrevSong(togglePlayMethod);
+      if (prevSongInfo && prevSongInfo.musicInfo) {
+        console.log("[playPrev] 从 listStore 获取到上一首:", prevSongInfo.musicInfo.name);
+        store_modules_list.listStore.setPlayMusicInfo(prevSongInfo.listId, prevSongInfo.musicInfo, prevSongInfo.isTempPlay);
+        await this.playSong(prevSongInfo.musicInfo);
+        return;
+      } else {
+        console.log("[playPrev] listStore 也无法获取上一首，从头开始");
+        prevIndex = 0;
+      }
+    } else if (state.playMode === store_modules_list.PLAY_MODE.random) {
       prevIndex = Math.floor(Math.random() * state.playlist.length);
       console.log("[playPrev] 随机模式，上一首索引:", prevIndex);
     } else {
@@ -1516,7 +1710,7 @@ const playerStore = {
   // 刷新播放URL（参考洛雪音乐桌面版实现）
   // 当播放出错或超时时，尝试重新获取播放链接
   async refreshMusicUrl() {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m;
     let song = state.currentSong;
     if (!song || !song.id) {
       console.log("[refreshMusicUrl] 没有当前播放的歌曲");
@@ -1546,6 +1740,7 @@ const playerStore = {
         clearTimeout(state.loadTimeout);
         state.loadTimeout = null;
       }
+      this.clearQuickCheckTimeout();
       const qualityMap = {
         "standard": "320k",
         "high": "flac",
@@ -1562,13 +1757,20 @@ const playerStore = {
           originalSource: song._toggleMusicInfo.originalSource,
           newSource: song._toggleMusicInfo.newSource
         });
-        songToRefresh = {
-          ...song,
-          source: song._toggleMusicInfo.newSource,
-          songmid: ((_a = song._toggleMusicInfo.matchedSong) == null ? void 0 : _a.songmid) || song.songmid,
-          hash: ((_b = song._toggleMusicInfo.matchedSong) == null ? void 0 : _b.hash) || song.hash,
-          copyrightId: ((_c = song._toggleMusicInfo.matchedSong) == null ? void 0 : _c.copyrightId) || song.copyrightId
-        };
+        const matchedSong = song._toggleMusicInfo.matchedSong;
+        if (matchedSong && matchedSong.id) {
+          songToRefresh = {
+            ...song,
+            source: song._toggleMusicInfo.newSource,
+            id: matchedSong.id,
+            songmid: matchedSong.songmid || "",
+            hash: matchedSong.hash || "",
+            copyrightId: matchedSong.copyrightId || ""
+          };
+        } else {
+          console.warn("[refreshMusicUrl] _toggleMusicInfo.matchedSong 不完整，使用原始source刷新");
+          songToRefresh = { ...song };
+        }
       } else if (state.currentSongSwitchInfo && state.currentSongSwitchInfo.newSource) {
         console.log("[refreshMusicUrl] 使用 state.currentSongSwitchInfo 换源信息:", {
           originalSource: state.currentSongSwitchInfo.originalSource,
@@ -1609,7 +1811,7 @@ const playerStore = {
         hasTlyric: !!result.tlyric,
         hasRlyric: !!result.rlyric,
         hasLxlyric: !!result.lxlyric,
-        lyricLength: (_d = result.lyric) == null ? void 0 : _d.length
+        lyricLength: (_a = result.lyric) == null ? void 0 : _a.length
       });
       if (result.lyric || result.tlyric || result.rlyric || result.lxlyric) {
         this.setLyrics({
@@ -1626,37 +1828,58 @@ const playerStore = {
           originalSource: result.fallback.originalSource,
           newSource: result.fallback.newSource
         });
+        const refreshMatchedSong = result.fallback.matchedSong;
+        const refreshHasValidMatchedSong = refreshMatchedSong && refreshMatchedSong.id;
         state.currentSongSwitchInfo = {
           originalSource: result.fallback.originalSource,
           newSource: result.fallback.newSource,
-          newSongId: ((_e = result.fallback.matchedSong) == null ? void 0 : _e.id) || null,
-          newSongName: ((_f = result.fallback.matchedSong) == null ? void 0 : _f.name) || null,
-          newSongSinger: ((_g = result.fallback.matchedSong) == null ? void 0 : _g.singer) || null
+          newSongId: (refreshMatchedSong == null ? void 0 : refreshMatchedSong.id) || null,
+          newSongName: (refreshMatchedSong == null ? void 0 : refreshMatchedSong.name) || null,
+          newSongSinger: (refreshMatchedSong == null ? void 0 : refreshMatchedSong.singer) || null,
+          newSongData: refreshHasValidMatchedSong ? {
+            id: refreshMatchedSong.id,
+            name: refreshMatchedSong.name || song.name,
+            singer: refreshMatchedSong.singer || song.singer,
+            source: result.fallback.newSource,
+            songmid: refreshMatchedSong.songmid || "",
+            hash: refreshMatchedSong.hash || "",
+            copyrightId: refreshMatchedSong.copyrightId || "",
+            interval: refreshMatchedSong.interval || song.interval,
+            duration: refreshMatchedSong.duration || song.duration,
+            dt: refreshMatchedSong.dt || song.dt,
+            album: refreshMatchedSong.album || song.album,
+            albumName: refreshMatchedSong.albumName || song.albumName,
+            al: refreshMatchedSong.al || song.al
+          } : null
         };
         if (state.currentSong) {
           state.currentSong._toggleMusicInfo = {
             originalSource: result.fallback.originalSource,
             newSource: result.fallback.newSource,
-            matchedSong: result.fallback.matchedSong,
+            matchedSong: refreshMatchedSong,
             toggleTime: Date.now()
           };
         }
         console.log("[refreshMusicUrl] 已记录换源信息（不修改显示信息）");
         this.showSourceSwitchHintMessage();
-        const originalSongId = String(song.id).replace(/^(tx|wy|kg|kw|mg)_/, "") || song.id;
-        const switchInfo = {
-          originalSource: result.fallback.originalSource,
-          newSource: result.fallback.newSource,
-          newSongId: ((_h = result.fallback.matchedSong) == null ? void 0 : _h.id) || song.id,
-          newSongName: ((_i = result.fallback.matchedSong) == null ? void 0 : _i.name) || song.name,
-          newSongSinger: ((_j = result.fallback.matchedSong) == null ? void 0 : _j.singer) || song.singer,
-          quality: state.audioQuality
-        };
-        utils_musicSwitchSourceStorage.saveMusicSwitchSource(originalSongId, switchInfo);
-        console.log("[refreshMusicUrl] 已保存换源信息到本地存储:", result.fallback.originalSource, "->", result.fallback.newSource);
+        if (refreshHasValidMatchedSong) {
+          const originalSongId = String(song.id).replace(/^(tx|wy|kg|kw|mg)_/, "") || song.id;
+          const switchInfo = {
+            originalSource: result.fallback.originalSource,
+            newSource: result.fallback.newSource,
+            newSongId: refreshMatchedSong.id,
+            newSongName: refreshMatchedSong.name || song.name,
+            newSongSinger: refreshMatchedSong.singer || song.singer,
+            quality: state.audioQuality
+          };
+          utils_musicSwitchSourceStorage.saveMusicSwitchSource(originalSongId, switchInfo);
+          console.log("[refreshMusicUrl] 已保存换源信息到本地存储:", result.fallback.originalSource, "->", result.fallback.newSource);
+        } else {
+          console.warn("[refreshMusicUrl] matchedSong 不完整，跳过保存换源信息到本地存储");
+        }
       }
-      const cacheSongId = ((_l = (_k = result.fallback) == null ? void 0 : _k.matchedSong) == null ? void 0 : _l.id) || song.id;
-      const cacheSource = ((_n = (_m = result.fallback) == null ? void 0 : _m.matchedSong) == null ? void 0 : _n.source) || song.source;
+      const cacheSongId = ((_c = (_b = result.fallback) == null ? void 0 : _b.matchedSong) == null ? void 0 : _c.id) || song.id;
+      const cacheSource = ((_e = (_d = result.fallback) == null ? void 0 : _d.matchedSong) == null ? void 0 : _e.source) || song.source;
       const qualities = ["128k", "320k", "flac"];
       for (const q of qualities) {
         await utils_musicUrlCache.setCachedMusicUrl(cacheSongId, q, result.url, cacheSource);
@@ -1667,13 +1890,34 @@ const playerStore = {
         console.log("[refreshMusicUrl] 歌曲已更换，不更新播放");
         return;
       }
+      if (this.isUnsupportedAudioFormat(result.url)) {
+        const formatMatch = result.url.match(/\.(\w+)(?:\?|$)/);
+        const formatExt = formatMatch ? "." + formatMatch[1] : "未知格式";
+        console.warn(`[refreshMusicUrl] ❌ 刷新后的URL格式不支持: ${formatExt}，切换下一首`);
+        const clearSongId = ((_g = (_f = result.fallback) == null ? void 0 : _f.matchedSong) == null ? void 0 : _g.id) || song.id;
+        const clearSource = ((_i = (_h = result.fallback) == null ? void 0 : _h.matchedSong) == null ? void 0 : _i.source) || song.source;
+        const qualities2 = ["128k", "320k", "flac"];
+        for (const q of qualities2) {
+          utils_musicUrlCache.removeCachedMusicUrl(clearSongId, q, clearSource).catch((e) => {
+            console.error("[refreshMusicUrl] 清除缓存失败:", q, e);
+          });
+        }
+        state.isRefreshingUrl = false;
+        common_vendor.index.showToast({
+          title: `不支持${formatExt}格式，切换下一首`,
+          icon: "none",
+          duration: 2e3
+        });
+        this.handlePlayErrorFallback();
+        return;
+      }
       const secureUrl = result.url;
       if (state.audioContext) {
-        const coverImgUrl = ((_o = song.al) == null ? void 0 : _o.picUrl) || ((_p = song.album) == null ? void 0 : _p.picUrl) || song.img || "/static/images/default-cover.png";
+        const coverImgUrl = ((_j = song.al) == null ? void 0 : _j.picUrl) || ((_k = song.album) == null ? void 0 : _k.picUrl) || song.img || "/static/images/default-cover.png";
         state.audioContext.title = song.name || "未知歌曲";
         state.audioContext.singer = this.formatArtists(song);
         state.audioContext.coverImgUrl = coverImgUrl;
-        state.audioContext.epname = ((_q = song.al) == null ? void 0 : _q.name) || ((_r = song.album) == null ? void 0 : _r.name) || "未知专辑";
+        state.audioContext.epname = ((_l = song.al) == null ? void 0 : _l.name) || ((_m = song.album) == null ? void 0 : _m.name) || "未知专辑";
         state.audioContext.src = secureUrl;
         state.currentSongUrlLoaded = true;
         console.log("[refreshMusicUrl] 已更新背景音频src，等待自动播放");
@@ -1832,6 +2076,7 @@ const playerStore = {
     }
     state.loadTimeout = setTimeout(() => {
       console.log("[startLoadTimeout] 加载超时，刷新URL");
+      this.clearQuickCheckTimeout();
       this.setStatusText("播放加载超时，正在重试...", 0);
       if (state.retryNum < 1) {
         this.refreshMusicUrl();
@@ -1850,7 +2095,7 @@ const playerStore = {
       console.log("[clearLoadTimeout] 已清除加载超时定时器");
     }
   },
-  // 开始快速检测超时定时器（5秒，仅用于缓存URL）
+  // 开始快速检测超时定时器（3秒，仅用于缓存URL）
   startQuickCheckTimeout() {
     if (state.quickCheckTimeout) {
       clearTimeout(state.quickCheckTimeout);
@@ -1858,6 +2103,7 @@ const playerStore = {
     state.quickCheckTimeout = setTimeout(() => {
       if (!state.playing && state.isUsingCachedUrl) {
         console.log("[startQuickCheckTimeout] 缓存URL快速检测超时，链接可能过期");
+        this.clearLoadTimeout();
         this.setStatusText("正在检查链接...", 0);
         state.isUsingCachedUrl = false;
         if (state.retryNum < 2) {
@@ -1872,8 +2118,8 @@ const playerStore = {
           this.handlePlayEndedWithRetry();
         }
       }
-    }, 5e3);
-    console.log("[startQuickCheckTimeout] 已启动快速检测超时定时器（5秒）");
+    }, 3e3);
+    console.log("[startQuickCheckTimeout] 已启动快速检测超时定时器（3秒）");
   },
   // 清除快速检测超时定时器
   clearQuickCheckTimeout() {
@@ -1882,6 +2128,24 @@ const playerStore = {
       state.quickCheckTimeout = null;
       console.log("[clearQuickCheckTimeout] 已清除快速检测超时定时器");
     }
+  },
+  // 检查URL是否为当前平台不支持的音频格式
+  // 各平台音频格式支持情况：
+  //   H5(浏览器):    mp3✅ m4a/aac✅ wav✅ ogg✅ flac✅ opus✅  | wma❌ mmp4❌
+  //   微信小程序:     mp3✅ m4a/aac✅ wav✅ ogg❌ flac❌ opus❌  | wma❌ mmp4❌
+  //   Android(App):  mp3✅ m4a/aac✅ wav✅ ogg✅ flac✅ opus✅  | wma❌ mmp4❌
+  //   iOS(App):      mp3✅ m4a/aac✅ wav✅ ogg❌ flac✅ opus❌  | wma❌ mmp4❌
+  isUnsupportedAudioFormat(url) {
+    if (!url || typeof url !== "string")
+      return false;
+    if (url.startsWith("file://"))
+      return false;
+    const lowerUrl = url.toLowerCase();
+    const universallyUnsupported = [".wma", ".mmp4"];
+    if (universallyUnsupported.some((fmt) => lowerUrl.includes(fmt)))
+      return true;
+    const mpUnsupported = [".ogg", ".flac", ".opus"];
+    return mpUnsupported.some((fmt) => lowerUrl.includes(fmt));
   },
   // 格式化歌手名称
   formatArtists(song) {

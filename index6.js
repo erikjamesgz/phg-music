@@ -10,6 +10,7 @@ const utils_playSong = require("./utils/playSong.js");
 const composables_usePageLifecycle = require("./composables/usePageLifecycle.js");
 const composables_useBottomHeight = require("./composables/useBottomHeight.js");
 const utils_musicPic = require("./utils/musicPic.js");
+const utils_config = require("./utils/config.js");
 if (!Math) {
   RocIconPlus();
 }
@@ -1008,6 +1009,117 @@ const _sfc_main = {
       darkMode.value = data.isDark;
       utils_system.setStatusBarTextColor(data.isDark ? "light" : "dark");
     };
+    const shareAchievement = common_vendor.ref({
+      totalCalls: 0,
+      sharedDays: 0,
+      todayCalls: 0,
+      weekStats: [],
+      title: "",
+      titleIcon: "",
+      nextTitle: "",
+      daysToNext: 0,
+      show: false
+    });
+    const refreshingShare = common_vendor.ref(false);
+    const refreshShareAchievement = () => {
+      if (refreshingShare.value)
+        return;
+      refreshingShare.value = true;
+      loadShareAchievement();
+      setTimeout(() => {
+        refreshingShare.value = false;
+      }, 1200);
+    };
+    const maxWeekCount = common_vendor.computed(() => {
+      if (!shareAchievement.value.weekStats || shareAchievement.value.weekStats.length === 0)
+        return 1;
+      return Math.max(1, ...shareAchievement.value.weekStats.map((s) => s.count || 0));
+    });
+    const formatChartDate = (dateStr, idx) => {
+      if (idx === shareAchievement.value.weekStats.length - 1)
+        return "今天";
+      if (!dateStr)
+        return "";
+      return dateStr.slice(5);
+    };
+    const loadShareAchievement = () => {
+      const origin = utils_config.getServerOrigin();
+      const apiKey = utils_config.getApiKey();
+      if (!origin || !apiKey)
+        return;
+      common_vendor.index.request({
+        url: `${origin}/owner/${apiKey}/status`,
+        method: "GET",
+        timeout: 8e3,
+        success: (res) => {
+          var _a, _b;
+          if (res.statusCode === 200 && ((_a = res.data) == null ? void 0 : _a.code) === 200 && ((_b = res.data) == null ? void 0 : _b.data)) {
+            const data = res.data.data;
+            if (data.share_status !== 1) {
+              shareAchievement.value.show = false;
+              return;
+            }
+            const apiCallStats = data.api_call_stats || [];
+            const apiCallTotal = data.api_call_total || 0;
+            const sharedSince = data.shared_since || 0;
+            const sharedDays = sharedSince ? Math.floor((Date.now() - sharedSince) / (24 * 3600 * 1e3)) + 1 : 0;
+            const todayCalls = data.current_usage || 0;
+            const weekTotal = apiCallStats.reduce((sum, s) => sum + (s.count || 0), 0);
+            const titles = [
+              { days: 1, icon: "🎵", name: "音乐爱好者" },
+              { days: 3, icon: "🎶", name: "音乐分享者" },
+              { days: 7, icon: "🛡️", name: "音乐守护者" },
+              { days: 15, icon: "⭐", name: "音乐使者" },
+              { days: 30, icon: "🌟", name: "音乐传教士" },
+              { days: 60, icon: "💎", name: "音乐钻石" },
+              { days: 100, icon: "👑", name: "音乐之王" },
+              { days: 180, icon: "🔥", name: "音乐传奇" },
+              { days: 365, icon: "🌈", name: "音乐之光" },
+              { days: 500, icon: "🏅", name: "音乐终身成就奖" }
+            ];
+            let currentTitle = titles[0];
+            let nextTitle = null;
+            for (let i = 0; i < titles.length; i++) {
+              if (sharedDays >= titles[i].days) {
+                currentTitle = titles[i];
+                nextTitle = titles[i + 1] || null;
+              } else {
+                if (!nextTitle)
+                  nextTitle = titles[i];
+                break;
+              }
+            }
+            shareAchievement.value = {
+              totalCalls: Math.max(apiCallTotal, weekTotal),
+              sharedDays,
+              todayCalls,
+              weekStats: apiCallStats,
+              title: currentTitle.name,
+              titleIcon: currentTitle.icon,
+              nextTitle: nextTitle ? nextTitle.name : "",
+              daysToNext: nextTitle ? Math.max(0, nextTitle.days - sharedDays) : 0,
+              show: true
+            };
+          }
+        },
+        fail: () => {
+        }
+      });
+    };
+    const goToShareManagement = () => {
+      if (typeof isTablet !== "undefined" && isTablet.value) {
+        common_vendor.index.$emit("my-open-share-management");
+      } else {
+        common_vendor.index.navigateTo({
+          url: "/pages/settings/index",
+          success: () => {
+            setTimeout(() => {
+              common_vendor.index.$emit("openShareManagement");
+            }, 500);
+          }
+        });
+      }
+    };
     common_vendor.onMounted(() => {
       common_vendor.index.$on("themeChanged", handleThemeChanged);
       common_vendor.index.$on("tabletModeChanged", handleTabletModeChanged);
@@ -1017,6 +1129,10 @@ const _sfc_main = {
       common_vendor.index.onWindowResize(() => {
         checkIsTablet();
       });
+      loadShareAchievement();
+    });
+    common_vendor.onShow(() => {
+      loadShareAchievement();
     });
     common_vendor.onUnmounted(() => {
       common_vendor.index.$off("themeChanged", handleThemeChanged);
@@ -1036,28 +1152,60 @@ const _sfc_main = {
         d: common_vendor.o(goToSettings, "62")
       } : {}, {
         e: common_vendor.t(formatAllSongs.value),
-        f: common_vendor.o(viewAllPlaylists, "56"),
+        f: common_vendor.o(viewAllPlaylists, "02"),
         g: common_vendor.t(formatNumber(stats.value.listenCount)),
         h: common_vendor.t(formatListenTime.value),
         i: common_vendor.t(favoriteSingerText.value),
-        j: common_vendor.t(myPlaylists.value.length || 0),
-        k: common_vendor.p({
+        j: shareAchievement.value.show
+      }, shareAchievement.value.show ? common_vendor.e({
+        k: refreshingShare.value ? 1 : "",
+        l: common_vendor.p({
+          type: "fas",
+          name: "sync",
+          size: "12",
+          color: "#9ca3af"
+        }),
+        m: common_vendor.o(refreshShareAchievement, "b9"),
+        n: common_vendor.t(shareAchievement.value.title),
+        o: common_vendor.t(shareAchievement.value.totalCalls.toLocaleString()),
+        p: common_vendor.t(shareAchievement.value.sharedDays),
+        q: common_vendor.t(shareAchievement.value.todayCalls),
+        r: shareAchievement.value.weekStats.length > 0
+      }, shareAchievement.value.weekStats.length > 0 ? {
+        s: common_vendor.f(shareAchievement.value.weekStats, (stat, idx, i0) => {
+          return {
+            a: common_vendor.t(stat.count || 0),
+            b: Math.max(2, stat.count / maxWeekCount.value * 24) + "px",
+            c: common_vendor.t(formatChartDate(stat.date, idx)),
+            d: idx
+          };
+        })
+      } : {}, {
+        t: shareAchievement.value.nextTitle
+      }, shareAchievement.value.nextTitle ? {
+        v: common_vendor.t(shareAchievement.value.daysToNext),
+        w: common_vendor.t(shareAchievement.value.nextTitle)
+      } : {}, {
+        x: common_vendor.o(goToShareManagement, "30")
+      }) : {}, {
+        y: common_vendor.t(myPlaylists.value.length || 0),
+        z: common_vendor.p({
           name: "plus",
           size: "16",
           color: "#6b7280"
         }),
-        l: common_vendor.o(createPlaylist, "5d"),
-        m: common_vendor.p({
+        A: common_vendor.o(createPlaylist, "92"),
+        B: common_vendor.p({
           name: "link",
           size: "16",
           color: "#6b7280"
         }),
-        n: common_vendor.o(importPlaylist, "40"),
-        o: common_vendor.f(sortedAllPlaylists.value, (playlist, index, i0) => {
+        C: common_vendor.o(importPlaylist, "56"),
+        D: common_vendor.f(sortedAllPlaylists.value, (playlist, index, i0) => {
           return common_vendor.e({
             a: playlist.playlistType === "default"
           }, playlist.playlistType === "default" ? {
-            b: "4598f48f-3-" + i0,
+            b: "7443707e-4-" + i0,
             c: common_vendor.p({
               name: "headphones",
               size: "32",
@@ -1070,7 +1218,7 @@ const _sfc_main = {
             g: common_vendor.unref(utils_imageProxy.proxyImageUrl)(playlist.coverUrl),
             h: common_vendor.o(($event) => handleMyImageError($event, playlist, "coverUrl"), playlist.id + "-" + playlist.playlistType)
           } : {
-            i: "4598f48f-4-" + i0,
+            i: "7443707e-5-" + i0,
             j: common_vendor.p({
               name: "heart",
               size: "32",
@@ -1083,7 +1231,7 @@ const _sfc_main = {
             m: common_vendor.unref(utils_imageProxy.proxyImageUrl)(playlist.coverUrl),
             n: common_vendor.o(($event) => handleMyImageError($event, playlist, "coverUrl"), playlist.id + "-" + playlist.playlistType)
           } : {
-            o: "4598f48f-5-" + i0,
+            o: "7443707e-6-" + i0,
             p: common_vendor.p({
               name: "music",
               size: "32",
@@ -1102,7 +1250,7 @@ const _sfc_main = {
             w: common_vendor.t(playlist.songCount || 0),
             x: playlist.playlistType === "favorite"
           }, playlist.playlistType === "favorite" ? {
-            y: "4598f48f-6-" + i0,
+            y: "7443707e-7-" + i0,
             z: common_vendor.p({
               name: "heart",
               size: "12",
@@ -1115,17 +1263,17 @@ const _sfc_main = {
             D: common_vendor.o(($event) => openPlaylist(playlist), playlist.id + "-" + playlist.playlistType)
           });
         }),
-        p: myPlaylistScrollLeft.value,
-        q: common_vendor.o(onMyPlaylistScroll, "92"),
-        r: common_vendor.t(recentSongsCount.value),
-        s: common_vendor.f(recentSongs.value, (song, index, i0) => {
+        E: myPlaylistScrollLeft.value,
+        F: common_vendor.o(onMyPlaylistScroll, "fe"),
+        G: common_vendor.t(recentSongsCount.value),
+        H: common_vendor.f(recentSongs.value, (song, index, i0) => {
           return common_vendor.e({
             a: getSongCover(song)
           }, getSongCover(song) ? {
             b: getSongCover(song),
             c: common_vendor.o(($event) => handleRecentSongImageError($event, song), song.id)
           } : {
-            d: "4598f48f-7-" + i0,
+            d: "7443707e-8-" + i0,
             e: common_vendor.p({
               name: "music",
               size: "24",
@@ -1135,7 +1283,7 @@ const _sfc_main = {
           }, {
             g: isSongPlaying(song)
           }, isSongPlaying(song) ? {} : {
-            h: "4598f48f-8-" + i0,
+            h: "7443707e-9-" + i0,
             i: common_vendor.p({
               name: "play",
               size: "16",
@@ -1150,22 +1298,22 @@ const _sfc_main = {
             o: common_vendor.o(($event) => playSong(song), song.id)
           });
         }),
-        t: common_vendor.p({
+        I: common_vendor.p({
           name: "chevron-right",
           size: "12",
           color: "#8a8a8a"
         }),
-        v: common_vendor.o(viewAllRecentPlayed, "5c"),
-        w: recentPlaylistHistory.value.length > 0
+        J: common_vendor.o(viewAllRecentPlayed, "47"),
+        K: recentPlaylistHistory.value.length > 0
       }, recentPlaylistHistory.value.length > 0 ? {
-        x: common_vendor.t(recentPlaylistHistoryCount.value),
-        y: common_vendor.f(recentPlaylistHistory.value, (playlist, index, i0) => {
+        L: common_vendor.t(recentPlaylistHistoryCount.value),
+        M: common_vendor.f(recentPlaylistHistory.value, (playlist, index, i0) => {
           return common_vendor.e({
             a: playlist.coverUrl && playlist.coverUrl !== "/static/logo.png"
           }, playlist.coverUrl && playlist.coverUrl !== "/static/logo.png" ? {
             b: common_vendor.unref(utils_imageProxy.proxyImageUrl)(playlist.coverUrl)
           } : {
-            c: "4598f48f-10-" + i0,
+            c: "7443707e-11-" + i0,
             d: common_vendor.p({
               name: "music",
               size: "32",
@@ -1182,17 +1330,17 @@ const _sfc_main = {
             k: common_vendor.o(($event) => openRecentPlaylist(playlist), playlist.id + "_" + playlist.source)
           });
         }),
-        z: recentPlaylistScrollLeft.value,
-        A: common_vendor.o(onRecentPlaylistScroll, "d1")
+        N: recentPlaylistScrollLeft.value,
+        O: common_vendor.o(onRecentPlaylistScroll, "5d")
       } : {}, {
-        B: common_vendor.t(deletedSongsCount.value),
-        C: common_vendor.f(deletedSongs.value, (song, index, i0) => {
+        P: common_vendor.t(deletedSongsCount.value),
+        Q: common_vendor.f(deletedSongs.value, (song, index, i0) => {
           return common_vendor.e({
             a: getSongCover(song)
           }, getSongCover(song) ? {
             b: getSongCover(song)
           } : {
-            c: "4598f48f-11-" + i0,
+            c: "7443707e-12-" + i0,
             d: common_vendor.p({
               name: "music",
               size: "24",
@@ -1200,7 +1348,7 @@ const _sfc_main = {
             }),
             e: generateGradientBackground(song.name, "song")
           }, {
-            f: "4598f48f-12-" + i0,
+            f: "7443707e-13-" + i0,
             g: common_vendor.t(song.name),
             h: common_vendor.t(song.type || "歌曲"),
             i: common_vendor.t(formatArtists(song)),
@@ -1208,33 +1356,33 @@ const _sfc_main = {
             k: common_vendor.o(($event) => playSong(song), song.id)
           });
         }),
-        D: common_vendor.p({
+        R: common_vendor.p({
           name: "play",
           size: "16",
           color: "#ffffff"
         }),
-        E: common_vendor.p({
+        S: common_vendor.p({
           name: "chevron-right",
           size: "12",
           color: "#8a8a8a"
         }),
-        F: common_vendor.o(viewAllDeleted, "f3"),
-        G: dislikeList.value.length > 0
+        T: common_vendor.o(viewAllDeleted, "09"),
+        U: dislikeList.value.length > 0
       }, dislikeList.value.length > 0 ? common_vendor.e({
-        H: common_vendor.t(dislikeList.value.length),
-        I: common_vendor.p({
+        V: common_vendor.t(dislikeList.value.length),
+        W: common_vendor.p({
           name: "trash-can",
           size: "14",
           color: "#ff4444"
         }),
-        J: common_vendor.o(handleClearDislikeList, "53"),
-        K: common_vendor.f(displayDislikeList.value, (song, index, i0) => {
+        X: common_vendor.o(handleClearDislikeList, "93"),
+        Y: common_vendor.f(displayDislikeList.value, (song, index, i0) => {
           return common_vendor.e({
             a: getSongCover(song)
           }, getSongCover(song) ? {
             b: getSongCover(song)
           } : {
-            c: "4598f48f-15-" + i0,
+            c: "7443707e-16-" + i0,
             d: common_vendor.p({
               name: "music",
               size: "24",
@@ -1245,49 +1393,49 @@ const _sfc_main = {
             f: common_vendor.t(song.name),
             g: common_vendor.t(song.singer || "未知歌手"),
             h: common_vendor.t(formatDislikeTime(song.addTime)),
-            i: "4598f48f-16-" + i0,
+            i: "7443707e-17-" + i0,
             j: common_vendor.o(($event) => handleRemoveFromDislike(song.id), song.id + "_" + index),
             k: song.id + "_" + index,
             l: common_vendor.o(($event) => playSong(song), song.id + "_" + index)
           });
         }),
-        L: common_vendor.p({
+        Z: common_vendor.p({
           name: "xmark",
           size: "16",
           color: "#999999"
         }),
-        M: dislikeList.value.length > 5
+        aa: dislikeList.value.length > 5
       }, dislikeList.value.length > 5 ? {
-        N: common_vendor.p({
+        ab: common_vendor.p({
           name: "chevron-right",
           size: "12",
           color: "#8a8a8a"
         }),
-        O: common_vendor.o(viewAllDisliked, "24")
+        ac: common_vendor.o(viewAllDisliked, "a3")
       } : {}) : {}, {
-        P: common_vendor.s(safeBottomStyle.value),
-        Q: common_vendor.s(scrollContainerStyle.value),
-        R: showImportModal.value
+        ad: common_vendor.s(safeBottomStyle.value),
+        ae: common_vendor.s(scrollContainerStyle.value),
+        af: showImportModal.value
       }, showImportModal.value ? {
-        S: common_vendor.t(importModalTitle.value),
-        T: common_vendor.p({
+        ag: common_vendor.t(importModalTitle.value),
+        ah: common_vendor.p({
           name: "xmark",
           size: "20",
           color: "#999"
         }),
-        U: common_vendor.o(closeImportModal, "a5"),
-        V: importLink.value,
-        W: common_vendor.o(($event) => importLink.value = $event.detail.value, "27"),
-        X: common_vendor.o(closeImportModal, "5a"),
-        Y: common_vendor.o(confirmImport, "77"),
-        Z: common_vendor.o(() => {
-        }, "88"),
-        aa: common_vendor.o(closeImportModal, "f5")
+        ai: common_vendor.o(closeImportModal, "05"),
+        aj: importLink.value,
+        ak: common_vendor.o(($event) => importLink.value = $event.detail.value, "b8"),
+        al: common_vendor.o(closeImportModal, "31"),
+        am: common_vendor.o(confirmImport, "b1"),
+        an: common_vendor.o(() => {
+        }, "dc"),
+        ao: common_vendor.o(closeImportModal, "a6")
       } : {}, {
-        ab: darkMode.value ? 1 : ""
+        ap: darkMode.value ? 1 : ""
       });
     };
   }
 };
-const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-4598f48f"]]);
+const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-7443707e"]]);
 exports.MiniProgramPage = MiniProgramPage;

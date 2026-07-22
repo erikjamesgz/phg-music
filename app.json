@@ -5,13 +5,20 @@
     "pages/playlist/index",
     "pages/search/index",
     "pages/music-sources/index",
-    "pages/player/index",
     "pages/rank/index",
     "pages/my/index",
     "pages/ai-recommend/index",
     "pages/settings/index",
     "pages/sharelist/index",
     "pages/songlist-list/index"
+  ],
+  "subPackages": [
+    {
+      "root": "pages/player",
+      "pages": [
+        "index"
+      ]
+    }
   ],
   "window": {
     "navigationBarTextStyle": "@navigationBarTextStyle",
@@ -42,6 +49,14 @@
         "pagePath": "pages/my/index"
       }
     ]
+  },
+  "preloadRule": {
+    "pages/main/index": {
+      "network": "all",
+      "packages": [
+        "pages/player"
+      ]
+    }
   },
   "themeLocation": "theme.json",
   "requiredBackgroundModes": [

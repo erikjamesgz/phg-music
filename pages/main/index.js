@@ -2,6 +2,9 @@
 const common_vendor = require("../../common/vendor.js");
 const utils_version = require("../../utils/version.js");
 const utils_system = require("../../utils/system.js");
+const utils_config = require("../../utils/config.js");
+const utils_mesh_meshConfig = require("../../utils/mesh/meshConfig.js");
+const store_modules_user = require("../../store/modules/user.js");
 const store_modules_list = require("../../store/modules/list.js");
 const store_modules_player = require("../../store/modules/player.js");
 if (!Array) {
@@ -10,7 +13,7 @@ if (!Array) {
 }
 const _easycom_roc_icon_plus = () => "../../uni_modules/roc-icon-plus/components/roc-icon-plus/roc-icon-plus.js";
 if (!Math) {
-  (PactModal + UpdateModal + _easycom_roc_icon_plus + IndexPage + SearchPage + PlaylistPage + MyPage + SettingsPage + ShareListPage + RankPage + SonglistListPage + MusicSourcesPage + MiniPlayer + CustomTabBar)();
+  (PactModal + UpdateModal + _easycom_roc_icon_plus + IndexPage + SearchPage + PlaylistPage + MyPage + SettingsPage + ShareListPage + RankPage + SonglistListPage + MusicSourcesPage + AIRecommendPage + MiniPlayer + CustomTabBar)();
 }
 const IndexPage = () => "../index/index2.js";
 const SearchPage = () => "../search/index2.js";
@@ -21,6 +24,7 @@ const ShareListPage = () => "../sharelist/index2.js";
 const RankPage = () => "../rank/index2.js";
 const SonglistListPage = () => "../songlist-list/index2.js";
 const MusicSourcesPage = () => "../music-sources/index2.js";
+const AIRecommendPage = () => "../ai-recommend/index2.js";
 const MiniPlayer = () => "../../components/player/MiniPlayer.js";
 const CustomTabBar = () => "../../components/common/CustomTabBar.js";
 const PactModal = () => "../../components/common/PactModal.js";
@@ -54,6 +58,17 @@ const _sfc_main = {
       height: 0
     });
     const showDebugLog = common_vendor.ref(false);
+    const showMeshModeModal = common_vendor.ref(false);
+    const isImportScriptsPrompting = common_vendor.ref(false);
+    const showDonationPromptModal = common_vendor.ref(false);
+    const donationStats = common_vendor.ref({
+      remaining: 0,
+      used: 0,
+      total: 0
+    });
+    const showServerGuideModal = common_vendor.ref(false);
+    const serverGuideSongCount = common_vendor.ref(0);
+    const serverGuideHelperCount = common_vendor.ref(0);
     const debugPanelExpanded = common_vendor.ref(false);
     const debugInfo = common_vendor.ref({
       followSystem: "",
@@ -550,6 +565,308 @@ ${logsText}`;
         utils_system.setStatusBarTextColor("black");
       }, 300);
     });
+    const promptImportScripts = () => {
+      if (isImportScriptsPrompting.value)
+        return;
+      isImportScriptsPrompting.value = true;
+      common_vendor.index.showModal({
+        title: "需要导入音源插件",
+        content: "播放器仅提供播放能力，不提供歌曲资源及歌曲信息，是否前往导入？",
+        confirmText: "前往导入",
+        cancelText: "取消",
+        success: (res) => {
+          isImportScriptsPrompting.value = false;
+          if (res.confirm) {
+            if (isTablet.value) {
+              subPageStack.value.push("/pages/music-sources/index");
+            } else {
+              common_vendor.index.navigateTo({ url: "/pages/music-sources/index" });
+            }
+          }
+        },
+        fail: () => {
+          isImportScriptsPrompting.value = false;
+        }
+      });
+    };
+    const checkMeshModeSelection = () => {
+      if (showMeshModeModal.value) {
+        console.log("[Main] 弹窗已显示，跳过检查");
+        return;
+      }
+      const mode = utils_config.getMeshMode();
+      if (!mode) {
+        console.log("[Main] 未选择 Mesh 模式，显示选择弹窗");
+        showMeshModeModal.value = true;
+        return;
+      }
+      console.log("[Main] 已有 Mesh 模式:", mode);
+      if (mode === "own") {
+        if (!utils_config.hasOwnServer()) {
+          console.log("[Main] own 模式但未设置服务器地址，显示选择弹窗");
+          showMeshModeModal.value = true;
+          return;
+        }
+        checkDonationPrompt();
+      } else if (mode === "free") {
+        if (!utils_config.hasLocalScripts()) {
+          console.log("[Main] free 模式但无本地脚本，提示导入脚本");
+          promptImportScripts();
+        } else {
+          console.log("[Main] free 模式，本地脚本已就绪");
+          checkServerDeployGuide();
+        }
+      }
+    };
+    const selectMeshMode = (mode) => {
+      console.log("[Main] 用户选择 Mesh 模式:", mode);
+      utils_config.setMeshMode(mode);
+      showMeshModeModal.value = false;
+      if (mode === "own") {
+        if (isTablet.value) {
+          switchTab(4);
+          setTimeout(() => {
+            common_vendor.index.$emit("openServerModal");
+          }, 500);
+        } else {
+          common_vendor.index.navigateTo({
+            url: "/pages/settings/index",
+            success: () => {
+              setTimeout(() => {
+                common_vendor.index.$emit("openServerModal");
+              }, 500);
+            }
+          });
+        }
+      } else if (mode === "free") {
+        if (!utils_config.hasLocalScripts()) {
+          common_vendor.index.showModal({
+            title: "需要导入音源插件",
+            content: "播放器仅提供播放能力，不提供歌曲资源及歌曲信息，是否前往导入？",
+            success: (res) => {
+              if (res.confirm) {
+                if (isTablet.value) {
+                  subPageStack.value.push("/pages/music-sources/index");
+                } else {
+                  common_vendor.index.navigateTo({ url: "/pages/music-sources/index" });
+                }
+              }
+            }
+          });
+        } else {
+          if (isTablet.value) {
+            switchTab(4);
+            setTimeout(() => {
+              common_vendor.index.$emit("openFreeNodesModal");
+            }, 500);
+          } else {
+            common_vendor.index.navigateTo({
+              url: "/pages/settings/index",
+              success: () => {
+                setTimeout(() => {
+                  common_vendor.index.$emit("openFreeNodesModal");
+                }, 500);
+              }
+            });
+          }
+        }
+      }
+    };
+    const dismissMeshModal = () => {
+      console.log("[Main] 首次选择弹窗不可关闭");
+    };
+    const showCopyToast = common_vendor.ref(false);
+    const copyToastText = common_vendor.ref("");
+    let copyToastTimer = null;
+    const showCustomToast = (text) => {
+      copyToastText.value = text;
+      showCopyToast.value = true;
+      if (copyToastTimer)
+        clearTimeout(copyToastTimer);
+      copyToastTimer = setTimeout(() => {
+        showCopyToast.value = false;
+      }, 2500);
+    };
+    const copyDeployTutorial = () => {
+      const tutorialUrl = "https://github.com/erikjamesgz/cf_phg_music_server";
+      console.log("[Main] 复制部署教程链接:", tutorialUrl);
+      common_vendor.index.setClipboardData({
+        data: tutorialUrl,
+        showToast: false,
+        success: () => {
+          console.log("[Main] 链接已复制到剪贴板");
+          showCustomToast("链接已复制，请在浏览器打开");
+        },
+        fail: (err) => {
+          console.error("[Main] 复制失败:", err);
+          showCustomToast("复制失败，请手动复制");
+        }
+      });
+    };
+    const checkDonationPrompt = async () => {
+      try {
+        const donated = common_vendor.index.getStorageSync("share_donated");
+        if (donated) {
+          console.log("[Main] 用户已共享，跳过引导");
+          return;
+        }
+        const lastPrompt = common_vendor.index.getStorageSync("last_donation_prompt") || 0;
+        const sevenDays = 7 * 24 * 60 * 60 * 1e3;
+        if (Date.now() - lastPrompt < sevenDays) {
+          console.log("[Main] 距上次弹窗不足7天，跳过");
+          return;
+        }
+        const installTime = common_vendor.index.getStorageSync("appInstallTime");
+        if (installTime && Date.now() - parseInt(installTime) < 24 * 60 * 60 * 1e3) {
+          console.log("[Main] 首次安装当天，跳过共享引导");
+          return;
+        }
+        const donationShownCount = common_vendor.index.getStorageSync("donation_prompt_shown_count") || 0;
+        if (donationShownCount >= 3) {
+          const lastMonthlyPrompt = common_vendor.index.getStorageSync("last_donation_monthly_prompt") || 0;
+          const oneMonth = 30 * 24 * 60 * 60 * 1e3;
+          if (Date.now() - lastMonthlyPrompt < oneMonth) {
+            console.log("[Main] 共享引导已弹超过3次，月内不重复，跳过");
+            return;
+          }
+        }
+        const origin = utils_config.getServerOrigin();
+        const apiKey = utils_config.getApiKey();
+        if (!origin || !apiKey) {
+          console.log("[Main] 无法解析服务器地址，跳过共享引导");
+          return;
+        }
+        const statusUrl = `${origin}/owner/${apiKey}/status`;
+        console.log("[Main] 查询服务器使用量:", statusUrl);
+        common_vendor.index.request({
+          url: statusUrl,
+          method: "GET",
+          timeout: 8e3,
+          success: (res) => {
+            var _a, _b;
+            if (res.statusCode === 200 && ((_a = res.data) == null ? void 0 : _a.code) === 200 && ((_b = res.data) == null ? void 0 : _b.data)) {
+              const data = res.data.data;
+              console.log("[Main] 服务器状态:", data);
+              const remainingRatio = data.daily_limit > 0 ? data.remaining / data.daily_limit : 0;
+              if (remainingRatio > 0.8) {
+                console.log("[Main] 剩余配额较多（" + (remainingRatio * 100).toFixed(0) + "%），显示共享引导");
+                donationStats.value = {
+                  remaining: 1e5 - (data.current_usage || 0),
+                  used: data.current_usage,
+                  total: 1e5
+                };
+                showDonationPromptModal.value = true;
+                const newCount = donationShownCount + 1;
+                common_vendor.index.setStorageSync("donation_prompt_shown_count", newCount);
+                if (newCount > 3) {
+                  common_vendor.index.setStorageSync("last_donation_monthly_prompt", Date.now());
+                }
+              } else {
+                console.log("[Main] 剩余配额不多，跳过共享引导");
+              }
+            }
+          },
+          fail: (err) => {
+            console.log("[Main] 查询服务器状态失败:", err.errMsg);
+          }
+        });
+      } catch (e) {
+        console.error("[Main] 检查共享引导异常:", e);
+      }
+    };
+    const dismissDonationPrompt = () => {
+      showDonationPromptModal.value = false;
+      common_vendor.index.setStorageSync("last_donation_prompt", Date.now());
+      console.log("[Main] 用户关闭共享引导弹窗");
+    };
+    const goToDonationSettings = () => {
+      showDonationPromptModal.value = false;
+      common_vendor.index.setStorageSync("last_donation_prompt", Date.now());
+      if (isTablet.value) {
+        switchTab(4);
+        setTimeout(() => {
+          common_vendor.index.$emit("openShareManagement");
+        }, 500);
+      } else {
+        common_vendor.index.navigateTo({
+          url: "/pages/settings/index",
+          success: () => {
+            setTimeout(() => {
+              common_vendor.index.$emit("openShareManagement");
+            }, 500);
+          }
+        });
+      }
+    };
+    const checkServerDeployGuide = () => {
+      var _a, _b, _c, _d;
+      if (utils_config.getMeshMode() !== "free")
+        return;
+      if (utils_config.hasOwnServer())
+        return;
+      let freeStartDate = common_vendor.index.getStorageSync("free_mode_start_date");
+      if (!freeStartDate) {
+        freeStartDate = Date.now();
+        common_vendor.index.setStorageSync("free_mode_start_date", freeStartDate);
+      }
+      const daysUsingFree = Math.floor((Date.now() - parseInt(freeStartDate)) / (24 * 3600 * 1e3));
+      if (daysUsingFree < 3) {
+        console.log("[Main] free模式未满3天，跳过部署引导");
+        return;
+      }
+      const lastDismissed = common_vendor.index.getStorageSync("server_guide_dismissed_at");
+      if (lastDismissed && Date.now() - parseInt(lastDismissed) < 7 * 24 * 3600 * 1e3) {
+        console.log("[Main] 7天内已关闭过部署引导，跳过");
+        return;
+      }
+      const shownCount = common_vendor.index.getStorageSync("server_guide_shown_count") || 0;
+      if (shownCount >= 3) {
+        const lastMonthlyGuide = common_vendor.index.getStorageSync("last_server_guide_monthly_prompt") || 0;
+        const oneMonth = 30 * 24 * 60 * 60 * 1e3;
+        if (Date.now() - lastMonthlyGuide < oneMonth) {
+          console.log("[Main] 部署引导已弹过3次，月内不重复，跳过");
+          return;
+        }
+      }
+      const listenCount = ((_d = (_c = (_b = (_a = store_modules_user.userStore) == null ? void 0 : _a.getState) == null ? void 0 : _b.call(_a)) == null ? void 0 : _c.stats) == null ? void 0 : _d.listenCount) || 0;
+      serverGuideSongCount.value = listenCount;
+      utils_mesh_meshConfig.getNodeList(false).then((nodes) => {
+        serverGuideHelperCount.value = nodes ? nodes.length : 0;
+      }).catch(() => {
+        serverGuideHelperCount.value = 0;
+      });
+      showServerGuideModal.value = true;
+      const newCount = shownCount + 1;
+      common_vendor.index.setStorageSync("server_guide_shown_count", newCount);
+      if (newCount > 3) {
+        common_vendor.index.setStorageSync("last_server_guide_monthly_prompt", Date.now());
+      }
+      console.log("[Main] 显示部署服务器引导弹窗，第", newCount, "次");
+    };
+    const dismissServerGuide = () => {
+      showServerGuideModal.value = false;
+      common_vendor.index.setStorageSync("server_guide_dismissed_at", Date.now());
+      console.log("[Main] 用户关闭部署引导弹窗");
+    };
+    const goToServerDeploy = () => {
+      showServerGuideModal.value = false;
+      common_vendor.index.setStorageSync("server_guide_dismissed_at", Date.now());
+      if (isTablet.value) {
+        switchTab(4);
+        setTimeout(() => {
+          common_vendor.index.$emit("openServerModal");
+        }, 500);
+      } else {
+        common_vendor.index.navigateTo({
+          url: "/pages/settings/index",
+          success: () => {
+            setTimeout(() => {
+              common_vendor.index.$emit("openServerModal");
+            }, 500);
+          }
+        });
+      }
+    };
     common_vendor.onMounted(() => {
       console.log("[Main] 主页面初始化");
       checkIsTablet();
@@ -558,6 +875,36 @@ ${logsText}`;
       console.log("[Main] 调试日志显示状态:", showDebugLog.value);
       initDarkMode();
       checkPactAgreement();
+      checkMeshModeSelection();
+      common_vendor.index.$on("checkMeshModeBeforeRequest", () => {
+        const mode = utils_config.getMeshMode();
+        if (!mode) {
+          showMeshModeModal.value = true;
+          return;
+        }
+        if (mode === "own") {
+          if (!utils_config.hasOwnServer()) {
+            showMeshModeModal.value = true;
+          }
+        } else if (mode === "free") {
+          if (!utils_config.hasLocalScripts()) {
+            promptImportScripts();
+          }
+        }
+      });
+      common_vendor.index.$on("my-open-share-management", () => {
+        console.log("[Main] 收到打开分享管理请求");
+        if (isTablet.value) {
+          switchTab(4);
+          setTimeout(() => {
+            common_vendor.index.$emit("openShareManagement");
+          }, 300);
+        }
+      });
+      common_vendor.index.$on("needImportScripts", () => {
+        console.log("[Main] 收到 needImportScripts 事件，提示用户导入音源插件");
+        promptImportScripts();
+      });
       checkHttpAccess();
       setTimeout(() => {
         checkAppUpdate();
@@ -633,11 +980,14 @@ ${logsText}`;
       common_vendor.index.$off("debugLogStatusChanged", handleDebugLogStatusChanged);
       common_vendor.index.$off("switchToSettingsTab");
       common_vendor.index.$off("navigateToAIRecommend");
+      common_vendor.index.$off("checkMeshModeBeforeRequest");
+      common_vendor.index.$off("my-open-share-management");
+      common_vendor.index.$off("needImportScripts");
       common_vendor.index.offWindowResize(handleWindowResize);
       console.log("[Main] 已移除全局事件监听");
     });
     return (_ctx, _cache) => {
-      var _a, _b, _c, _d, _e, _f, _g, _h;
+      var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j;
       return common_vendor.e({
         a: common_vendor.o(handlePactAgree, "ff"),
         b: common_vendor.o(handlePactReject, "ef"),
@@ -674,149 +1024,258 @@ ${logsText}`;
         q: darkMode.value ? 1 : "",
         r: darkMode.value ? 1 : "",
         s: darkMode.value ? 1 : "",
-        t: darkMode.value ? 1 : "",
-        v: common_vendor.o(handleIgnoreForever, "77"),
-        w: common_vendor.o(closeDebugModal, "87"),
-        x: darkMode.value ? 1 : "",
-        y: common_vendor.o(() => {
+        t: common_vendor.o(handleIgnoreForever, "be"),
+        v: common_vendor.o(closeDebugModal, "a0"),
+        w: darkMode.value ? 1 : "",
+        x: common_vendor.o(() => {
         }, "5f"),
-        z: common_vendor.o(closeDebugModal, "9d")
+        y: common_vendor.o(closeDebugModal, "9d")
       } : {}, {
-        A: showIgnoreConfirmModal.value
+        z: showIgnoreConfirmModal.value
       }, showIgnoreConfirmModal.value ? {
+        A: darkMode.value ? 1 : "",
         B: darkMode.value ? 1 : "",
-        C: darkMode.value ? 1 : "",
-        D: common_vendor.o(closeIgnoreConfirmModal, "5b"),
-        E: common_vendor.o(confirmIgnoreForever, "2e"),
-        F: darkMode.value ? 1 : "",
-        G: common_vendor.o(() => {
-        }, "d2"),
-        H: common_vendor.o(closeIgnoreConfirmModal, "be")
+        C: common_vendor.o(closeIgnoreConfirmModal, "d9"),
+        D: common_vendor.o(confirmIgnoreForever, "26"),
+        E: darkMode.value ? 1 : "",
+        F: common_vendor.o(() => {
+        }, "7f"),
+        G: common_vendor.o(closeIgnoreConfirmModal, "ae")
       } : {}, {
-        I: loadedTabs.value.includes(0)
+        H: loadedTabs.value.includes(0)
       }, loadedTabs.value.includes(0) ? {
-        J: common_vendor.p({
+        I: common_vendor.p({
           ["is-active"]: currentTab.value === 0
         })
       } : {}, {
-        K: loadedTabs.value.includes(1)
+        J: loadedTabs.value.includes(1)
       }, loadedTabs.value.includes(1) ? {
-        L: common_vendor.p({
+        K: common_vendor.p({
           ["is-active"]: currentTab.value === 1
         })
       } : {}, {
-        M: loadedTabs.value.includes(2)
+        L: loadedTabs.value.includes(2)
       }, loadedTabs.value.includes(2) ? {
-        N: common_vendor.p({
+        M: common_vendor.p({
           ["is-active"]: currentTab.value === 2
         })
       } : {}, {
-        O: loadedTabs.value.includes(3)
+        N: loadedTabs.value.includes(3)
       }, loadedTabs.value.includes(3) ? {
-        P: common_vendor.p({
+        O: common_vendor.p({
           ["is-active"]: currentTab.value === 3
         })
       } : {}, {
-        Q: isTablet.value
+        P: isTablet.value
       }, isTablet.value ? common_vendor.e({
-        R: loadedTabs.value.includes(4)
+        Q: loadedTabs.value.includes(4)
       }, loadedTabs.value.includes(4) ? {
-        S: common_vendor.p({
+        R: common_vendor.p({
           ["is-active"]: currentTab.value === 4
         })
       } : {}) : {}, {
-        T: isTablet.value ? 1 : "",
-        U: currentTab.value,
-        V: common_vendor.o(onSwiperChange, "da"),
-        W: isTablet.value ? 0 : 300,
-        X: isTablet.value,
-        Y: showSubPage.value && isTablet.value
+        S: isTablet.value ? 1 : "",
+        T: currentTab.value,
+        U: common_vendor.o(onSwiperChange, "f4"),
+        V: isTablet.value ? 0 : 300,
+        W: isTablet.value,
+        X: showSubPage.value && isTablet.value
       }, showSubPage.value && isTablet.value ? common_vendor.e({
-        Z: (_a = currentSubPageUrl.value) == null ? void 0 : _a.includes("/pages/sharelist/index")
+        Y: (_a = currentSubPageUrl.value) == null ? void 0 : _a.includes("/pages/sharelist/index")
       }, ((_b = currentSubPageUrl.value) == null ? void 0 : _b.includes("/pages/sharelist/index")) ? {
-        aa: common_vendor.o(closeSubPage, "f1"),
-        ab: common_vendor.p({
+        Z: common_vendor.o(closeSubPage, "bc"),
+        aa: common_vendor.p({
           ["url-params"]: getSubPageParams()
         })
       } : ((_c = currentSubPageUrl.value) == null ? void 0 : _c.includes("/pages/rank/index")) ? {
-        ad: common_vendor.o(closeSubPage, "64"),
-        ae: common_vendor.p({
+        ac: common_vendor.o(closeSubPage, "71"),
+        ad: common_vendor.p({
           ["url-params"]: getSubPageParams()
         })
       } : ((_d = currentSubPageUrl.value) == null ? void 0 : _d.includes("/pages/songlist-list/index")) ? {
-        ag: common_vendor.o(closeSubPage, "ee"),
-        ah: common_vendor.p({
+        af: common_vendor.o(closeSubPage, "26"),
+        ag: common_vendor.p({
           ["url-params"]: getSubPageParams()
         })
       } : ((_e = currentSubPageUrl.value) == null ? void 0 : _e.includes("/pages/music-sources/index")) ? {
-        aj: common_vendor.o(closeSubPage, "23")
+        ai: common_vendor.o(closeSubPage, "4a")
+      } : ((_f = currentSubPageUrl.value) == null ? void 0 : _f.includes("/pages/ai-recommend/index")) ? {
+        ak: common_vendor.o(closeSubPage, "c5")
       } : {}, {
-        ac: (_f = currentSubPageUrl.value) == null ? void 0 : _f.includes("/pages/rank/index"),
-        af: (_g = currentSubPageUrl.value) == null ? void 0 : _g.includes("/pages/songlist-list/index"),
-        ai: (_h = currentSubPageUrl.value) == null ? void 0 : _h.includes("/pages/music-sources/index"),
-        ak: darkMode.value ? 1 : ""
+        ab: (_g = currentSubPageUrl.value) == null ? void 0 : _g.includes("/pages/rank/index"),
+        ae: (_h = currentSubPageUrl.value) == null ? void 0 : _h.includes("/pages/songlist-list/index"),
+        ah: (_i = currentSubPageUrl.value) == null ? void 0 : _i.includes("/pages/music-sources/index"),
+        aj: (_j = currentSubPageUrl.value) == null ? void 0 : _j.includes("/pages/ai-recommend/index"),
+        al: darkMode.value ? 1 : ""
       }) : {}, {
-        al: common_vendor.o(switchTab, "ee"),
-        am: common_vendor.p({
+        am: common_vendor.o(switchTab, "b3"),
+        an: common_vendor.p({
           ["current-index"]: currentTab.value,
           ["is-tablet"]: isTablet.value
         }),
-        an: showDebugLog.value
+        ao: showDebugLog.value
       }, showDebugLog.value ? common_vendor.e({
-        ao: isTablet.value
+        ap: isTablet.value
       }, isTablet.value ? {
-        ap: common_vendor.p({
+        aq: common_vendor.p({
           type: "fas",
           name: "copy",
           size: "14",
           color: darkMode.value ? "#9ca3af" : "#6b7280"
         }),
-        aq: common_vendor.o(copyDebugLogs, "91")
+        ar: common_vendor.o(copyDebugLogs, "68")
       } : {}, {
-        ar: common_vendor.p({
+        as: common_vendor.p({
           type: "fas",
           name: debugPanelExpanded.value ? "chevron-down" : "chevron-up",
           size: "14",
           color: darkMode.value ? "#9ca3af" : "#6b7280"
         }),
-        as: debugPanelExpanded.value
+        at: debugPanelExpanded.value
       }, debugPanelExpanded.value ? {
-        at: common_vendor.t(debugInfo.value.followSystem),
-        av: common_vendor.t(debugInfo.value.followSystemType),
-        aw: common_vendor.t(debugInfo.value.isFollowSystem),
-        ax: common_vendor.n(debugInfo.value.isFollowSystem ? "success" : "warning"),
-        ay: common_vendor.t(debugInfo.value.darkModeStorage),
-        az: common_vendor.t(debugInfo.value.systemTheme),
-        aA: common_vendor.t(darkMode.value),
-        aB: common_vendor.n(darkMode.value ? "dark" : "light"),
-        aC: common_vendor.t(debugInfo.value.platform),
-        aD: common_vendor.t(debugInfo.value.appTheme),
-        aE: common_vendor.t(debugInfo.value.isFirstInstall),
-        aF: common_vendor.n(debugInfo.value.isFirstInstall ? "success" : ""),
-        aG: common_vendor.t(debugInfo.value.appLaunchTime),
-        aH: common_vendor.t(themeLogs.value.length),
-        aI: common_vendor.f(themeLogs.value, (log, index, i0) => {
+        av: common_vendor.t(debugInfo.value.followSystem),
+        aw: common_vendor.t(debugInfo.value.followSystemType),
+        ax: common_vendor.t(debugInfo.value.isFollowSystem),
+        ay: common_vendor.n(debugInfo.value.isFollowSystem ? "success" : "warning"),
+        az: common_vendor.t(debugInfo.value.darkModeStorage),
+        aA: common_vendor.t(debugInfo.value.systemTheme),
+        aB: common_vendor.t(darkMode.value),
+        aC: common_vendor.n(darkMode.value ? "dark" : "light"),
+        aD: common_vendor.t(debugInfo.value.platform),
+        aE: common_vendor.t(debugInfo.value.appTheme),
+        aF: common_vendor.t(debugInfo.value.isFirstInstall),
+        aG: common_vendor.n(debugInfo.value.isFirstInstall ? "success" : ""),
+        aH: common_vendor.t(debugInfo.value.appLaunchTime),
+        aI: common_vendor.t(themeLogs.value.length),
+        aJ: common_vendor.f(themeLogs.value, (log, index, i0) => {
           return {
             a: common_vendor.t(log),
             b: index
           };
         }),
-        aJ: common_vendor.o(onDebugLogsWheel, "65"),
-        aK: common_vendor.o(refreshDebugInfo, "d7"),
-        aL: common_vendor.o(clearThemeLogs, "d1"),
-        aM: common_vendor.o(() => {
-        }, "b7")
+        aK: common_vendor.o(onDebugLogsWheel, "11"),
+        aL: common_vendor.o(refreshDebugInfo, "11"),
+        aM: common_vendor.o(clearThemeLogs, "85"),
+        aN: common_vendor.o(() => {
+        }, "89")
       } : {}, {
-        aN: darkMode.value ? 1 : "",
-        aO: debugPanelExpanded.value ? 1 : "",
-        aP: isTablet.value ? 1 : "",
-        aQ: common_vendor.o(toggleDebugPanel, "ac")
+        aO: darkMode.value ? 1 : "",
+        aP: debugPanelExpanded.value ? 1 : "",
+        aQ: isTablet.value ? 1 : "",
+        aR: common_vendor.o(toggleDebugPanel, "d7")
       }) : {}, {
-        aR: darkMode.value ? 1 : "",
-        aS: isTablet.value ? 1 : ""
+        aS: showMeshModeModal.value
+      }, showMeshModeModal.value ? {
+        aT: darkMode.value ? 1 : "",
+        aU: darkMode.value ? 1 : "",
+        aV: common_vendor.p({
+          type: "fas",
+          name: "server",
+          size: "22",
+          color: "#e2e8f0"
+        }),
+        aW: darkMode.value ? 1 : "",
+        aX: darkMode.value ? 1 : "",
+        aY: common_vendor.p({
+          type: "fas",
+          name: "chevron-right",
+          size: "14",
+          color: "#9ca3af"
+        }),
+        aZ: darkMode.value ? 1 : "",
+        ba: common_vendor.o(($event) => selectMeshMode("own"), "91"),
+        bb: common_vendor.p({
+          type: "fas",
+          name: "globe",
+          size: "22",
+          color: "#e2e8f0"
+        }),
+        bc: darkMode.value ? 1 : "",
+        bd: darkMode.value ? 1 : "",
+        be: common_vendor.p({
+          type: "fas",
+          name: "chevron-right",
+          size: "14",
+          color: "#9ca3af"
+        }),
+        bf: darkMode.value ? 1 : "",
+        bg: common_vendor.o(($event) => selectMeshMode("free"), "d0"),
+        bh: darkMode.value ? 1 : "",
+        bi: darkMode.value ? 1 : "",
+        bj: common_vendor.o(copyDeployTutorial, "c2"),
+        bk: darkMode.value ? 1 : "",
+        bl: isTablet.value ? 1 : "",
+        bm: common_vendor.o(() => {
+        }, "bc"),
+        bn: isTablet.value ? 1 : "",
+        bo: common_vendor.o(dismissMeshModal, "76")
+      } : {}, {
+        bp: showDonationPromptModal.value
+      }, showDonationPromptModal.value ? {
+        bq: common_vendor.p({
+          type: "fas",
+          name: "heart",
+          size: "24",
+          color: "#e2e8f0"
+        }),
+        br: darkMode.value ? 1 : "",
+        bs: darkMode.value ? 1 : "",
+        bt: darkMode.value ? 1 : "",
+        bv: common_vendor.t(donationStats.value.remaining),
+        bw: darkMode.value ? 1 : "",
+        bx: darkMode.value ? 1 : "",
+        by: common_vendor.t(donationStats.value.used),
+        bz: common_vendor.t(donationStats.value.total),
+        bA: darkMode.value ? 1 : "",
+        bB: darkMode.value ? 1 : "",
+        bC: darkMode.value ? 1 : "",
+        bD: darkMode.value ? 1 : "",
+        bE: darkMode.value ? 1 : "",
+        bF: darkMode.value ? 1 : "",
+        bG: darkMode.value ? 1 : "",
+        bH: darkMode.value ? 1 : "",
+        bI: darkMode.value ? 1 : "",
+        bJ: common_vendor.o(dismissDonationPrompt, "17"),
+        bK: common_vendor.o(goToDonationSettings, "db"),
+        bL: darkMode.value ? 1 : "",
+        bM: common_vendor.o(() => {
+        }, "8a"),
+        bN: common_vendor.o(dismissDonationPrompt, "02")
+      } : {}, {
+        bO: showServerGuideModal.value
+      }, showServerGuideModal.value ? {
+        bP: common_vendor.p({
+          type: "fas",
+          name: "server",
+          size: "24",
+          color: "#e2e8f0"
+        }),
+        bQ: darkMode.value ? 1 : "",
+        bR: darkMode.value ? 1 : "",
+        bS: common_vendor.t(serverGuideSongCount.value),
+        bT: common_vendor.t(serverGuideHelperCount.value),
+        bU: darkMode.value ? 1 : "",
+        bV: darkMode.value ? 1 : "",
+        bW: darkMode.value ? 1 : "",
+        bX: darkMode.value ? 1 : "",
+        bY: darkMode.value ? 1 : "",
+        bZ: darkMode.value ? 1 : "",
+        ca: common_vendor.o(dismissServerGuide, "9d"),
+        cb: common_vendor.o(goToServerDeploy, "e4"),
+        cc: darkMode.value ? 1 : "",
+        cd: common_vendor.o(() => {
+        }, "41"),
+        ce: common_vendor.o(dismissServerGuide, "e9")
+      } : {}, {
+        cf: showCopyToast.value
+      }, showCopyToast.value ? {
+        cg: common_vendor.t(copyToastText.value)
+      } : {}, {
+        ch: darkMode.value ? 1 : "",
+        ci: isTablet.value ? 1 : ""
       });
     };
   }
 };
-const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-4073cb87"]]);
+const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["__scopeId", "data-v-55921151"]]);
 wx.createPage(MiniProgramPage);
